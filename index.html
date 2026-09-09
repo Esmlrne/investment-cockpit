@@ -36,9 +36,15 @@ main{
   padding:18px 14px 50px;
 }
 
-h1{margin:4px 0;font-size:26px}
-h2{margin:0;font-size:18px}
-h3{margin:0}
+h1{
+  margin:4px 0;
+  font-size:26px;
+}
+
+h2{
+  margin:0;
+  font-size:18px;
+}
 
 .small{
   color:var(--muted);
@@ -73,7 +79,9 @@ button{
   font-weight:600;
 }
 
-button:active{transform:scale(.98)}
+button:active{
+  transform:scale(.98);
+}
 
 .card{
   background:var(--card);
@@ -219,6 +227,7 @@ canvas{
 .analysisBox strong{
   font-size:16px;
 }
+
 
 /* =========================
    DECISION COCKPIT
@@ -397,8 +406,9 @@ canvas{
   background:rgba(255,92,103,.15);
 }
 
+
 /* =========================
-   PULLBACK STRATEGY
+   PULLBACK
 ========================= */
 
 .pullback{
@@ -469,6 +479,55 @@ canvas{
   background:rgba(53,208,127,.055);
 }
 
+.scenario{
+  margin-top:12px;
+  padding:12px;
+  background:var(--card2);
+  border-radius:10px;
+}
+
+.scenarioTitle{
+  font-size:12px;
+  color:var(--muted);
+  text-transform:uppercase;
+  font-weight:750;
+  margin-bottom:9px;
+}
+
+.scenarioRow{
+  display:grid;
+  grid-template-columns:1.15fr 1fr 1fr 1fr;
+  gap:7px;
+  padding:8px 0;
+  border-bottom:1px solid rgba(255,255,255,.05);
+  font-size:12px;
+}
+
+.scenarioRow:last-child{
+  border-bottom:0;
+}
+
+.scenarioHeader{
+  color:var(--muted);
+  font-size:10px;
+  text-transform:uppercase;
+}
+
+.scenarioGood{
+  color:var(--green);
+  font-weight:750;
+}
+
+.scenarioOkay{
+  color:var(--yellow);
+  font-weight:750;
+}
+
+.scenarioBad{
+  color:var(--red);
+  font-weight:750;
+}
+
 .pullbackExplanation{
   margin-top:12px;
   background:var(--card2);
@@ -478,6 +537,35 @@ canvas{
   line-height:1.45;
 }
 
+
+/* =========================
+   FINAL DECISION
+========================= */
+
+.finalDecision{
+  border-color:#465264;
+}
+
+.finalDecisionTitle{
+  font-size:11px;
+  color:var(--muted);
+  text-transform:uppercase;
+  font-weight:800;
+}
+
+.finalDecisionMain{
+  margin-top:5px;
+  font-size:23px;
+  font-weight:850;
+}
+
+.finalDecisionSub{
+  margin-top:6px;
+  font-size:14px;
+  line-height:1.45;
+}
+
+
 /* =========================
    FOOTER
 ========================= */
@@ -486,6 +574,7 @@ canvas{
   text-align:center;
   margin-top:22px;
 }
+
 
 @media(max-width:520px){
 
@@ -514,6 +603,11 @@ canvas{
   .pullbackTitle{
     font-size:18px;
   }
+
+  .scenarioRow{
+    grid-template-columns:1.1fr 1fr 1fr 1fr;
+    font-size:11px;
+  }
 }
 </style>
 </head>
@@ -529,27 +623,42 @@ canvas{
   </div>
 </header>
 
+
 <div class="search">
+
   <input
     id="ticker"
     placeholder="Enter ticker e.g. NVDA"
     autocomplete="off"
     autocapitalize="characters"
   >
-  <button onclick="addTicker()">Add</button>
+
+  <button onclick="addTicker()">
+    Add
+  </button>
+
 </div>
+
 
 <div id="status" class="small"></div>
 
+
 <div class="card">
+
   <div class="chartTitle">
     <h2>My watchlist</h2>
   </div>
 
-  <div id="watchlist" class="watchlist"></div>
+  <div
+    id="watchlist"
+    class="watchlist"
+  ></div>
+
 </div>
 
+
 <div id="dashboard"></div>
+
 
 <div class="footer small">
   Market data provided through Alpha Vantage.
@@ -557,18 +666,26 @@ canvas{
 
 </main>
 
+
 <script>
 
-const STORAGE_KEY = "ic_watchlist";
-const SELECTED_KEY = "ic_selected";
+const STORAGE_KEY =
+  "ic_watchlist";
+
+const SELECTED_KEY =
+  "ic_selected";
+
 
 let list = JSON.parse(
   localStorage.getItem(STORAGE_KEY) ||
   '["NVDA","MSFT","GOOGL","AAPL","AMZN","TSLA"]'
 );
 
+
 let selected =
-  localStorage.getItem(SELECTED_KEY) || list[0];
+  localStorage.getItem(SELECTED_KEY) ||
+  list[0];
+
 
 let lastStockData = null;
 
@@ -621,19 +738,6 @@ function money(value){
 }
 
 
-function number(value){
-
-  if(
-    value == null ||
-    !Number.isFinite(Number(value))
-  ){
-    return "—";
-  }
-
-  return Number(value).toFixed(2);
-}
-
-
 function pct(value){
 
   const n = Number(value);
@@ -643,7 +747,9 @@ function pct(value){
 
   return (
     n >= 0 ? "+" : ""
-  ) + n.toFixed(2) + "%";
+  ) +
+  n.toFixed(2) +
+  "%";
 }
 
 
@@ -662,7 +768,8 @@ function trendClass(trend){
 function setupClass(setup){
 
   const s =
-    String(setup || "").toUpperCase();
+    String(setup || "")
+      .toUpperCase();
 
   if(
     s.includes("BREAKOUT") ||
@@ -685,7 +792,8 @@ function setupClass(setup){
 function qualityClass(quality){
 
   const q =
-    String(quality || "").toUpperCase();
+    String(quality || "")
+      .toUpperCase();
 
   if(q === "ATTRACTIVE")
     return "qualityGood";
@@ -704,7 +812,9 @@ function qualityClass(quality){
 function renderWatchlist(){
 
   const box =
-    document.getElementById("watchlist");
+    document.getElementById(
+      "watchlist"
+    );
 
   box.innerHTML =
     list.map(t => `
@@ -723,7 +833,9 @@ function renderWatchlist(){
 function addTicker(){
 
   const input =
-    document.getElementById("ticker");
+    document.getElementById(
+      "ticker"
+    );
 
   const ticker =
     input.value
@@ -743,7 +855,8 @@ function addTicker(){
 
     list.unshift(ticker);
 
-    list = list.slice(0,12);
+    list =
+      list.slice(0,12);
   }
 
   selected = ticker;
@@ -819,6 +932,7 @@ function drawPriceChart(
   if(!history.length)
     return;
 
+
   const dpr =
     window.devicePixelRatio || 1;
 
@@ -827,8 +941,13 @@ function drawPriceChart(
 
   const height = 350;
 
-  canvas.width = width*dpr;
-  canvas.height = height*dpr;
+
+  canvas.width =
+    width*dpr;
+
+  canvas.height =
+    height*dpr;
+
 
   const ctx =
     canvas.getContext("2d");
@@ -842,20 +961,28 @@ function drawPriceChart(
     height
   );
 
+
   const pad = {
     left:48,
-    right:12,
+    right:100,
     top:18,
     bottom:28
   };
 
+
   const chartW =
-    width-pad.left-pad.right;
+    width -
+    pad.left -
+    pad.right;
 
   const chartH =
-    height-pad.top-pad.bottom;
+    height -
+    pad.top -
+    pad.bottom;
 
-  const values = [];
+
+  const values=[];
+
 
   history.forEach(item => {
 
@@ -873,6 +1000,7 @@ function drawPriceChart(
 
   });
 
+
   [
     data.target1,
     data.target2,
@@ -887,8 +1015,10 @@ function drawPriceChart(
 
   });
 
+
   if(!values.length)
     return;
+
 
   const min =
     Math.min(...values);
@@ -902,18 +1032,20 @@ function drawPriceChart(
 
   function x(i){
 
-    if(history.length === 1)
+    if(history.length===1)
       return pad.left+chartW/2;
 
     return pad.left+
-      i/(history.length-1)*chartW;
+      i/(history.length-1)*
+      chartW;
   }
 
 
   function y(v){
 
     return pad.top+
-      (max-v)/range*chartH;
+      (max-v)/range*
+      chartH;
   }
 
 
@@ -926,17 +1058,29 @@ function drawPriceChart(
   ctx.strokeStyle =
     "#252b36";
 
-  ctx.lineWidth = 1;
+  ctx.lineWidth=1;
+
 
   for(let i=0;i<5;i++){
 
     const yy =
-      pad.top+i/4*chartH;
+      pad.top+
+      i/4*chartH;
 
     ctx.beginPath();
-    ctx.moveTo(pad.left,yy);
-    ctx.lineTo(width-pad.right,yy);
+
+    ctx.moveTo(
+      pad.left,
+      yy
+    );
+
+    ctx.lineTo(
+      width-pad.right,
+      yy
+    );
+
     ctx.stroke();
+
 
     const value =
       max-i/4*range;
@@ -962,41 +1106,54 @@ function drawPriceChart(
     ctx.beginPath();
 
     ctx.strokeStyle =
-      key === "sma20"
+      key==="sma20"
         ? "#55a7ff"
         : "#a88cff";
 
-    ctx.lineWidth = 1.7;
+    ctx.lineWidth=1.7;
 
     ctx.setLineDash(
-      dashed ? [5,4] : []
+      dashed
+        ? [5,4]
+        : []
     );
 
-    let started = false;
+    let started=false;
+
 
     history.forEach(
       (item,i) => {
 
-        if(item[key] == null)
+        if(item[key]==null)
           return;
 
-        const xx = x(i);
-        const yy = y(Number(item[key]));
+        const xx=x(i);
+        const yy=y(Number(item[key]));
+
 
         if(!started){
 
-          ctx.moveTo(xx,yy);
-          started = true;
+          ctx.moveTo(
+            xx,
+            yy
+          );
+
+          started=true;
 
         }else{
 
-          ctx.lineTo(xx,yy);
-
+          ctx.lineTo(
+            xx,
+            yy
+          );
         }
+
       }
     );
 
+
     ctx.stroke();
+
     ctx.setLineDash([]);
   }
 
@@ -1005,115 +1162,344 @@ function drawPriceChart(
   drawSMA("sma50",true);
 
 
-  /* LEVELS */
+  /* =========================
+     LEVELS
+  ========================= */
 
-  function horizontal(
+
+  const levels = [];
+
+
+  function addLevel(
     value,
     label,
-    type
+    type,
+    priority
   ){
 
     if(
-      value == null ||
+      value==null ||
       !Number.isFinite(Number(value))
     )
       return;
 
+    levels.push({
+      value:Number(value),
+      label,
+      type,
+      priority
+    });
+  }
+
+
+  addLevel(
+    data.target2,
+    "TARGET 2",
+    "target",
+    1
+  );
+
+  addLevel(
+    data.target1,
+    "TARGET 1",
+    "target",
+    2
+  );
+
+  addLevel(
+    data.buy_trigger_price,
+    "BUY TRIGGER",
+    "trigger",
+    3
+  );
+
+  addLevel(
+    data.fundamentals?.resistance,
+    "RESISTANCE",
+    "resistance",
+    4
+  );
+
+  addLevel(
+    data.invalidation ?? data.stop,
+    "INVALIDATION",
+    "invalidation",
+    5
+  );
+
+
+  /*
+    Sort by price so nearby labels can be
+    separated vertically.
+  */
+
+  levels.sort(
+    (a,b) =>
+      y(a.value)-y(b.value)
+  );
+
+
+  const labelPositions=[];
+
+  const minGap=16;
+
+
+  levels.forEach(level => {
+
+    let yy=y(level.value);
+
+    yy=Math.max(
+      13,
+      Math.min(
+        height-32,
+        yy
+      )
+    );
+
+
+    for(
+      let i=0;
+      i<labelPositions.length;
+      i++
+    ){
+
+      if(
+        Math.abs(
+          yy-labelPositions[i]
+        ) < minGap
+      ){
+
+        yy =
+          labelPositions[i]+minGap;
+      }
+    }
+
+
+    yy=Math.min(
+      height-32,
+      yy
+    );
+
+
+    labelPositions.push(yy);
+
+    level.labelY=yy;
+  });
+
+
+  function levelColor(type){
+
+    if(type==="target")
+      return "rgba(245,196,81,.82)";
+
+    if(type==="trigger")
+      return "rgba(85,167,255,.95)";
+
+    if(type==="resistance")
+      return "rgba(255,92,103,.75)";
+
+    if(type==="invalidation")
+      return "rgba(255,92,103,.90)";
+
+    return "#8992a3";
+  }
+
+
+  levels.forEach(level => {
+
     const yy =
-      y(Number(value));
+      y(level.value);
 
-    if(type === "support")
-      ctx.strokeStyle =
-        "rgba(53,208,127,.65)";
+    const color =
+      levelColor(level.type);
 
-    else if(type === "resistance")
-      ctx.strokeStyle =
-        "rgba(255,92,103,.65)";
 
-    else if(type === "trigger")
-      ctx.strokeStyle =
-        "rgba(85,167,255,.9)";
+    ctx.strokeStyle=color;
 
-    else if(type === "invalidation")
-      ctx.strokeStyle =
-        "rgba(255,92,103,.8)";
+    ctx.lineWidth =
+      level.type==="trigger"
+        ? 1.8
+        : 1.3;
 
-    else
-      ctx.strokeStyle =
-        "rgba(245,196,81,.65)";
 
     ctx.setLineDash(
-      type === "trigger"
+      level.type==="trigger"
         ? [7,4]
         : [5,5]
     );
 
+
     ctx.beginPath();
-    ctx.moveTo(pad.left,yy);
-    ctx.lineTo(width-pad.right,yy);
+
+    ctx.moveTo(
+      pad.left,
+      yy
+    );
+
+    ctx.lineTo(
+      width-pad.right,
+      yy
+    );
+
     ctx.stroke();
 
     ctx.setLineDash([]);
 
-    ctx.fillStyle =
-      ctx.strokeStyle;
+
+    /*
+      Leader line from actual price level
+      to the label position.
+    */
+
+    if(
+      Math.abs(
+        level.labelY-yy
+      ) > 3
+    ){
+
+      ctx.strokeStyle=color;
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        width-pad.right,
+        yy
+      );
+
+      ctx.lineTo(
+        width-pad.right+7,
+        level.labelY
+      );
+
+      ctx.stroke();
+    }
+
+
+    ctx.fillStyle=color;
+
+    ctx.font =
+      "10px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif";
 
     ctx.fillText(
-      label,
+      level.label,
+      width-pad.right+10,
+      level.labelY+3
+    );
+
+  });
+
+
+  /* =========================
+     PULLBACK ZONE
+  ========================= */
+
+
+  const pbLow =
+    Number(data.entry_low);
+
+  const pbHigh =
+    Number(data.entry_high);
+
+
+  if(
+    Number.isFinite(pbLow) &&
+    Number.isFinite(pbHigh) &&
+    pbHigh>pbLow
+  ){
+
+    const topY =
+      y(pbHigh);
+
+    const bottomY =
+      y(pbLow);
+
+
+    ctx.fillStyle =
+      "rgba(53,208,127,.06)";
+
+
+    ctx.fillRect(
+      pad.left,
+      Math.min(
+        topY,
+        bottomY
+      ),
+      chartW,
+      Math.abs(
+        bottomY-topY
+      )
+    );
+
+
+    ctx.strokeStyle =
+      "rgba(53,208,127,.30)";
+
+    ctx.setLineDash([3,3]);
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      pad.left,
+      topY
+    );
+
+    ctx.lineTo(
+      width-pad.right,
+      topY
+    );
+
+    ctx.stroke();
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      pad.left,
+      bottomY
+    );
+
+    ctx.lineTo(
+      width-pad.right,
+      bottomY
+    );
+
+    ctx.stroke();
+
+
+    ctx.setLineDash([]);
+
+
+    ctx.fillStyle =
+      "rgba(53,208,127,.75)";
+
+    ctx.font =
+      "10px sans-serif";
+
+    ctx.fillText(
+      "PULLBACK ZONE",
       pad.left+5,
-      Math.max(
-        12,
-        yy-5
+      Math.min(
+        topY+12,
+        height-35
       )
     );
   }
 
 
-  horizontal(
-    data.fundamentals?.support,
-    "Support",
-    "support"
-  );
+  /* =========================
+     CANDLESTICKS
+  ========================= */
 
-  horizontal(
-    data.fundamentals?.resistance,
-    "Resistance",
-    "resistance"
-  );
-
-  horizontal(
-    data.buy_trigger_price,
-    "BUY TRIGGER",
-    "trigger"
-  );
-
-  horizontal(
-    data.target1,
-    "Target 1",
-    "target"
-  );
-
-  horizontal(
-    data.target2,
-    "Target 2",
-    "target"
-  );
-
-  horizontal(
-    data.invalidation ?? data.stop,
-    "Invalidation",
-    "invalidation"
-  );
-
-
-  /* CANDLES */
 
   const candleWidth =
     Math.max(
       2,
       Math.min(
         9,
-        chartW/history.length*.62
+        chartW/
+        history.length*
+        .62
       )
     );
 
@@ -1121,7 +1507,7 @@ function drawPriceChart(
   history.forEach(
     (item,i) => {
 
-      const xx = x(i);
+      const xx=x(i);
 
       const open =
         Number(item.open);
@@ -1135,13 +1521,16 @@ function drawPriceChart(
       const low =
         Number(item.low);
 
-      const openY = y(open);
-      const closeY = y(close);
-      const highY = y(high);
-      const lowY = y(low);
+
+      const openY=y(open);
+      const closeY=y(close);
+      const highY=y(high);
+      const lowY=y(low);
+
 
       const bullish =
-        close >= open;
+        close>=open;
+
 
       ctx.strokeStyle =
         bullish
@@ -1153,18 +1542,31 @@ function drawPriceChart(
           ? "#35d07f"
           : "#ff5c67";
 
-      ctx.lineWidth = 1;
+
+      ctx.lineWidth=1;
+
 
       ctx.beginPath();
-      ctx.moveTo(xx,highY);
-      ctx.lineTo(xx,lowY);
+
+      ctx.moveTo(
+        xx,
+        highY
+      );
+
+      ctx.lineTo(
+        xx,
+        lowY
+      );
+
       ctx.stroke();
+
 
       const top =
         Math.min(
           openY,
           closeY
         );
+
 
       const bodyH =
         Math.max(
@@ -1173,6 +1575,7 @@ function drawPriceChart(
             closeY-openY
           )
         );
+
 
       ctx.fillRect(
         xx-candleWidth/2,
@@ -1184,32 +1587,44 @@ function drawPriceChart(
   );
 
 
-  /* CURRENT */
+  /* CURRENT PRICE */
 
   const currentY =
     y(Number(data.price));
 
+
   ctx.strokeStyle =
     "#f2f4f7";
 
-  ctx.setLineDash([2,3]);
+  ctx.setLineDash(
+    [2,3]
+  );
+
 
   ctx.beginPath();
-  ctx.moveTo(pad.left,currentY);
-  ctx.lineTo(width-pad.right,currentY);
+
+  ctx.moveTo(
+    pad.left,
+    currentY
+  );
+
+  ctx.lineTo(
+    width-pad.right,
+    currentY
+  );
+
   ctx.stroke();
 
   ctx.setLineDash([]);
 
+
   ctx.fillStyle =
     "#f2f4f7";
 
+
   ctx.fillText(
-    "Current",
-    Math.max(
-      pad.left+5,
-      width-55
-    ),
+    "CURRENT",
+    width-pad.right+10,
     Math.max(
       14,
       Math.min(
@@ -1235,7 +1650,7 @@ function drawPriceChart(
     history[
       history.length-1
     ].date.slice(5),
-    width-40,
+    width-pad.right-35,
     height-8
   );
 }
@@ -1257,16 +1672,19 @@ function drawRSI(
   if(!history.length)
     return;
 
+
   const dpr =
     window.devicePixelRatio || 1;
 
   const width =
     canvas.clientWidth || 700;
 
-  const height = 150;
+  const height=150;
 
-  canvas.width = width*dpr;
-  canvas.height = height*dpr;
+
+  canvas.width=width*dpr;
+  canvas.height=height*dpr;
+
 
   const ctx =
     canvas.getContext("2d");
@@ -1279,6 +1697,7 @@ function drawRSI(
     width,
     height
   );
+
 
   const left=35;
   const right=10;
@@ -1307,7 +1726,6 @@ function drawRSI(
 
 
   ctx.strokeStyle="#252b36";
-  ctx.lineWidth=1;
 
   [30,50,70].forEach(
     value => {
@@ -1315,9 +1733,12 @@ function drawRSI(
       const yy=y(value);
 
       ctx.beginPath();
+
       ctx.moveTo(left,yy);
       ctx.lineTo(width-right,yy);
+
       ctx.stroke();
+
 
       ctx.fillStyle="#8992a3";
       ctx.font="10px sans-serif";
@@ -1338,11 +1759,13 @@ function drawRSI(
 
   let started=false;
 
+
   history.forEach(
     (item,i) => {
 
       if(item.rsi==null)
         return;
+
 
       if(!started){
 
@@ -1363,7 +1786,9 @@ function drawRSI(
     }
   );
 
+
   ctx.stroke();
+
 
   ctx.fillStyle="#8992a3";
   ctx.font="10px sans-serif";
@@ -1392,6 +1817,7 @@ function drawMACD(
   if(!history.length)
     return;
 
+
   const dpr =
     window.devicePixelRatio || 1;
 
@@ -1400,8 +1826,10 @@ function drawMACD(
 
   const height=150;
 
+
   canvas.width=width*dpr;
   canvas.height=height*dpr;
+
 
   const ctx =
     canvas.getContext("2d");
@@ -1415,6 +1843,7 @@ function drawMACD(
     height
   );
 
+
   const left=40;
   const right=10;
   const top=12;
@@ -1423,7 +1852,9 @@ function drawMACD(
   const w=width-left-right;
   const h=height-top-bottom;
 
+
   const vals=[];
+
 
   history.forEach(item => {
 
@@ -1440,8 +1871,10 @@ function drawMACD(
 
   });
 
+
   if(!vals.length)
     return;
+
 
   const maxAbs =
     Math.max(
@@ -1471,11 +1904,14 @@ function drawMACD(
 
   const zero=y(0);
 
+
   ctx.strokeStyle="#252b36";
 
   ctx.beginPath();
+
   ctx.moveTo(left,zero);
   ctx.lineTo(width-right,zero);
+
   ctx.stroke();
 
 
@@ -1492,19 +1928,29 @@ function drawMACD(
       if(item.macdHistogram==null)
         return;
 
+
       const yy =
-        y(Number(item.macdHistogram));
+        y(Number(
+          item.macdHistogram
+        ));
+
 
       ctx.fillStyle =
         Number(item.macdHistogram)>=0
           ? "rgba(53,208,127,.65)"
           : "rgba(255,92,103,.65)";
 
+
       ctx.fillRect(
         x(i)-barW/2,
-        Math.min(yy,zero),
+        Math.min(
+          yy,
+          zero
+        ),
         barW,
-        Math.abs(zero-yy)
+        Math.abs(
+          zero-yy
+        )
       );
     }
   );
@@ -1530,13 +1976,16 @@ function drawMACD(
         : []
     );
 
+
     let started=false;
+
 
     history.forEach(
       (item,i) => {
 
         if(item[key]==null)
           return;
+
 
         if(!started){
 
@@ -1557,6 +2006,7 @@ function drawMACD(
       }
     );
 
+
     ctx.stroke();
 
     ctx.setLineDash([]);
@@ -1565,6 +2015,7 @@ function drawMACD(
 
   draw("macd",false);
   draw("macdSignal",true);
+
 
   ctx.fillStyle="#8992a3";
   ctx.font="10px sans-serif";
@@ -1584,9 +2035,12 @@ function drawMACD(
 function renderConditions(data){
 
   const conditions =
-    Array.isArray(data.buy_conditions)
+    Array.isArray(
+      data.buy_conditions
+    )
       ? data.buy_conditions
       : [];
+
 
   if(!conditions.length){
 
@@ -1602,16 +2056,18 @@ function renderConditions(data){
     condition => {
 
       const text =
-        typeof condition === "string"
+        typeof condition==="string"
           ? condition
           : condition.text ||
             condition.label ||
             "Condition";
 
+
       const met =
-        typeof condition === "string"
+        typeof condition==="string"
           ? false
           : Boolean(condition.met);
+
 
       return `
 
@@ -1640,7 +2096,7 @@ function renderConditions(data){
 
 
 /* =========================
-   PULLBACK ENGINE
+   REALISTIC PULLBACK ENGINE
 ========================= */
 
 function calculatePullback(data){
@@ -1648,33 +2104,32 @@ function calculatePullback(data){
   const price =
     Number(data.price);
 
+
   const support =
     Number(
       data.fundamentals?.support
     );
+
 
   const resistance =
     Number(
       data.fundamentals?.resistance
     );
 
+
+  const latest =
+    data.history?.length
+      ? data.history[
+          data.history.length-1
+        ]
+      : null;
+
+
   const sma20 =
     Number(
-      data.history?.length
-        ? data.history[
-            data.history.length-1
-          ]?.sma20
-        : NaN
+      latest?.sma20
     );
 
-  const sma50 =
-    Number(
-      data.history?.length
-        ? data.history[
-            data.history.length-1
-          ]?.sma50
-        : NaN
-    );
 
   const stop =
     Number(
@@ -1683,55 +2138,36 @@ function calculatePullback(data){
     );
 
 
-  /*
-    Preferred pullback zone:
-
-    Lower boundary:
-    support
-
-    Upper boundary:
-    strongest of:
-    support,
-    SMA20,
-    existing backend entry_high
-  */
-
   let low =
     Number.isFinite(support)
       ? support
       : Number(data.entry_low);
 
-  let highCandidates = [
+
+  const highs=[
     Number(data.entry_high),
     sma20,
     support
   ].filter(
-    v => Number.isFinite(v)
+    Number.isFinite
   );
 
+
   let high =
-    highCandidates.length
-      ? Math.max(...highCandidates)
+    highs.length
+      ? Math.max(...highs)
       : price;
 
 
-  /*
-    If price is already below the zone,
-    use the current price as reference.
-  */
-
   if(!Number.isFinite(low))
-    low = price*0.95;
+    low=price*.95;
+
 
   if(!Number.isFinite(high))
-    high = price*0.98;
+    high=price*.98;
 
 
-  /*
-    Make sure the zone is logically ordered.
-  */
-
-  if(high < low){
+  if(high<low){
 
     const temp=high;
     high=low;
@@ -1740,28 +2176,34 @@ function calculatePullback(data){
 
 
   /*
-    Preferred entry is weighted toward
-    the upper half of support/SMA zone.
+    Three possible execution prices:
+
+    BEST:
+    lower end of pullback zone.
+
+    BASE:
+    midpoint.
+
+    WORST:
+    upper end of pullback zone.
+
+    This prevents the model from assuming
+    the perfect fill.
   */
 
-  const preferred =
+  const bestEntry=low;
+
+  const baseEntry=
     (low+high)/2;
 
+  const worstEntry=high;
 
-  /*
-    Invalidation:
-    use backend invalidation if available.
-  */
 
   const invalidation =
     Number.isFinite(stop)
       ? stop
-      : low*0.98;
+      : low*.98;
 
-
-  /*
-    Use existing targets.
-  */
 
   let target1 =
     Number(data.target1);
@@ -1770,62 +2212,94 @@ function calculatePullback(data){
     Number(data.target2);
 
 
-  if(!Number.isFinite(target1))
+  if(!Number.isFinite(target1)){
+
     target1 =
       Number.isFinite(resistance)
         ? resistance
         : price*1.08;
+  }
 
-  if(!Number.isFinite(target2))
+
+  if(!Number.isFinite(target2)){
+
     target2 =
       target1*1.08;
+  }
+
+
+  function scenario(entry){
+
+    const risk =
+      entry-invalidation;
+
+    const reward1 =
+      target1-entry;
+
+    const reward2 =
+      target2-entry;
+
+
+    const rr1 =
+      risk>0
+        ? reward1/risk
+        : NaN;
+
+
+    const rr2 =
+      risk>0
+        ? reward2/risk
+        : NaN;
+
+
+    return {
+      entry,
+      risk,
+      reward1,
+      reward2,
+      rr1,
+      rr2
+    };
+  }
+
+
+  const best =
+    scenario(bestEntry);
+
+  const base =
+    scenario(baseEntry);
+
+  const worst =
+    scenario(worstEntry);
 
 
   /*
-    R/R based on preferred pullback entry.
+    Base case determines the headline
+    quality.
+
+    This is deliberately more conservative
+    than using the best possible fill.
   */
-
-  const risk =
-    preferred-invalidation;
-
-  const reward1 =
-    target1-preferred;
-
-  const reward2 =
-    target2-preferred;
-
-  const rr1 =
-    risk>0
-      ? reward1/risk
-      : NaN;
-
-  const rr2 =
-    risk>0
-      ? reward2/risk
-      : NaN;
-
 
   let quality =
     "NOT ATTRACTIVE";
 
+
   if(
-    Number.isFinite(rr2) &&
-    rr2>=2
+    Number.isFinite(base.rr2) &&
+    base.rr2>=2
   ){
+
     quality="ATTRACTIVE";
 
   }else if(
-    Number.isFinite(rr2) &&
-    rr2>=1.5
+    Number.isFinite(base.rr2) &&
+    base.rr2>=1.5
   ){
+
     quality="ACCEPTABLE";
   }
 
-
-  /*
-    Determine whether price is currently
-    inside or near the pullback zone.
-  */
 
   let status =
     "WAIT FOR PULLBACK";
@@ -1867,31 +2341,30 @@ function calculatePullback(data){
   }
 
 
-  /*
-    Pullback only makes sense when
-    the larger structure is constructive.
-  */
-
   const bullishStructure =
     String(
       data.structure || ""
-    ).toUpperCase()
+    )
+      .toUpperCase()
       .includes("HIGHER HIGH") &&
     String(
       data.structure || ""
-    ).toUpperCase()
+    )
+      .toUpperCase()
       .includes("HIGHER LOW");
 
 
   const shortTermBullish =
     String(
       data.short_term_trend || ""
-    ).toUpperCase()
+    )
+      .toUpperCase()
       .includes("BULLISH");
 
 
   let strategy =
-    "WAIT — NO PULLBACK YET";
+    "WAIT FOR ATTRACTIVE PULLBACK";
+
 
   if(price<invalidation){
 
@@ -1934,13 +2407,15 @@ function calculatePullback(data){
   return {
     low,
     high,
-    preferred,
+    bestEntry,
+    baseEntry,
+    worstEntry,
     invalidation,
     target1,
     target2,
-    risk,
-    rr1,
-    rr2,
+    best,
+    base,
+    worst,
     quality,
     status,
     statusClass,
@@ -1948,6 +2423,36 @@ function calculatePullback(data){
     bullishStructure,
     shortTermBullish
   };
+}
+
+
+/* =========================
+   SCENARIO QUALITY
+========================= */
+
+function scenarioQuality(rr){
+
+  if(
+    Number.isFinite(rr) &&
+    rr>=2
+  )
+    return "scenarioGood";
+
+  if(
+    Number.isFinite(rr) &&
+    rr>=1.5
+  )
+    return "scenarioOkay";
+
+  return "scenarioBad";
+}
+
+
+function rrText(rr){
+
+  return Number.isFinite(rr)
+    ? rr.toFixed(2)+"x"
+    : "—";
 }
 
 
@@ -1961,11 +2466,6 @@ function renderPullback(data){
     calculatePullback(data);
 
 
-  let statusClass =
-    "pullbackStatus " +
-    p.statusClass;
-
-
   return `
 
     <div class="card pullback">
@@ -1974,11 +2474,16 @@ function renderPullback(data){
         🟢 PULLBACK STRATEGY
       </div>
 
+
       <div class="pullbackTitle">
         ${esc(p.strategy)}
       </div>
 
-      <div class="${statusClass}">
+
+      <div class="
+        pullbackStatus
+        ${p.statusClass}
+      ">
         ${esc(p.status)}
       </div>
 
@@ -2004,11 +2509,11 @@ function renderPullback(data){
         <div class="pullbackBox entryBox">
 
           <div class="label">
-            Preferred entry
+            Base entry
           </div>
 
           <div class="value">
-            ${money(p.preferred)}
+            ${money(p.baseEntry)}
           </div>
 
         </div>
@@ -2030,1076 +2535,3 @@ function renderPullback(data){
         <div class="pullbackBox">
 
           <div class="label">
-            Risk / share
-          </div>
-
-          <div class="value">
-            ${money(p.risk)}
-          </div>
-
-        </div>
-
-
-        <div class="pullbackBox">
-
-          <div class="label">
-            Target 1
-          </div>
-
-          <div class="value">
-            ${money(p.target1)}
-          </div>
-
-        </div>
-
-
-        <div class="pullbackBox">
-
-          <div class="label">
-            Target 2
-          </div>
-
-          <div class="value">
-            ${money(p.target2)}
-          </div>
-
-        </div>
-
-
-        <div class="pullbackBox">
-
-          <div class="label">
-            Potential R/R → T1
-          </div>
-
-          <div class="value">
-            ${
-              Number.isFinite(p.rr1)
-                ? p.rr1.toFixed(2)+"x"
-                : "—"
-            }
-          </div>
-
-        </div>
-
-
-        <div class="pullbackBox">
-
-          <div class="label">
-            Potential R/R → T2
-          </div>
-
-          <div class="value">
-            ${
-              Number.isFinite(p.rr2)
-                ? p.rr2.toFixed(2)+"x"
-                : "—"
-            }
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="reasonBox">
-
-        <div class="label">
-          Pullback R/R quality
-        </div>
-
-        <span class="
-          quality
-          ${qualityClass(p.quality)}
-        ">
-          ${esc(p.quality)}
-        </span>
-
-      </div>
-
-
-      <div class="pullbackExplanation">
-
-        <strong>
-          Strategy logic
-        </strong>
-
-        <br><br>
-
-        ${
-          p.bullishStructure
-            ? "✓ Market structure is bullish."
-            : "× Market structure is not fully bullish."
-        }
-
-        <br>
-
-        ${
-          p.shortTermBullish
-            ? "✓ Short-term trend is bullish."
-            : "× Short-term trend is not bullish."
-        }
-
-        <br>
-
-        ${
-          p.status === "IN PULLBACK ZONE"
-            ? "✓ Price is currently inside the calculated pullback zone."
-            : "→ Wait for price to reach the pullback zone and show a bullish reaction."
-        }
-
-        <br>
-
-        ${
-          p.quality === "ATTRACTIVE"
-            ? "✓ Potential reward/risk is attractive."
-            : "× Current pullback reward/risk is not attractive enough yet."
-        }
-
-      </div>
-
-    </div>
-  `;
-}
-
-
-/* =========================
-   MAIN RENDER
-========================= */
-
-function render(data){
-
-  lastStockData=data;
-
-  const trend =
-    data.trend || "SIDEWAYS";
-
-  const changeClass =
-    Number(data.change_pct)>=0
-      ? "bullish"
-      : "bearish";
-
-  const candle =
-    data.candle_pattern ||
-    "NEUTRAL";
-
-  const setup =
-    data.setup ||
-    "RANGE / WAIT";
-
-  const triggerConfirmed =
-    Boolean(
-      data.buy_trigger_confirmed
-    );
-
-  const rrQuality =
-    data.risk_reward_quality ||
-    "NOT ATTRACTIVE";
-
-
-  const triggerClass =
-    triggerConfirmed
-      ? "triggerConfirmed"
-      : "triggerWaiting";
-
-  const triggerText =
-    triggerConfirmed
-      ? "TRIGGER CONFIRMED"
-      : "WAIT FOR CONFIRMATION";
-
-
-  const diagnosis =
-    data.diagnosis ||
-    data.model_interpretation ||
-    `The market is ${String(trend).toLowerCase()} with ${String(data.structure || "unclear").toLowerCase()} structure.`;
-
-
-  const conditionsMet =
-    data.conditions_met ?? 0;
-
-  const conditionsTotal =
-    data.conditions_total ??
-    data.buy_conditions?.length ??
-    0;
-
-
-  document.getElementById(
-    "dashboard"
-  ).innerHTML = `
-
-
-    <!-- HERO -->
-
-    <div class="card">
-
-      <div class="hero">
-
-        <div>
-
-          <h2>
-            ${esc(data.symbol)}
-          </h2>
-
-          <div class="price">
-            ${money(data.price)}
-          </div>
-
-          <div class="change ${changeClass}">
-            ${pct(data.change_pct)}
-          </div>
-
-        </div>
-
-        <div class="badge ${trendClass(trend)}">
-          ${esc(trend)}
-        </div>
-
-      </div>
-
-
-      <div class="stats">
-
-        <div class="stat">
-          <div class="label">
-            Investment signal
-          </div>
-          <div class="value">
-            ${esc(data.signal)}
-          </div>
-        </div>
-
-        <div class="stat">
-          <div class="label">
-            Score
-          </div>
-          <div class="value">
-            ${esc(data.score)}/100
-          </div>
-        </div>
-
-        <div class="stat">
-          <div class="label">
-            Trend confidence
-          </div>
-          <div class="value">
-            ${esc(data.trend_confidence)}%
-          </div>
-        </div>
-
-        <div class="stat">
-          <div class="label">
-            Market structure
-          </div>
-          <div class="value">
-            ${esc(data.structure)}
-          </div>
-        </div>
-
-        <div class="stat">
-          <div class="label">
-            Latest candle
-          </div>
-          <div class="value">
-            ${esc(candle)}
-          </div>
-        </div>
-
-        <div class="stat">
-          <div class="label">
-            RSI 14
-          </div>
-          <div class="value">
-            ${data.rsi ?? "—"}
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- BREAKOUT DECISION -->
-
-    <div class="card decision">
-
-      <div class="decisionHeader">
-
-        <div>
-
-          <div class="small">
-            BREAKOUT DECISION
-          </div>
-
-          <div class="
-            setup
-            ${setupClass(setup)}
-          ">
-            ${esc(setup)}
-          </div>
-
-        </div>
-
-        <div class="
-          triggerStatus
-          ${triggerClass}
-        ">
-          ${triggerText}
-        </div>
-
-      </div>
-
-
-      <div class="decisionGrid">
-
-        <div class="decisionBox triggerBox">
-
-          <div class="label">
-            Buy trigger
-          </div>
-
-          <div class="value">
-            ${esc(
-              data.buy_trigger ||
-              "Wait for confirmation"
-            )}
-          </div>
-
-        </div>
-
-
-        <div class="decisionBox triggerBox">
-
-          <div class="label">
-            Trigger price
-          </div>
-
-          <div class="value">
-            ${money(
-              data.buy_trigger_price
-            )}
-          </div>
-
-        </div>
-
-
-        <div class="decisionBox invalidationBox">
-
-          <div class="label">
-            Invalidation
-          </div>
-
-          <div class="value">
-            ${money(
-              data.invalidation ??
-              data.stop
-            )}
-          </div>
-
-        </div>
-
-
-        <div class="decisionBox">
-
-          <div class="label">
-            Risk / share
-          </div>
-
-          <div class="value">
-            ${money(
-              data.risk_per_share
-            )}
-          </div>
-
-        </div>
-
-
-        <div class="decisionBox">
-
-          <div class="label">
-            Target 1
-          </div>
-
-          <div class="value">
-            ${money(data.target1)}
-          </div>
-
-        </div>
-
-
-        <div class="decisionBox">
-
-          <div class="label">
-            Target 2
-          </div>
-
-          <div class="value">
-            ${money(data.target2)}
-          </div>
-
-        </div>
-
-
-        <div class="decisionBox rrBox">
-
-          <div class="label">
-            R/R to Target 1
-          </div>
-
-          <div class="value">
-            ${
-              data.risk_reward_target1 != null
-                ? Number(
-                    data.risk_reward_target1
-                  ).toFixed(2)+"x"
-                : "—"
-            }
-          </div>
-
-        </div>
-
-
-        <div class="decisionBox rrBox">
-
-          <div class="label">
-            R/R to Target 2
-          </div>
-
-          <div class="value">
-            ${
-              data.risk_reward_target2 != null
-                ? Number(
-                    data.risk_reward_target2
-                  ).toFixed(2)+"x"
-                : "—"
-            }
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="reasonBox">
-
-        <div class="label">
-          Risk / reward quality
-        </div>
-
-        <span class="
-          quality
-          ${qualityClass(rrQuality)}
-        ">
-          ${esc(rrQuality)}
-        </span>
-
-      </div>
-
-
-      <div class="reasonBox">
-
-        <div class="label">
-          Trigger explanation
-        </div>
-
-        <div class="text">
-          ${esc(
-            data.trigger_reason ||
-            "No additional trigger explanation available."
-          )}
-        </div>
-
-      </div>
-
-
-      <div class="reasonBox">
-
-        <div class="label">
-          Invalidation logic
-        </div>
-
-        <div class="text">
-          ${esc(
-            data.invalidation_reason ||
-            "Setup is invalidated if price closes below the key structural support."
-          )}
-        </div>
-
-      </div>
-
-
-      <div class="conditions">
-
-        <div class="conditionsTitle">
-          Confirmation conditions
-          ${conditionsMet}/${conditionsTotal}
-        </div>
-
-        ${renderConditions(data)}
-
-      </div>
-
-    </div>
-
-
-    <!-- PULLBACK STRATEGY -->
-
-    ${renderPullback(data)}
-
-
-    <!-- PRICE CHART -->
-
-    <div class="card">
-
-      <div class="chartTitle">
-
-        <h2>
-          Price &amp; trend analysis
-        </h2>
-
-        <span class="small">
-          100 trading days
-        </span>
-
-      </div>
-
-      <div class="chartWrap">
-        <canvas id="priceChart"></canvas>
-      </div>
-
-    </div>
-
-
-    <!-- RSI -->
-
-    <div class="card">
-
-      <div class="chartTitle">
-        <h2>RSI momentum</h2>
-      </div>
-
-      <canvas id="rsiChart"></canvas>
-
-    </div>
-
-
-    <!-- MACD -->
-
-    <div class="card">
-
-      <div class="chartTitle">
-        <h2>MACD momentum</h2>
-      </div>
-
-      <canvas id="macdChart"></canvas>
-
-    </div>
-
-
-    <!-- TECHNICAL DIAGNOSIS -->
-
-    <div class="card">
-
-      <div class="chartTitle">
-        <h2>
-          🧠 Technical diagnosis
-        </h2>
-      </div>
-
-
-      <div class="analysis">
-
-        <div class="analysisBox">
-
-          <h3>
-            Primary trend
-          </h3>
-
-          <strong class="${trendClass(trend)}">
-            ${esc(trend)}
-          </strong>
-
-          <div class="small">
-            Confidence
-            ${esc(data.trend_confidence)}%
-          </div>
-
-        </div>
-
-
-        <div class="analysisBox">
-
-          <h3>
-            Short-term trend
-          </h3>
-
-          <strong>
-            ${esc(
-              data.short_term_trend ||
-              "—"
-            )}
-          </strong>
-
-        </div>
-
-
-        <div class="analysisBox">
-
-          <h3>
-            Market structure
-          </h3>
-
-          <strong>
-            ${esc(
-              data.structure ||
-              "—"
-            )}
-          </strong>
-
-          <div class="small">
-            ${esc(
-              data.structure_direction ||
-              ""
-            )}
-          </div>
-
-        </div>
-
-
-        <div class="analysisBox">
-
-          <h3>
-            Candle pattern
-          </h3>
-
-          <strong>
-            ${esc(candle)}
-          </strong>
-
-          <div class="small">
-            ${esc(
-              data.candle_signal ||
-              "NEUTRAL"
-            )}
-          </div>
-
-        </div>
-
-
-        <div class="analysisBox">
-
-          <h3>
-            Breakout
-          </h3>
-
-          <strong>
-            ${esc(
-              data.breakout ||
-              "NONE"
-            )}
-          </strong>
-
-          <div class="small">
-            Level:
-            ${money(data.breakout_level)}
-          </div>
-
-        </div>
-
-
-        <div class="analysisBox">
-
-          <h3>
-            Reversal
-          </h3>
-
-          <strong>
-            ${esc(
-              data.reversal ||
-              "NONE"
-            )}
-          </strong>
-
-          <div class="small">
-            Confidence:
-            ${data.reversal_confidence ?? "—"}%
-          </div>
-
-        </div>
-
-
-        <div class="analysisBox">
-
-          <h3>
-            Momentum
-          </h3>
-
-          <strong>
-            ${
-              data.rsi != null
-                ? "RSI "+data.rsi
-                : "RSI unavailable"
-            }
-          </strong>
-
-          <div class="small">
-            MACD ${
-              data.fundamentals?.macd != null
-                ? Number(
-                    data.fundamentals.macd
-                  ).toFixed(2)
-                : "—"
-            }
-          </div>
-
-        </div>
-
-
-        <div class="analysisBox">
-
-          <h3>
-            Volume
-          </h3>
-
-          <strong>
-            ${esc(
-              data.volume_confirmation ||
-              "—"
-            )}
-          </strong>
-
-          <div class="small">
-            Relative volume:
-            ${
-              data.relative_volume != null
-                ? Number(
-                    data.relative_volume
-                  ).toFixed(2)+"x"
-                : "—"
-            }
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- MODEL INTERPRETATION -->
-
-    <div class="card">
-
-      <div class="chartTitle">
-        <h2>
-          Model interpretation
-        </h2>
-      </div>
-
-      <div class="reasonBox">
-
-        <div class="text">
-          ${esc(diagnosis)}
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- WHY -->
-
-    <div class="card">
-
-      <div class="chartTitle">
-        <h2>
-          Why the model thinks this
-        </h2>
-      </div>
-
-      <ul class="list">
-
-        ${
-          (data.reasons || []).length
-
-          ? data.reasons
-              .map(
-                x =>
-                  `<li>${esc(x)}</li>`
-              )
-              .join("")
-
-          : "<li>No additional bullish confirmations.</li>"
-        }
-
-      </ul>
-
-    </div>
-
-
-    <!-- RISKS -->
-
-    <div class="card">
-
-      <div class="chartTitle">
-        <h2>
-          Risks
-        </h2>
-      </div>
-
-      <ul class="list">
-
-        ${
-          (data.risks || []).length
-
-          ? data.risks
-              .map(
-                x =>
-                  `<li>${esc(x)}</li>`
-              )
-              .join("")
-
-          : "<li>No major technical risks detected.</li>"
-        }
-
-      </ul>
-
-    </div>
-
-
-    <!-- TRADE LEVELS -->
-
-    <div class="card">
-
-      <div class="chartTitle">
-        <h2>
-          Trade levels
-        </h2>
-      </div>
-
-
-      <div class="stats">
-
-        <div class="stat">
-          <div class="label">
-            Buy zone low
-          </div>
-          <div class="value">
-            ${money(data.entry_low)}
-          </div>
-        </div>
-
-        <div class="stat">
-          <div class="label">
-            Buy zone high
-          </div>
-          <div class="value">
-            ${money(data.entry_high)}
-          </div>
-        </div>
-
-        <div class="stat">
-          <div class="label">
-            Support
-          </div>
-          <div class="value">
-            ${money(
-              data.fundamentals?.support
-            )}
-          </div>
-        </div>
-
-        <div class="stat">
-          <div class="label">
-            Resistance
-          </div>
-          <div class="value">
-            ${money(
-              data.fundamentals?.resistance
-            )}
-          </div>
-        </div>
-
-        <div class="stat">
-          <div class="label">
-            Buy trigger
-          </div>
-          <div class="value">
-            ${money(
-              data.buy_trigger_price
-            )}
-          </div>
-        </div>
-
-        <div class="stat">
-          <div class="label">
-            Invalidation
-          </div>
-          <div class="value">
-            ${money(
-              data.invalidation ??
-              data.stop
-            )}
-          </div>
-        </div>
-
-        <div class="stat">
-          <div class="label">
-            Target 1
-          </div>
-          <div class="value">
-            ${money(data.target1)}
-          </div>
-        </div>
-
-        <div class="stat">
-          <div class="label">
-            Target 2
-          </div>
-          <div class="value">
-            ${money(data.target2)}
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-
-  `;
-
-
-  requestAnimationFrame(() => {
-
-    drawPriceChart(
-      document.getElementById(
-        "priceChart"
-      ),
-      data
-    );
-
-    drawRSI(
-      document.getElementById(
-        "rsiChart"
-      ),
-      data
-    );
-
-    drawMACD(
-      document.getElementById(
-        "macdChart"
-      ),
-      data
-    );
-
-  });
-}
-
-
-/* =========================
-   LOAD
-========================= */
-
-async function load(){
-
-  setStatus(
-    "Analyzing "+selected+"..."
-  );
-
-  try{
-
-    const data =
-      await api(selected);
-
-    render(data);
-
-    setStatus(
-      "Analysis updated for "+selected
-    );
-
-  }catch(error){
-
-    document.getElementById(
-      "dashboard"
-    ).innerHTML = `
-
-      <div class="card">
-
-        <strong>
-          Unable to load ${esc(selected)}
-        </strong>
-
-        <div class="small">
-          ${esc(error.message)}
-        </div>
-
-      </div>
-
-    `;
-
-    setStatus(
-      "Data request failed."
-    );
-  }
-}
-
-
-/* =========================
-   EVENTS
-========================= */
-
-document
-  .getElementById("ticker")
-  .addEventListener(
-    "keydown",
-    e => {
-
-      if(e.key==="Enter")
-        addTicker();
-
-    }
-  );
-
-
-window.addEventListener(
-  "resize",
-  () => {
-
-    if(!lastStockData)
-      return;
-
-    drawPriceChart(
-      document.getElementById(
-        "priceChart"
-      ),
-      lastStockData
-    );
-
-    drawRSI(
-      document.getElementById(
-        "rsiChart"
-      ),
-      lastStockData
-    );
-
-    drawMACD(
-      document.getElementById(
-        "macdChart"
-      ),
-      lastStockData
-    );
-
-  }
-);
-
-
-/* =========================
-   INITIALIZE
-========================= */
-
-renderWatchlist();
-
-load();
-
-</script>
-
-</body>
-</html>
