@@ -1,612 +1,424 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0b0d12">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Investment Cockpit</title>
 
 <style>
-:root{
-  --bg:#0b0d12;
-  --card:#141821;
-  --card2:#10131a;
-  --border:#252b36;
-  --text:#f2f4f7;
-  --muted:#8992a3;
-  --green:#35d07f;
-  --red:#ff5c67;
-  --yellow:#f5c451;
-  --blue:#55a7ff;
-  --purple:#a88cff;
+* {
+  box-sizing: border-box;
 }
 
-*{box-sizing:border-box}
-
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-}
-
-main{
-  max-width:900px;
-  margin:auto;
-  padding:18px 14px 50px;
-}
-
-h1{
-  margin:4px 0;
-  font-size:26px;
-}
-
-h2{
-  margin:0;
-  font-size:18px;
-}
-
-.small{
-  color:var(--muted);
-  font-size:13px;
-  line-height:1.4;
-}
-
-.search{
-  display:flex;
-  gap:8px;
-  margin:18px 0 12px;
-}
-
-input{
-  flex:1;
-  min-width:0;
-  background:var(--card);
-  border:1px solid var(--border);
-  color:var(--text);
-  border-radius:10px;
-  padding:13px;
-  font-size:16px;
-}
-
-button{
-  background:#1d2430;
-  color:var(--text);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:12px 16px;
-  font-size:15px;
-  font-weight:600;
-}
-
-button:active{
-  transform:scale(.98);
-}
-
-.card{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:15px;
-  padding:16px;
-  margin-top:12px;
-}
-
-.hero{
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  align-items:flex-start;
-}
-
-.price{
-  font-size:31px;
-  font-weight:750;
-  margin-top:4px;
-}
-
-.change{
-  font-size:14px;
-  margin-top:3px;
-}
-
-.badge{
-  padding:7px 10px;
-  border-radius:9px;
-  font-size:12px;
-  font-weight:800;
-  white-space:nowrap;
-}
-
-.bullish{
-  background:rgba(53,208,127,.15);
-  color:var(--green);
-}
-
-.bearish{
-  background:rgba(255,92,103,.15);
-  color:var(--red);
-}
-
-.sideways{
-  background:rgba(245,196,81,.15);
-  color:var(--yellow);
-}
-
-.neutral{
-  background:rgba(137,146,163,.15);
-  color:var(--muted);
-}
-
-.blue{
-  background:rgba(85,167,255,.15);
-  color:var(--blue);
-}
-
-.purple{
-  background:rgba(168,140,255,.15);
-  color:var(--purple);
-}
-
-.stats{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:9px;
-  margin-top:14px;
-}
-
-.stat{
-  background:var(--card2);
-  border-radius:10px;
-  padding:11px;
-}
-
-.stat .label{
-  color:var(--muted);
-  font-size:11px;
-  margin-bottom:4px;
+body {
+  margin: 0;
+  background: #f5f6f8;
+  color: #17191c;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 }
 
-.stat .value{
-  font-size:15px;
-  font-weight:650;
-  word-break:break-word;
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 18px;
 }
 
-.watchlist{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:10px;
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
-.tickerBtn{
-  padding:9px 12px;
-  font-size:13px;
+h1 {
+  margin: 0;
+  font-size: 28px;
 }
 
-.chartWrap{
-  width:100%;
-  overflow:hidden;
+.subtitle {
+  color: #6b7078;
+  font-size: 13px;
+  margin-top: 4px;
 }
 
-canvas{
-  display:block;
-  width:100%;
-  height:auto;
-  background:#0e1117;
-  border-radius:10px;
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 15px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
-.chartTitle{
-  margin:4px 0 10px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
+.primary {
+  background: #111;
+  color: white;
 }
 
-.analysis{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
+.secondary {
+  background: #e5e7eb;
+  color: #111;
 }
 
-.analysisBox{
-  background:var(--card2);
-  border-radius:10px;
-  padding:12px;
+.search-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
-.analysisBox h3{
-  margin:0 0 7px;
-  font-size:11px;
-  color:var(--muted);
-  text-transform:uppercase;
+.search-row input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #d5d8dd;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 16px;
+  background: white;
 }
 
-.analysisBox strong{
-  font-size:16px;
+.watchlist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
 }
 
-
-/* =========================
-   DECISION COCKPIT
-========================= */
-
-.decision{
-  border-color:#344052;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(85,167,255,.07),
-      rgba(20,24,33,1) 32%
-    );
-}
-
-.decisionHeader{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:12px;
-}
-
-.setup{
-  font-size:21px;
-  font-weight:800;
-  margin-top:4px;
-}
-
-.triggerStatus{
-  padding:8px 11px;
-  border-radius:9px;
-  font-size:12px;
-  font-weight:800;
-  white-space:nowrap;
+.ticker {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  padding: 8px 12px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
-.triggerConfirmed{
-  color:var(--green);
-  background:rgba(53,208,127,.15);
+.ticker.active {
+  background: #111;
+  color: white;
 }
 
-.triggerWaiting{
-  color:var(--yellow);
-  background:rgba(245,196,81,.15);
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.05);
 }
 
-.triggerDanger{
-  color:var(--red);
-  background:rgba(255,92,103,.15);
+.loading {
+  text-align: center;
+  padding: 35px;
+  color: #666;
 }
 
-.decisionGrid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:9px;
-  margin-top:14px;
+.error {
+  background: #fff0f0;
+  color: #a00000;
+  border: 1px solid #ffcaca;
+  padding: 14px;
+  border-radius: 12px;
+  margin-bottom: 16px;
 }
 
-.decisionBox{
-  background:var(--card2);
-  border-radius:11px;
-  padding:12px;
+.stock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
 }
 
-.decisionBox .label{
-  color:var(--muted);
-  font-size:11px;
-  margin-bottom:5px;
+.symbol {
+  font-size: 30px;
+  font-weight: 800;
 }
 
-.decisionBox .value{
-  font-size:17px;
-  font-weight:750;
+.company {
+  color: #70757d;
+  margin-top: 2px;
 }
 
-.triggerBox{
-  border:1px solid rgba(53,208,127,.28);
-  background:rgba(53,208,127,.06);
+.price {
+  font-size: 30px;
+  font-weight: 800;
+  text-align: right;
 }
 
-.invalidationBox{
-  border:1px solid rgba(255,92,103,.25);
-  background:rgba(255,92,103,.05);
+.change {
+  text-align: right;
+  font-weight: 700;
+  margin-top: 3px;
 }
 
-.rrBox{
-  border:1px solid rgba(85,167,255,.25);
-  background:rgba(85,167,255,.05);
+.positive {
+  color: #16833a;
 }
 
-.reasonBox{
-  margin-top:12px;
-  padding:12px;
-  border-radius:10px;
-  background:var(--card2);
+.negative {
+  color: #c62828;
 }
 
-.reasonBox .label{
-  color:var(--muted);
-  font-size:11px;
-  text-transform:uppercase;
-  margin-bottom:5px;
+.neutral {
+  color: #777;
 }
 
-.reasonBox .text{
-  font-size:13px;
-  line-height:1.45;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-top: 18px;
 }
 
-.quality{
-  display:inline-block;
-  padding:5px 8px;
-  border-radius:7px;
-  font-size:11px;
-  font-weight:800;
+.metric {
+  background: #f7f7f8;
+  border-radius: 12px;
+  padding: 12px;
 }
 
-.qualityGood{
-  color:var(--green);
-  background:rgba(53,208,127,.15);
+.metric-label {
+  color: #70757d;
+  font-size: 12px;
+  margin-bottom: 5px;
 }
 
-.qualityOkay{
-  color:var(--yellow);
-  background:rgba(245,196,81,.15);
+.metric-value {
+  font-size: 16px;
+  font-weight: 800;
 }
 
-.qualityBad{
-  color:var(--red);
-  background:rgba(255,92,103,.15);
+.section-title {
+  font-size: 19px;
+  font-weight: 800;
+  margin-bottom: 14px;
 }
 
-.conditions{
-  margin-top:14px;
+.decision {
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  padding: 16px;
+  background: #fafafa;
 }
 
-.conditionsTitle{
-  font-size:12px;
-  font-weight:750;
-  color:var(--muted);
-  text-transform:uppercase;
-  margin-bottom:8px;
+.decision-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 15px;
 }
 
-.condition{
-  display:flex;
-  align-items:flex-start;
-  gap:9px;
-  padding:9px 10px;
-  margin:6px 0;
-  background:var(--card2);
-  border-radius:9px;
-  font-size:13px;
-  line-height:1.35;
+.decision-label {
+  color: #666;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
 }
 
-.conditionIcon{
-  width:20px;
-  height:20px;
-  border-radius:50%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  flex:0 0 20px;
-  font-size:12px;
-  font-weight:800;
+.decision-value {
+  font-size: 22px;
+  font-weight: 900;
+  margin-top: 4px;
 }
 
-.conditionMet .conditionIcon{
-  color:var(--green);
-  background:rgba(53,208,127,.15);
+.badge {
+  display: inline-block;
+  border-radius: 20px;
+  padding: 7px 11px;
+  font-size: 12px;
+  font-weight: 800;
+  background: #eee;
 }
 
-.conditionMissing .conditionIcon{
-  color:var(--red);
-  background:rgba(255,92,103,.15);
+.badge.good {
+  background: #e4f5e9;
+  color: #176b32;
 }
-
 
-/* =========================
-   PULLBACK
-========================= */
-
-.pullback{
-  border-color:rgba(53,208,127,.30);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(53,208,127,.055),
-      rgba(20,24,33,1) 35%
-    );
+.badge.warn {
+  background: #fff2d8;
+  color: #8a5a00;
 }
 
-.strategyTag{
-  display:inline-block;
-  padding:6px 9px;
-  border-radius:8px;
-  font-size:11px;
-  font-weight:800;
-  letter-spacing:.3px;
-  margin-bottom:7px;
+.badge.bad {
+  background: #fde7e7;
+  color: #a40000;
 }
 
-.pullbackTag{
-  color:var(--green);
-  background:rgba(53,208,127,.13);
+.conditions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 14px;
 }
 
-.pullbackTitle{
-  font-size:21px;
-  font-weight:800;
+.condition {
+  padding: 9px 10px;
+  background: white;
+  border-radius: 9px;
+  font-size: 13px;
 }
 
-.pullbackStatus{
-  display:inline-block;
-  margin-top:5px;
-  padding:7px 10px;
-  border-radius:8px;
-  font-size:11px;
-  font-weight:800;
+.condition.yes {
+  color: #176b32;
 }
 
-.pullbackGrid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:9px;
-  margin-top:14px;
+.condition.no {
+  color: #a40000;
 }
 
-.pullbackBox{
-  background:var(--card2);
-  border-radius:11px;
-  padding:12px;
+.logic {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  background: white;
+  color: #555;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-.pullbackBox .label{
-  color:var(--muted);
-  font-size:11px;
-  margin-bottom:5px;
+.strategy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 
-.pullbackBox .value{
-  font-size:17px;
-  font-weight:750;
+.strategy {
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  padding: 16px;
 }
 
-.entryBox{
-  border:1px solid rgba(53,208,127,.3);
-  background:rgba(53,208,127,.055);
+.strategy h3 {
+  margin: 0 0 12px;
+  font-size: 17px;
 }
 
-.scenario{
-  margin-top:12px;
-  padding:12px;
-  background:var(--card2);
-  border-radius:10px;
+.strategy-status {
+  font-size: 18px;
+  font-weight: 900;
+  margin-bottom: 12px;
 }
 
-.scenarioTitle{
-  font-size:12px;
-  color:var(--muted);
-  text-transform:uppercase;
-  font-weight:750;
-  margin-bottom:9px;
+.strategy-table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.scenarioRow{
-  display:grid;
-  grid-template-columns:1.15fr 1fr 1fr 1fr;
-  gap:7px;
-  padding:8px 0;
-  border-bottom:1px solid rgba(255,255,255,.05);
-  font-size:12px;
+.strategy-table td {
+  padding: 7px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 13px;
 }
 
-.scenarioRow:last-child{
-  border-bottom:0;
+.strategy-table td:last-child {
+  text-align: right;
+  font-weight: 800;
 }
 
-.scenarioHeader{
-  color:var(--muted);
-  font-size:10px;
-  text-transform:uppercase;
+.rr {
+  font-size: 20px;
+  font-weight: 900;
 }
 
-.scenarioGood{
-  color:var(--green);
-  font-weight:750;
+.chart-wrapper {
+  width: 100%;
+  overflow: hidden;
 }
 
-.scenarioOkay{
-  color:var(--yellow);
-  font-weight:750;
+canvas {
+  display: block;
+  width: 100%;
+  height: 420px;
+  background: white;
+  border-radius: 12px;
 }
 
-.scenarioBad{
-  color:var(--red);
-  font-weight:750;
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+  color: #666;
+  font-size: 12px;
 }
 
-.pullbackExplanation{
-  margin-top:12px;
-  background:var(--card2);
-  padding:12px;
-  border-radius:10px;
-  font-size:13px;
-  line-height:1.45;
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
-
 
-/* =========================
-   FINAL DECISION
-========================= */
-
-.finalDecision{
-  border-color:#465264;
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
 }
 
-.finalDecisionTitle{
-  font-size:11px;
-  color:var(--muted);
-  text-transform:uppercase;
-  font-weight:800;
+.analysis-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 
-.finalDecisionMain{
-  margin-top:5px;
-  font-size:23px;
-  font-weight:850;
+.list {
+  margin: 0;
+  padding-left: 20px;
 }
 
-.finalDecisionSub{
-  margin-top:6px;
-  font-size:14px;
-  line-height:1.45;
+.list li {
+  margin-bottom: 7px;
+  font-size: 14px;
+  line-height: 1.4;
 }
-
 
-/* =========================
-   FOOTER
-========================= */
-
-.footer{
-  text-align:center;
-  margin-top:22px;
+.footer {
+  text-align: center;
+  color: #888;
+  font-size: 11px;
+  padding: 10px 0 25px;
 }
-
 
-@media(max-width:520px){
+@media (max-width: 750px) {
 
-  main{
-    padding:14px 10px 40px;
+  .container {
+    padding: 12px;
   }
 
-  .analysis{
-    grid-template-columns:1fr;
+  h1 {
+    font-size: 23px;
   }
 
-  .decisionGrid,
-  .pullbackGrid{
-    grid-template-columns:1fr 1fr;
+  .header {
+    align-items: flex-start;
   }
 
-  .decisionHeader{
-    flex-direction:column;
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .triggerStatus{
-    align-self:flex-start;
+  .strategy-grid,
+  .analysis-grid {
+    grid-template-columns: 1fr;
   }
 
-  .setup,
-  .pullbackTitle{
-    font-size:18px;
+  .conditions {
+    grid-template-columns: 1fr;
   }
 
-  .scenarioRow{
-    grid-template-columns:1.1fr 1fr 1fr 1fr;
-    font-size:11px;
+  .stock-header {
+    flex-direction: column;
+  }
+
+  .price {
+    text-align: left;
+  }
+
+  .change {
+    text-align: left;
+  }
+
+  canvas {
+    height: 390px;
   }
 }
 </style>
@@ -614,1924 +426,1370 @@ canvas{
 
 <body>
 
-<main>
+<div class="container">
 
-<header>
-  <h1>Investment Cockpit</h1>
-  <div class="small">
-    Technical trend, candlestick &amp; decision analysis
-  </div>
-</header>
+  <div class="header">
+    <div>
+      <h1>Investment Cockpit</h1>
+      <div class="subtitle">Technical analysis • Decision engine • Pullback & breakout strategy</div>
+    </div>
 
-
-<div class="search">
-
-  <input
-    id="ticker"
-    placeholder="Enter ticker e.g. NVDA"
-    autocomplete="off"
-    autocapitalize="characters"
-  >
-
-  <button onclick="addTicker()">
-    Add
-  </button>
-
-</div>
-
-
-<div id="status" class="small"></div>
-
-
-<div class="card">
-
-  <div class="chartTitle">
-    <h2>My watchlist</h2>
+    <button class="primary" onclick="loadStock(currentTicker)">
+      Refresh
+    </button>
   </div>
 
-  <div
-    id="watchlist"
-    class="watchlist"
-  ></div>
+  <div class="search-row">
+    <input
+      id="tickerInput"
+      placeholder="Add ticker e.g. NVDA"
+      autocomplete="off"
+      autocapitalize="characters"
+    >
+    <button class="primary" onclick="addTicker()">Add</button>
+  </div>
+
+  <div id="watchlist" class="watchlist"></div>
+
+  <div id="error"></div>
+  <div id="content"></div>
+
+  <div class="footer">
+    Investment Cockpit • Technical signals are decision support, not financial advice.
+  </div>
 
 </div>
-
-
-<div id="dashboard"></div>
-
-
-<div class="footer small">
-  Market data provided through Alpha Vantage.
-</div>
-
-</main>
-
 
 <script>
 
-const STORAGE_KEY =
-  "ic_watchlist";
+let tickers = ["AAPL", "NVDA", "MSFT"];
+let currentTicker = "AAPL";
+let currentData = null;
 
-const SELECTED_KEY =
-  "ic_selected";
+const watchlistEl = document.getElementById("watchlist");
+const contentEl = document.getElementById("content");
+const errorEl = document.getElementById("error");
 
-
-let list = JSON.parse(
-  localStorage.getItem(STORAGE_KEY) ||
-  '["NVDA","MSFT","GOOGL","AAPL","AMZN","TSLA"]'
-);
-
-
-let selected =
-  localStorage.getItem(SELECTED_KEY) ||
-  list[0];
-
-
-let lastStockData = null;
-
-
-/* =========================
-   HELPERS
-========================= */
-
-function save(){
-
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(list)
-  );
-
-  localStorage.setItem(
-    SELECTED_KEY,
-    selected
-  );
+function money(v) {
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  return "$" + Number(v).toFixed(2);
 }
 
+function pct(v) {
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  const n = Number(v);
+  return (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
+}
 
-function esc(value){
+function num(v, digits = 2) {
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  return Number(v).toFixed(digits);
+}
 
+function esc(value) {
   return String(value ?? "")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;");
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
+function renderWatchlist() {
 
-function money(value){
+  watchlistEl.innerHTML = tickers.map(t => `
+    <div
+      class="ticker ${t === currentTicker ? "active" : ""}"
+      onclick="loadStock('${esc(t)}')"
+    >
+      ${esc(t)}
+    </div>
+  `).join("");
+}
 
-  if(
-    value == null ||
-    !Number.isFinite(Number(value))
-  ){
-    return "—";
+function addTicker() {
+
+  const input = document.getElementById("tickerInput");
+  const ticker = input.value.trim().toUpperCase();
+
+  if (!ticker) return;
+
+  if (!tickers.includes(ticker)) {
+    tickers.push(ticker);
   }
-
-  return "$" +
-    Number(value).toLocaleString(
-      "en-US",
-      {
-        minimumFractionDigits:2,
-        maximumFractionDigits:2
-      }
-    );
-}
-
-
-function pct(value){
-
-  const n = Number(value);
-
-  if(!Number.isFinite(n))
-    return "—";
-
-  return (
-    n >= 0 ? "+" : ""
-  ) +
-  n.toFixed(2) +
-  "%";
-}
-
-
-function trendClass(trend){
-
-  if(trend === "BULLISH")
-    return "bullish";
-
-  if(trend === "BEARISH")
-    return "bearish";
-
-  return "sideways";
-}
-
-
-function setupClass(setup){
-
-  const s =
-    String(setup || "")
-      .toUpperCase();
-
-  if(
-    s.includes("BREAKOUT") ||
-    s.includes("CONFIRMED BUY") ||
-    s.includes("BUY")
-  )
-    return "bullish";
-
-  if(
-    s.includes("BREAKDOWN") ||
-    s.includes("CONFIRMED SELL") ||
-    s.includes("SELL")
-  )
-    return "bearish";
-
-  return "sideways";
-}
-
-
-function qualityClass(quality){
-
-  const q =
-    String(quality || "")
-      .toUpperCase();
-
-  if(q === "ATTRACTIVE")
-    return "qualityGood";
-
-  if(q === "ACCEPTABLE")
-    return "qualityOkay";
-
-  return "qualityBad";
-}
-
-
-/* =========================
-   WATCHLIST
-========================= */
-
-function renderWatchlist(){
-
-  const box =
-    document.getElementById(
-      "watchlist"
-    );
-
-  box.innerHTML =
-    list.map(t => `
-
-      <button
-        class="tickerBtn"
-        onclick="selectTicker('${esc(t)}')"
-      >
-        ${esc(t)}
-      </button>
-
-    `).join("");
-}
-
-
-function addTicker(){
-
-  const input =
-    document.getElementById(
-      "ticker"
-    );
-
-  const ticker =
-    input.value
-      .trim()
-      .toUpperCase();
-
-  if(!/^[A-Z.]{1,8}$/.test(ticker)){
-
-    setStatus(
-      "Enter a valid US ticker."
-    );
-
-    return;
-  }
-
-  if(!list.includes(ticker)){
-
-    list.unshift(ticker);
-
-    list =
-      list.slice(0,12);
-  }
-
-  selected = ticker;
-
-  save();
 
   input.value = "";
+  loadStock(ticker);
+}
 
+document.getElementById("tickerInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") addTicker();
+});
+
+async function loadStock(ticker) {
+
+  currentTicker = ticker;
   renderWatchlist();
 
-  load();
-}
+  errorEl.innerHTML = "";
 
+  contentEl.innerHTML = `
+    <div class="card loading">
+      Loading ${esc(ticker)}...
+    </div>
+  `;
 
-function selectTicker(ticker){
+  try {
 
-  selected = ticker;
-
-  save();
-
-  load();
-}
-
-
-function setStatus(text){
-
-  document.getElementById(
-    "status"
-  ).textContent = text;
-}
-
-
-/* =========================
-   API
-========================= */
-
-async function api(ticker){
-
-  const response =
-    await fetch(
-      "/api/stock?ticker=" +
-      encodeURIComponent(ticker)
+    const response = await fetch(
+      "/api/stock?ticker=" + encodeURIComponent(ticker)
     );
 
-  const data =
-    await response.json();
+    const data = await response.json();
 
-  if(!response.ok){
-
-    throw new Error(
-      data.error ||
-      "Unable to load stock"
-    );
-  }
-
-  return data;
-}
-
-
-/* =========================
-   PRICE CHART
-========================= */
-
-function drawPriceChart(
-  canvas,
-  data
-){
-
-  const history =
-    (data.history || [])
-      .slice(-100);
-
-  if(!history.length)
-    return;
-
-
-  const dpr =
-    window.devicePixelRatio || 1;
-
-  const width =
-    canvas.clientWidth || 700;
-
-  const height = 350;
-
-
-  canvas.width =
-    width*dpr;
-
-  canvas.height =
-    height*dpr;
-
-
-  const ctx =
-    canvas.getContext("2d");
-
-  ctx.scale(dpr,dpr);
-
-  ctx.clearRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  const pad = {
-    left:48,
-    right:100,
-    top:18,
-    bottom:28
-  };
-
-
-  const chartW =
-    width -
-    pad.left -
-    pad.right;
-
-  const chartH =
-    height -
-    pad.top -
-    pad.bottom;
-
-
-  const values=[];
-
-
-  history.forEach(item => {
-
-    [
-      item.high,
-      item.low,
-      item.sma20,
-      item.sma50
-    ].forEach(v => {
-
-      if(Number.isFinite(Number(v)))
-        values.push(Number(v));
-
-    });
-
-  });
-
-
-  [
-    data.target1,
-    data.target2,
-    data.stop,
-    data.invalidation,
-    data.buy_trigger_price,
-    data.price
-  ].forEach(v => {
-
-    if(Number.isFinite(Number(v)))
-      values.push(Number(v));
-
-  });
-
-
-  if(!values.length)
-    return;
-
-
-  const min =
-    Math.min(...values);
-
-  const max =
-    Math.max(...values);
-
-  const range =
-    max-min || 1;
-
-
-  function x(i){
-
-    if(history.length===1)
-      return pad.left+chartW/2;
-
-    return pad.left+
-      i/(history.length-1)*
-      chartW;
-  }
-
-
-  function y(v){
-
-    return pad.top+
-      (max-v)/range*
-      chartH;
-  }
-
-
-  ctx.font =
-    "11px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif";
-
-
-  /* GRID */
-
-  ctx.strokeStyle =
-    "#252b36";
-
-  ctx.lineWidth=1;
-
-
-  for(let i=0;i<5;i++){
-
-    const yy =
-      pad.top+
-      i/4*chartH;
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-      pad.left,
-      yy
-    );
-
-    ctx.lineTo(
-      width-pad.right,
-      yy
-    );
-
-    ctx.stroke();
-
-
-    const value =
-      max-i/4*range;
-
-    ctx.fillStyle =
-      "#8992a3";
-
-    ctx.fillText(
-      money(value),
-      4,
-      yy+4
-    );
-  }
-
-
-  /* SMA */
-
-  function drawSMA(
-    key,
-    dashed
-  ){
-
-    ctx.beginPath();
-
-    ctx.strokeStyle =
-      key==="sma20"
-        ? "#55a7ff"
-        : "#a88cff";
-
-    ctx.lineWidth=1.7;
-
-    ctx.setLineDash(
-      dashed
-        ? [5,4]
-        : []
-    );
-
-    let started=false;
-
-
-    history.forEach(
-      (item,i) => {
-
-        if(item[key]==null)
-          return;
-
-        const xx=x(i);
-        const yy=y(Number(item[key]));
-
-
-        if(!started){
-
-          ctx.moveTo(
-            xx,
-            yy
-          );
-
-          started=true;
-
-        }else{
-
-          ctx.lineTo(
-            xx,
-            yy
-          );
-        }
-
-      }
-    );
-
-
-    ctx.stroke();
-
-    ctx.setLineDash([]);
-  }
-
-
-  drawSMA("sma20",false);
-  drawSMA("sma50",true);
-
-
-  /* =========================
-     LEVELS
-  ========================= */
-
-
-  const levels = [];
-
-
-  function addLevel(
-    value,
-    label,
-    type,
-    priority
-  ){
-
-    if(
-      value==null ||
-      !Number.isFinite(Number(value))
-    )
-      return;
-
-    levels.push({
-      value:Number(value),
-      label,
-      type,
-      priority
-    });
-  }
-
-
-  addLevel(
-    data.target2,
-    "TARGET 2",
-    "target",
-    1
-  );
-
-  addLevel(
-    data.target1,
-    "TARGET 1",
-    "target",
-    2
-  );
-
-  addLevel(
-    data.buy_trigger_price,
-    "BUY TRIGGER",
-    "trigger",
-    3
-  );
-
-  addLevel(
-    data.fundamentals?.resistance,
-    "RESISTANCE",
-    "resistance",
-    4
-  );
-
-  addLevel(
-    data.invalidation ?? data.stop,
-    "INVALIDATION",
-    "invalidation",
-    5
-  );
-
-
-  /*
-    Sort by price so nearby labels can be
-    separated vertically.
-  */
-
-  levels.sort(
-    (a,b) =>
-      y(a.value)-y(b.value)
-  );
-
-
-  const labelPositions=[];
-
-  const minGap=16;
-
-
-  levels.forEach(level => {
-
-    let yy=y(level.value);
-
-    yy=Math.max(
-      13,
-      Math.min(
-        height-32,
-        yy
-      )
-    );
-
-
-    for(
-      let i=0;
-      i<labelPositions.length;
-      i++
-    ){
-
-      if(
-        Math.abs(
-          yy-labelPositions[i]
-        ) < minGap
-      ){
-
-        yy =
-          labelPositions[i]+minGap;
-      }
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to load stock.");
     }
 
+    currentData = data;
 
-    yy=Math.min(
-      height-32,
-      yy
-    );
+    renderDashboard(data);
 
+  } catch (err) {
 
-    labelPositions.push(yy);
-
-    level.labelY=yy;
-  });
-
-
-  function levelColor(type){
-
-    if(type==="target")
-      return "rgba(245,196,81,.82)";
-
-    if(type==="trigger")
-      return "rgba(85,167,255,.95)";
-
-    if(type==="resistance")
-      return "rgba(255,92,103,.75)";
-
-    if(type==="invalidation")
-      return "rgba(255,92,103,.90)";
-
-    return "#8992a3";
-  }
-
-
-  levels.forEach(level => {
-
-    const yy =
-      y(level.value);
-
-    const color =
-      levelColor(level.type);
-
-
-    ctx.strokeStyle=color;
-
-    ctx.lineWidth =
-      level.type==="trigger"
-        ? 1.8
-        : 1.3;
-
-
-    ctx.setLineDash(
-      level.type==="trigger"
-        ? [7,4]
-        : [5,5]
-    );
-
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-      pad.left,
-      yy
-    );
-
-    ctx.lineTo(
-      width-pad.right,
-      yy
-    );
-
-    ctx.stroke();
-
-    ctx.setLineDash([]);
-
-
-    /*
-      Leader line from actual price level
-      to the label position.
-    */
-
-    if(
-      Math.abs(
-        level.labelY-yy
-      ) > 3
-    ){
-
-      ctx.strokeStyle=color;
-
-      ctx.beginPath();
-
-      ctx.moveTo(
-        width-pad.right,
-        yy
-      );
-
-      ctx.lineTo(
-        width-pad.right+7,
-        level.labelY
-      );
-
-      ctx.stroke();
-    }
-
-
-    ctx.fillStyle=color;
-
-    ctx.font =
-      "10px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif";
-
-    ctx.fillText(
-      level.label,
-      width-pad.right+10,
-      level.labelY+3
-    );
-
-  });
-
-
-  /* =========================
-     PULLBACK ZONE
-  ========================= */
-
-
-  const pbLow =
-    Number(data.entry_low);
-
-  const pbHigh =
-    Number(data.entry_high);
-
-
-  if(
-    Number.isFinite(pbLow) &&
-    Number.isFinite(pbHigh) &&
-    pbHigh>pbLow
-  ){
-
-    const topY =
-      y(pbHigh);
-
-    const bottomY =
-      y(pbLow);
-
-
-    ctx.fillStyle =
-      "rgba(53,208,127,.06)";
-
-
-    ctx.fillRect(
-      pad.left,
-      Math.min(
-        topY,
-        bottomY
-      ),
-      chartW,
-      Math.abs(
-        bottomY-topY
-      )
-    );
-
-
-    ctx.strokeStyle =
-      "rgba(53,208,127,.30)";
-
-    ctx.setLineDash([3,3]);
-
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-      pad.left,
-      topY
-    );
-
-    ctx.lineTo(
-      width-pad.right,
-      topY
-    );
-
-    ctx.stroke();
-
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-      pad.left,
-      bottomY
-    );
-
-    ctx.lineTo(
-      width-pad.right,
-      bottomY
-    );
-
-    ctx.stroke();
-
-
-    ctx.setLineDash([]);
-
-
-    ctx.fillStyle =
-      "rgba(53,208,127,.75)";
-
-    ctx.font =
-      "10px sans-serif";
-
-    ctx.fillText(
-      "PULLBACK ZONE",
-      pad.left+5,
-      Math.min(
-        topY+12,
-        height-35
-      )
-    );
-  }
-
-
-  /* =========================
-     CANDLESTICKS
-  ========================= */
-
-
-  const candleWidth =
-    Math.max(
-      2,
-      Math.min(
-        9,
-        chartW/
-        history.length*
-        .62
-      )
-    );
-
-
-  history.forEach(
-    (item,i) => {
-
-      const xx=x(i);
-
-      const open =
-        Number(item.open);
-
-      const close =
-        Number(item.close);
-
-      const high =
-        Number(item.high);
-
-      const low =
-        Number(item.low);
-
-
-      const openY=y(open);
-      const closeY=y(close);
-      const highY=y(high);
-      const lowY=y(low);
-
-
-      const bullish =
-        close>=open;
-
-
-      ctx.strokeStyle =
-        bullish
-          ? "#35d07f"
-          : "#ff5c67";
-
-      ctx.fillStyle =
-        bullish
-          ? "#35d07f"
-          : "#ff5c67";
-
-
-      ctx.lineWidth=1;
-
-
-      ctx.beginPath();
-
-      ctx.moveTo(
-        xx,
-        highY
-      );
-
-      ctx.lineTo(
-        xx,
-        lowY
-      );
-
-      ctx.stroke();
-
-
-      const top =
-        Math.min(
-          openY,
-          closeY
-        );
-
-
-      const bodyH =
-        Math.max(
-          1,
-          Math.abs(
-            closeY-openY
-          )
-        );
-
-
-      ctx.fillRect(
-        xx-candleWidth/2,
-        top,
-        candleWidth,
-        bodyH
-      );
-    }
-  );
-
-
-  /* CURRENT PRICE */
-
-  const currentY =
-    y(Number(data.price));
-
-
-  ctx.strokeStyle =
-    "#f2f4f7";
-
-  ctx.setLineDash(
-    [2,3]
-  );
-
-
-  ctx.beginPath();
-
-  ctx.moveTo(
-    pad.left,
-    currentY
-  );
-
-  ctx.lineTo(
-    width-pad.right,
-    currentY
-  );
-
-  ctx.stroke();
-
-  ctx.setLineDash([]);
-
-
-  ctx.fillStyle =
-    "#f2f4f7";
-
-
-  ctx.fillText(
-    "CURRENT",
-    width-pad.right+10,
-    Math.max(
-      14,
-      Math.min(
-        height-30,
-        currentY-5
-      )
-    )
-  );
-
-
-  /* DATES */
-
-  ctx.fillStyle =
-    "#8992a3";
-
-  ctx.fillText(
-    history[0].date.slice(5),
-    pad.left,
-    height-8
-  );
-
-  ctx.fillText(
-    history[
-      history.length-1
-    ].date.slice(5),
-    width-pad.right-35,
-    height-8
-  );
-}
-
-
-/* =========================
-   RSI
-========================= */
-
-function drawRSI(
-  canvas,
-  data
-){
-
-  const history =
-    (data.history || [])
-      .slice(-100);
-
-  if(!history.length)
-    return;
-
-
-  const dpr =
-    window.devicePixelRatio || 1;
-
-  const width =
-    canvas.clientWidth || 700;
-
-  const height=150;
-
-
-  canvas.width=width*dpr;
-  canvas.height=height*dpr;
-
-
-  const ctx =
-    canvas.getContext("2d");
-
-  ctx.scale(dpr,dpr);
-
-  ctx.clearRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  const left=35;
-  const right=10;
-  const top=12;
-  const bottom=22;
-
-  const w=width-left-right;
-  const h=height-top-bottom;
-
-
-  function x(i){
-
-    if(history.length===1)
-      return left+w/2;
-
-    return left+
-      i/(history.length-1)*w;
-  }
-
-
-  function y(v){
-
-    return top+
-      (100-v)/100*h;
-  }
-
-
-  ctx.strokeStyle="#252b36";
-
-  [30,50,70].forEach(
-    value => {
-
-      const yy=y(value);
-
-      ctx.beginPath();
-
-      ctx.moveTo(left,yy);
-      ctx.lineTo(width-right,yy);
-
-      ctx.stroke();
-
-
-      ctx.fillStyle="#8992a3";
-      ctx.font="10px sans-serif";
-
-      ctx.fillText(
-        value,
-        left-25,
-        yy+3
-      );
-    }
-  );
-
-
-  ctx.beginPath();
-
-  ctx.strokeStyle="#55a7ff";
-  ctx.lineWidth=2;
-
-  let started=false;
-
-
-  history.forEach(
-    (item,i) => {
-
-      if(item.rsi==null)
-        return;
-
-
-      if(!started){
-
-        ctx.moveTo(
-          x(i),
-          y(Number(item.rsi))
-        );
-
-        started=true;
-
-      }else{
-
-        ctx.lineTo(
-          x(i),
-          y(Number(item.rsi))
-        );
-      }
-    }
-  );
-
-
-  ctx.stroke();
-
-
-  ctx.fillStyle="#8992a3";
-  ctx.font="10px sans-serif";
-
-  ctx.fillText(
-    "RSI 14",
-    left,
-    height-6
-  );
-}
-
-
-/* =========================
-   MACD
-========================= */
-
-function drawMACD(
-  canvas,
-  data
-){
-
-  const history =
-    (data.history || [])
-      .slice(-100);
-
-  if(!history.length)
-    return;
-
-
-  const dpr =
-    window.devicePixelRatio || 1;
-
-  const width =
-    canvas.clientWidth || 700;
-
-  const height=150;
-
-
-  canvas.width=width*dpr;
-  canvas.height=height*dpr;
-
-
-  const ctx =
-    canvas.getContext("2d");
-
-  ctx.scale(dpr,dpr);
-
-  ctx.clearRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-
-  const left=40;
-  const right=10;
-  const top=12;
-  const bottom=22;
-
-  const w=width-left-right;
-  const h=height-top-bottom;
-
-
-  const vals=[];
-
-
-  history.forEach(item => {
-
-    [
-      item.macd,
-      item.macdSignal,
-      item.macdHistogram
-    ].forEach(v => {
-
-      if(v!=null)
-        vals.push(Number(v));
-
-    });
-
-  });
-
-
-  if(!vals.length)
-    return;
-
-
-  const maxAbs =
-    Math.max(
-      ...vals.map(
-        v=>Math.abs(v)
-      )
-    ) || 1;
-
-
-  function x(i){
-
-    if(history.length===1)
-      return left+w/2;
-
-    return left+
-      i/(history.length-1)*w;
-  }
-
-
-  function y(v){
-
-    return top+
-      (maxAbs-v)/
-      (maxAbs*2)*h;
-  }
-
-
-  const zero=y(0);
-
-
-  ctx.strokeStyle="#252b36";
-
-  ctx.beginPath();
-
-  ctx.moveTo(left,zero);
-  ctx.lineTo(width-right,zero);
-
-  ctx.stroke();
-
-
-  const barW =
-    Math.max(
-      1,
-      w/history.length*.65
-    );
-
-
-  history.forEach(
-    (item,i) => {
-
-      if(item.macdHistogram==null)
-        return;
-
-
-      const yy =
-        y(Number(
-          item.macdHistogram
-        ));
-
-
-      ctx.fillStyle =
-        Number(item.macdHistogram)>=0
-          ? "rgba(53,208,127,.65)"
-          : "rgba(255,92,103,.65)";
-
-
-      ctx.fillRect(
-        x(i)-barW/2,
-        Math.min(
-          yy,
-          zero
-        ),
-        barW,
-        Math.abs(
-          zero-yy
-        )
-      );
-    }
-  );
-
-
-  function draw(
-    key,
-    dashed
-  ){
-
-    ctx.beginPath();
-
-    ctx.strokeStyle =
-      key==="macd"
-        ? "#a88cff"
-        : "#55a7ff";
-
-    ctx.lineWidth=1.7;
-
-    ctx.setLineDash(
-      dashed
-        ? [5,4]
-        : []
-    );
-
-
-    let started=false;
-
-
-    history.forEach(
-      (item,i) => {
-
-        if(item[key]==null)
-          return;
-
-
-        if(!started){
-
-          ctx.moveTo(
-            x(i),
-            y(Number(item[key]))
-          );
-
-          started=true;
-
-        }else{
-
-          ctx.lineTo(
-            x(i),
-            y(Number(item[key]))
-          );
-        }
-      }
-    );
-
-
-    ctx.stroke();
-
-    ctx.setLineDash([]);
-  }
-
-
-  draw("macd",false);
-  draw("macdSignal",true);
-
-
-  ctx.fillStyle="#8992a3";
-  ctx.font="10px sans-serif";
-
-  ctx.fillText(
-    "MACD",
-    left,
-    height-6
-  );
-}
-
-
-/* =========================
-   CONDITIONS
-========================= */
-
-function renderConditions(data){
-
-  const conditions =
-    Array.isArray(
-      data.buy_conditions
-    )
-      ? data.buy_conditions
-      : [];
-
-
-  if(!conditions.length){
-
-    return `
-      <div class="small">
-        No explicit confirmation conditions returned.
+    errorEl.innerHTML = `
+      <div class="error">
+        <strong>Error:</strong> ${esc(err.message)}
       </div>
     `;
+
+    contentEl.innerHTML = "";
   }
+}
 
+function renderDashboard(data) {
 
-  return conditions.map(
-    condition => {
+  const changeClass =
+    Number(data.change_pct) > 0
+      ? "positive"
+      : Number(data.change_pct) < 0
+      ? "negative"
+      : "neutral";
 
-      const text =
-        typeof condition==="string"
-          ? condition
-          : condition.text ||
-            condition.label ||
-            "Condition";
+  contentEl.innerHTML = `
 
+    <div class="card">
 
-      const met =
-        typeof condition==="string"
-          ? false
-          : Boolean(condition.met);
+      <div class="stock-header">
 
-
-      return `
-
-        <div class="
-          condition
-          ${
-            met
-              ? "conditionMet"
-              : "conditionMissing"
-          }
-        ">
-
-          <div class="conditionIcon">
-            ${met ? "✓" : "×"}
-          </div>
-
-          <div>
-            ${esc(text)}
-          </div>
-
+        <div>
+          <div class="symbol">${esc(data.symbol)}</div>
+          <div class="company">${esc(data.name || "")}</div>
         </div>
-      `;
-    }
-  ).join("");
+
+        <div>
+          <div class="price">${money(data.price)}</div>
+          <div class="change ${changeClass}">
+            ${pct(data.change_pct)}
+          </div>
+        </div>
+
+      </div>
+
+      <div class="grid">
+
+        <div class="metric">
+          <div class="metric-label">Signal</div>
+          <div class="metric-value">${esc(data.signal || "WATCH")}</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Score</div>
+          <div class="metric-value">${num(data.score, 0)}/100</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Trend</div>
+          <div class="metric-value">
+            ${esc(data.trend || "—")}
+          </div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Trend Confidence</div>
+          <div class="metric-value">
+            ${num(data.trend_confidence, 0)}%
+          </div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">RSI</div>
+          <div class="metric-value">${num(data.rsi)}</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">SMA 20</div>
+          <div class="metric-value">${money(data.fundamentals?.sma20)}</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">SMA 50</div>
+          <div class="metric-value">${money(data.fundamentals?.sma50)}</div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-label">Structure</div>
+          <div class="metric-value">
+            ${esc(data.structure || "—")}
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    ${renderDecisionCockpit(data)}
+
+    ${renderStrategies(data)}
+
+    <div class="card">
+
+      <div class="section-title">
+        Price & Technical Levels
+      </div>
+
+      <div class="chart-wrapper">
+        <canvas id="priceChart"></canvas>
+      </div>
+
+      <div class="legend">
+
+        <span>
+          <span class="dot" style="background:#111"></span>
+          Price
+        </span>
+
+        <span>
+          <span class="dot" style="background:#777"></span>
+          SMA20
+        </span>
+
+        <span>
+          <span class="dot" style="background:#aaa"></span>
+          SMA50
+        </span>
+
+        <span>
+          Pullback zone
+        </span>
+
+      </div>
+
+    </div>
+
+    ${renderAnalysis(data)}
+
+  `;
+
+  drawChart(data);
 }
 
+function renderDecisionCockpit(data) {
 
-/* =========================
-   REALISTIC PULLBACK ENGINE
-========================= */
+  const confirmed = !!data.buy_trigger_confirmed;
 
-function calculatePullback(data){
+  let badgeClass = confirmed ? "good" : "warn";
 
-  const price =
-    Number(data.price);
+  const conditions = Array.isArray(data.buy_conditions)
+    ? data.buy_conditions
+    : [];
 
+  const met =
+    data.conditions_met !== undefined
+      ? data.conditions_met
+      : conditions.filter(Boolean).length;
 
-  const support =
-    Number(
-      data.fundamentals?.support
-    );
+  const total =
+    data.conditions_total !== undefined
+      ? data.conditions_total
+      : conditions.length;
 
+  const rrQuality =
+    data.risk_reward_quality || "—";
 
-  const resistance =
-    Number(
-      data.fundamentals?.resistance
-    );
+  let rrClass = "warn";
 
-
-  const latest =
-    data.history?.length
-      ? data.history[
-          data.history.length-1
-        ]
-      : null;
-
-
-  const sma20 =
-    Number(
-      latest?.sma20
-    );
-
-
-  const stop =
-    Number(
-      data.invalidation ??
-      data.stop
-    );
-
-
-  let low =
-    Number.isFinite(support)
-      ? support
-      : Number(data.entry_low);
-
-
-  const highs=[
-    Number(data.entry_high),
-    sma20,
-    support
-  ].filter(
-    Number.isFinite
-  );
-
-
-  let high =
-    highs.length
-      ? Math.max(...highs)
-      : price;
-
-
-  if(!Number.isFinite(low))
-    low=price*.95;
-
-
-  if(!Number.isFinite(high))
-    high=price*.98;
-
-
-  if(high<low){
-
-    const temp=high;
-    high=low;
-    low=temp;
-  }
-
-
-  /*
-    Three possible execution prices:
-
-    BEST:
-    lower end of pullback zone.
-
-    BASE:
-    midpoint.
-
-    WORST:
-    upper end of pullback zone.
-
-    This prevents the model from assuming
-    the perfect fill.
-  */
-
-  const bestEntry=low;
-
-  const baseEntry=
-    (low+high)/2;
-
-  const worstEntry=high;
-
-
-  const invalidation =
-    Number.isFinite(stop)
-      ? stop
-      : low*.98;
-
-
-  let target1 =
-    Number(data.target1);
-
-  let target2 =
-    Number(data.target2);
-
-
-  if(!Number.isFinite(target1)){
-
-    target1 =
-      Number.isFinite(resistance)
-        ? resistance
-        : price*1.08;
-  }
-
-
-  if(!Number.isFinite(target2)){
-
-    target2 =
-      target1*1.08;
-  }
-
-
-  function scenario(entry){
-
-    const risk =
-      entry-invalidation;
-
-    const reward1 =
-      target1-entry;
-
-    const reward2 =
-      target2-entry;
-
-
-    const rr1 =
-      risk>0
-        ? reward1/risk
-        : NaN;
-
-
-    const rr2 =
-      risk>0
-        ? reward2/risk
-        : NaN;
-
-
-    return {
-      entry,
-      risk,
-      reward1,
-      reward2,
-      rr1,
-      rr2
-    };
-  }
-
-
-  const best =
-    scenario(bestEntry);
-
-  const base =
-    scenario(baseEntry);
-
-  const worst =
-    scenario(worstEntry);
-
-
-  /*
-    Base case determines the headline
-    quality.
-
-    This is deliberately more conservative
-    than using the best possible fill.
-  */
-
-  let quality =
-    "NOT ATTRACTIVE";
-
-
-  if(
-    Number.isFinite(base.rr2) &&
-    base.rr2>=2
-  ){
-
-    quality="ATTRACTIVE";
-
-  }else if(
-    Number.isFinite(base.rr2) &&
-    base.rr2>=1.5
-  ){
-
-    quality="ACCEPTABLE";
-  }
-
-
-  let status =
-    "WAIT FOR PULLBACK";
-
-  let statusClass =
-    "sideways";
-
-
-  if(
-    price>=low &&
-    price<=high
-  ){
-
-    status =
-      "IN PULLBACK ZONE";
-
-    statusClass =
-      "bullish";
-
-  }else if(
-    price>high
-  ){
-
-    status =
-      "ABOVE PULLBACK ZONE";
-
-    statusClass =
-      "blue";
-
-  }else if(
-    price<invalidation
-  ){
-
-    status =
-      "PULLBACK INVALIDATED";
-
-    statusClass =
-      "bearish";
-  }
-
-
-  const bullishStructure =
-    String(
-      data.structure || ""
-    )
-      .toUpperCase()
-      .includes("HIGHER HIGH") &&
-    String(
-      data.structure || ""
-    )
-      .toUpperCase()
-      .includes("HIGHER LOW");
-
-
-  const shortTermBullish =
-    String(
-      data.short_term_trend || ""
-    )
-      .toUpperCase()
-      .includes("BULLISH");
-
-
-  let strategy =
-    "WAIT FOR ATTRACTIVE PULLBACK";
-
-
-  if(price<invalidation){
-
-    strategy =
-      "AVOID — INVALIDATED";
-
-  }else if(
-    quality==="ATTRACTIVE" &&
-    bullishStructure &&
-    shortTermBullish &&
-    price>=low &&
-    price<=high
-  ){
-
-    strategy =
-      "PULLBACK OPPORTUNITY";
-
-  }else if(
-    quality==="ATTRACTIVE" &&
-    bullishStructure
-  ){
-
-    strategy =
-      "WAIT FOR ATTRACTIVE PULLBACK";
-
-  }else if(
-    price>high
-  ){
-
-    strategy =
-      "WAIT — PRICE ABOVE ZONE";
-
-  }else{
-
-    strategy =
-      "PULLBACK R/R NOT ATTRACTIVE";
-  }
-
-
-  return {
-    low,
-    high,
-    bestEntry,
-    baseEntry,
-    worstEntry,
-    invalidation,
-    target1,
-    target2,
-    best,
-    base,
-    worst,
-    quality,
-    status,
-    statusClass,
-    strategy,
-    bullishStructure,
-    shortTermBullish
-  };
-}
-
-
-/* =========================
-   SCENARIO QUALITY
-========================= */
-
-function scenarioQuality(rr){
-
-  if(
-    Number.isFinite(rr) &&
-    rr>=2
-  )
-    return "scenarioGood";
-
-  if(
-    Number.isFinite(rr) &&
-    rr>=1.5
-  )
-    return "scenarioOkay";
-
-  return "scenarioBad";
-}
-
-
-function rrText(rr){
-
-  return Number.isFinite(rr)
-    ? rr.toFixed(2)+"x"
-    : "—";
-}
-
-
-/* =========================
-   PULLBACK UI
-========================= */
-
-function renderPullback(data){
-
-  const p =
-    calculatePullback(data);
-
+  if (rrQuality === "ATTRACTIVE") rrClass = "good";
+  if (rrQuality === "NOT ATTRACTIVE") rrClass = "bad";
 
   return `
 
-    <div class="card pullback">
+    <div class="card">
 
-      <div class="strategyTag pullbackTag">
-        🟢 PULLBACK STRATEGY
+      <div class="section-title">
+        Decision Cockpit
       </div>
 
+      <div class="decision">
 
-      <div class="pullbackTitle">
-        ${esc(p.strategy)}
-      </div>
+        <div class="decision-main">
 
+          <div>
+            <div class="decision-label">
+              Buy trigger
+            </div>
 
-      <div class="
-        pullbackStatus
-        ${p.statusClass}
-      ">
-        ${esc(p.status)}
-      </div>
+            <div class="decision-value">
+              ${esc(data.buy_trigger || "WAIT")}
+            </div>
 
+            ${
+              data.buy_trigger_price
+                ? `
+                <div style="margin-top:5px;color:#666;font-size:13px">
+                  Trigger price:
+                  <strong>${money(data.buy_trigger_price)}</strong>
+                </div>
+                `
+                : ""
+            }
 
-      <div class="pullbackGrid">
-
-
-        <div class="pullbackBox entryBox">
-
-          <div class="label">
-            Pullback zone
           </div>
 
-          <div class="value">
-            ${money(p.low)}
-            —
-            ${money(p.high)}
+          <div>
+            <span class="badge ${badgeClass}">
+              ${confirmed ? "CONFIRMED" : "WAIT"}
+            </span>
+          </div>
+
+        </div>
+
+        <div class="grid">
+
+          <div class="metric">
+            <div class="metric-label">Invalidation</div>
+            <div class="metric-value">
+              ${money(data.invalidation || data.stop)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Risk / Share</div>
+            <div class="metric-value">
+              ${money(data.risk_per_share)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Target 1</div>
+            <div class="metric-value">
+              ${money(data.target1)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Target 2</div>
+            <div class="metric-value">
+              ${money(data.target2)}
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">R/R → T1</div>
+            <div class="metric-value">
+              ${num(data.risk_reward_target1)}x
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">R/R → T2</div>
+            <div class="metric-value">
+              ${num(data.risk_reward_target2)}x
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">R/R Quality</div>
+            <div class="metric-value">
+              <span class="badge ${rrClass}">
+                ${esc(rrQuality)}
+              </span>
+            </div>
+          </div>
+
+          <div class="metric">
+            <div class="metric-label">Confirmation</div>
+            <div class="metric-value">
+              ${met}/${total}
+            </div>
+          </div>
+
+        </div>
+
+        <div class="logic">
+          <strong>Trigger logic:</strong><br>
+          ${esc(
+            data.trigger_reason ||
+            "Wait for confirmation before entering."
+          )}
+        </div>
+
+        <div class="logic">
+          <strong>Invalidation logic:</strong><br>
+          ${esc(
+            data.invalidation_reason ||
+            "Setup is invalidated if price breaks the key support level."
+          )}
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+}
+
+function renderStrategies(data) {
+
+  const price = Number(data.price);
+
+  const support = Number(
+    data.fundamentals?.support ??
+    data.entry_low ??
+    data.stop
+  );
+
+  const resistance = Number(
+    data.fundamentals?.resistance ??
+    data.entry_high
+  );
+
+  const sma20 = Number(data.fundamentals?.sma20);
+
+  const zoneLow = isFinite(support)
+    ? support
+    : price * 0.95;
+
+  const zoneHighCandidates = [
+    isFinite(sma20) ? sma20 : NaN,
+    isFinite(resistance) ? resistance : NaN,
+    price
+  ].filter(v => isFinite(v));
+
+  /*
+    Pullback zone should NOT extend all the way to resistance.
+    We want a realistic area near support / SMA20.
+  */
+
+  let pullbackHigh;
+
+  if (isFinite(sma20) && sma20 > zoneLow) {
+    pullbackHigh = Math.min(
+      sma20,
+      zoneLow + Math.max(
+        price * 0.06,
+        (resistance - zoneLow) * 0.35
+      )
+    );
+  } else {
+    pullbackHigh =
+      zoneLow +
+      Math.max(
+        price * 0.04,
+        (resistance - zoneLow) * 0.30
+      );
+  }
+
+  if (!isFinite(pullbackHigh) || pullbackHigh <= zoneLow) {
+    pullbackHigh = zoneLow * 1.04;
+  }
+
+  const bestEntry = zoneLow + (pullbackHigh - zoneLow) * 0.25;
+  const baseEntry = zoneLow + (pullbackHigh - zoneLow) * 0.50;
+  const worstEntry = zoneLow + (pullbackHigh - zoneLow) * 0.75;
+
+  const invalidation = Number(
+    data.invalidation ??
+    data.stop ??
+    zoneLow
+  );
+
+  const target1 = Number(data.target1);
+  const target2 = Number(data.target2);
+
+  function rr(entry, target) {
+
+    const risk = entry - invalidation;
+    const reward = target - entry;
+
+    if (!isFinite(risk) || risk <= 0) return null;
+    if (!isFinite(reward)) return null;
+
+    return reward / risk;
+  }
+
+  const baseRR1 = rr(baseEntry, target1);
+  const baseRR2 = rr(baseEntry, target2);
+
+  let pullbackStatus = "WAIT FOR PULLBACK";
+  let pullbackStrategy = "WAIT";
+
+  if (price < zoneLow) {
+    pullbackStatus = "PULLBACK INVALIDATED";
+    pullbackStrategy = "AVOID";
+  } else if (price >= zoneLow && price <= pullbackHigh) {
+    pullbackStatus = "IN PULLBACK ZONE";
+
+    if (
+      baseRR1 !== null &&
+      baseRR1 >= 2 &&
+      data.short_term_trend === "BULLISH"
+    ) {
+      pullbackStrategy = "PULLBACK OPPORTUNITY";
+    } else {
+      pullbackStrategy = "WAIT FOR CONFIRMATION";
+    }
+
+  } else {
+    pullbackStatus = "ABOVE PULLBACK ZONE";
+    pullbackStrategy = "WAIT FOR PULLBACK";
+  }
+
+  const breakoutTrigger = Number(
+    data.buy_trigger_price ??
+    (isFinite(resistance) ? resistance * 1.002 : price * 1.02)
+  );
+
+  const breakoutConfirmed =
+    !!data.buy_trigger_confirmed &&
+    price >= breakoutTrigger;
+
+  const breakoutStatus = breakoutConfirmed
+    ? "BREAKOUT CONFIRMED"
+    : "WAIT FOR BREAKOUT";
+
+  return `
+
+    <div class="card">
+
+      <div class="section-title">
+        Entry Strategies
+      </div>
+
+      <div class="strategy-grid">
+
+        <!-- BREAKOUT -->
+
+        <div class="strategy">
+
+          <h3>🚀 Breakout Strategy</h3>
+
+          <div class="strategy-status">
+            ${esc(breakoutStatus)}
+          </div>
+
+          <table class="strategy-table">
+
+            <tr>
+              <td>Resistance</td>
+              <td>${money(resistance)}</td>
+            </tr>
+
+            <tr>
+              <td>Trigger</td>
+              <td>${money(breakoutTrigger)}</td>
+            </tr>
+
+            <tr>
+              <td>Invalidation</td>
+              <td>${money(invalidation)}</td>
+            </tr>
+
+            <tr>
+              <td>Target 1</td>
+              <td>${money(target1)}</td>
+            </tr>
+
+            <tr>
+              <td>Target 2</td>
+              <td>${money(target2)}</td>
+            </tr>
+
+          </table>
+
+          <div class="logic">
+            Enter only after a daily close above resistance
+            with momentum and candle confirmation.
           </div>
 
         </div>
 
 
-        <div class="pullbackBox entryBox">
+        <!-- PULLBACK -->
 
-          <div class="label">
-            Base entry
+        <div class="strategy">
+
+          <h3>🎯 Pullback Strategy</h3>
+
+          <div class="strategy-status">
+            ${esc(pullbackStatus)}
           </div>
 
-          <div class="value">
-            ${money(p.baseEntry)}
+          <table class="strategy-table">
+
+            <tr>
+              <td>Pullback zone</td>
+              <td>
+                ${money(zoneLow)} – ${money(pullbackHigh)}
+              </td>
+            </tr>
+
+            <tr>
+              <td>Best entry</td>
+              <td>${money(bestEntry)}</td>
+            </tr>
+
+            <tr>
+              <td>Base entry</td>
+              <td>${money(baseEntry)}</td>
+            </tr>
+
+            <tr>
+              <td>Invalidation</td>
+              <td>${money(invalidation)}</td>
+            </tr>
+
+            <tr>
+              <td>Target 1</td>
+              <td>${money(target1)}</td>
+            </tr>
+
+            <tr>
+              <td>Target 2</td>
+              <td>${money(target2)}</td>
+            </tr>
+
+          </table>
+
+          <div style="margin-top:14px">
+
+            <div class="metric-label">
+              Realistic entry scenarios
+            </div>
+
+            <table class="strategy-table">
+
+              <tr>
+                <td>Best entry R/R → T1</td>
+                <td>
+                  ${baseRR1 === null ? "—" : baseRR1.toFixed(2) + "x"}
+                </td>
+              </tr>
+
+              <tr>
+                <td>Base entry R/R → T1</td>
+                <td>
+                  ${baseRR1 === null ? "—" : baseRR1.toFixed(2) + "x"}
+                </td>
+              </tr>
+
+              <tr>
+                <td>Base entry R/R → T2</td>
+                <td>
+                  ${baseRR2 === null ? "—" : baseRR2.toFixed(2) + "x"}
+                </td>
+              </tr>
+
+            </table>
+
+          </div>
+
+          <div class="logic">
+            <strong>Strategy:</strong>
+            ${esc(pullbackStrategy)}.
+            Prefer a bullish reaction from support/SMA20
+            rather than buying an extended price.
           </div>
 
         </div>
 
+      </div>
 
-        <div class="pullbackBox">
+    </div>
 
-          <div class="label">
-            Invalidation
-          </div>
+  `;
+}
 
-          <div class="value">
-            ${money(p.invalidation)}
-          </div>
+function renderAnalysis(data) {
+
+  const reasons = Array.isArray(data.reasons)
+    ? data.reasons
+    : [];
+
+  const risks = Array.isArray(data.risks)
+    ? data.risks
+    : [];
+
+  return `
+
+    <div class="card">
+
+      <div class="section-title">
+        Technical Diagnosis
+      </div>
+
+      <div class="analysis-grid">
+
+        <div>
+
+          <h3>Why</h3>
+
+          <ul class="list">
+
+            ${
+              reasons.length
+                ? reasons.map(x => `<li>${esc(x)}</li>`).join("")
+                : "<li>No major positive factors detected.</li>"
+            }
+
+          </ul>
 
         </div>
 
+        <div>
 
-        <div class="pullbackBox">
+          <h3>Risks</h3>
 
-          <div class="label">
+          <ul class="list">
+
+            ${
+              risks.length
+                ? risks.map(x => `<li>${esc(x)}</li>`).join("")
+                : "<li>No major risks identified.</li>"
+            }
+
+          </ul>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+}
+
+
+/* ============================================================
+   CHART
+   ============================================================ */
+
+function drawChart(data) {
+
+  const canvas = document.getElementById("priceChart");
+
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  const rect = canvas.getBoundingClientRect();
+
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+
+  ctx.scale(dpr, dpr);
+
+  const W = rect.width;
+  const H = rect.height;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const history = Array.isArray(data.history)
+    ? data.history
+    : [];
+
+  if (history.length < 2) {
+
+    ctx.fillStyle = "#777";
+    ctx.font = "14px Arial";
+    ctx.fillText("Not enough historical data.", 20, 30);
+
+    return;
+  }
+
+  /*
+    IMPORTANT:
+    The old chart included distant values in the Y-axis calculation,
+    which caused the chart to collapse toward $0.
+
+    This version calculates the visible range mainly from historical
+    price action and only adds levels that are reasonably close.
+  */
+
+  const closes = history
+    .map(x => Number(x.close))
+    .filter(isFinite);
+
+  const highs = history
+    .map(x => Number(x.high))
+    .filter(isFinite);
+
+  const lows = history
+    .map(x => Number(x.low))
+    .filter(isFinite);
+
+  if (!closes.length) return;
+
+  const recentPrices = history.slice(-80);
+
+  const recentHighs = recentPrices
+    .map(x => Number(x.high))
+    .filter(isFinite);
+
+  const recentLows = recentPrices
+    .map(x => Number(x.low))
+    .filter(isFinite);
+
+  let minPrice = Math.min(...recentLows);
+  let maxPrice = Math.max(...recentHighs);
+
+  const current = Number(data.price);
+
+  const support = Number(
+    data.fundamentals?.support ??
+    data.entry_low ??
+    data.stop
+  );
+
+  const resistance = Number(
+    data.fundamentals?.resistance ??
+    data.entry_high
+  );
+
+  const sma20 = Number(data.fundamentals?.sma20);
+  const sma50 = Number(data.fundamentals?.sma50);
+  const target1 = Number(data.target1);
+  const target2 = Number(data.target2);
+  const stop = Number(data.invalidation ?? data.stop);
+
+  /*
+    Only include technical levels if they are within a sensible
+    distance of the current visible range.
+  */
+
+  const candidates = [
+    support,
+    resistance,
+    sma20,
+    sma50,
+    target1,
+    target2,
+    stop,
+    current
+  ].filter(v => isFinite(v) && v > 0);
+
+  const baseRange = Math.max(
+    maxPrice - minPrice,
+    current * 0.10
+  );
+
+  const expandedMin = current - baseRange * 0.70;
+  const expandedMax = current + baseRange * 0.70;
+
+  candidates.forEach(v => {
+
+    if (
+      v >= expandedMin &&
+      v <= expandedMax
+    ) {
+      minPrice = Math.min(minPrice, v);
+      maxPrice = Math.max(maxPrice, v);
+    }
+
+  });
+
+  /*
+    Add padding around the visible price area.
+  */
+
+  const range = Math.max(
+    maxPrice - minPrice,
+    current * 0.08
+  );
+
+  minPrice -= range * 0.10;
+  maxPrice += range * 0.10;
+
+  /*
+    Never allow the chart to collapse toward zero.
+  */
+
+  if (minPrice < current * 0.55) {
+    minPrice = current * 0.55;
+  }
+
+  const pad = {
+    top: 22,
+    bottom: 30,
+    left: 45,
+    right: 125
+  };
+
+  const chartW = W - pad.left - pad.right;
+  const chartH = H - pad.top - pad.bottom;
+
+  function x(i) {
+
+    return pad.left +
+      (i / (history.length - 1)) * chartW;
+
+  }
+
+  function y(value) {
+
+    return pad.top +
+      (maxPrice - value) /
+      (maxPrice - minPrice) *
+      chartH;
+
+  }
+
+  /*
+    Grid
+  */
+
+  ctx.strokeStyle = "#eeeeee";
+  ctx.lineWidth = 1;
+
+  for (let i = 0; i <= 5; i++) {
+
+    const yy = pad.top +
+      (i / 5) * chartH;
+
+    ctx.beginPath();
+    ctx.moveTo(pad.left, yy);
+    ctx.lineTo(W - pad.right, yy);
+    ctx.stroke();
+
+    const value =
+      maxPrice -
+      (i / 5) *
+      (maxPrice - minPrice);
+
+    ctx.fillStyle = "#888";
+    ctx.font = "11px Arial";
+    ctx.fillText(
+      money(value),
+      3,
+      yy + 4
+    );
+
+  }
+
+  /*
+    Pullback zone
+  */
+
+  const zoneLow = isFinite(support)
+    ? support
+    : NaN;
+
+  let zoneHigh = NaN;
+
+  if (isFinite(zoneLow)) {
+
+    if (isFinite(sma20) && sma20 > zoneLow) {
+
+      zoneHigh = Math.min(
+        sma20,
+        zoneLow +
+        Math.max(
+          current * 0.06,
+          (isFinite(resistance)
+            ? resistance - zoneLow
+            : current * 0.10) * 0.35
+        )
+      );
+
+    } else {
+
+      zoneHigh =
+        zoneLow +
+        current * 0.05;
+
+    }
+
+    /*
+      Only draw the zone if it is visible.
+    */
+
+    if (
+      zoneHigh > minPrice &&
+      zoneLow < maxPrice
+    ) {
+
+      const topY = y(
+        Math.min(zoneHigh, maxPrice)
+      );
+
+      const bottomY = y(
+        Math.max(zoneLow, minPrice)
+      );
+
+      ctx.fillStyle = "rgba(100,100,100,0.08)";
+
+      ctx.fillRect(
+        pad.left,
+        topY,
+        chartW,
+        bottomY - topY
+      );
+
+    }
+
+  }
+
+  /*
+    Price line
+  */
+
+  ctx.beginPath();
+
+  history.forEach((item, i) => {
+
+    const value = Number(item.close);
+
+    if (!isFinite(value)) return;
+
+    const xx = x(i);
+    const yy = y(value);
+
+    if (i === 0) {
+      ctx.moveTo(xx, yy);
+    } else {
+      ctx.lineTo(xx, yy);
+    }
+
+  });
+
+  ctx.strokeStyle = "#111";
+  ctx.lineWidth = 2.2;
+  ctx.stroke();
+
+  /*
+    SMA20
+  */
+
+  drawIndicatorLine(
+    ctx,
+    history,
+    "sma20",
+    x,
+    y,
+    "#777",
+    1.4
+  );
+
+  /*
+    SMA50
+  */
+
+  drawIndicatorLine(
+    ctx,
+    history,
+    "sma50",
+    x,
+    y,
+    "#aaa",
+    1.3
+  );
+
+  /*
+    Technical level labels
+  */
+
+  const levels = [];
+
+  function addLevel(label, value) {
+
+    if (
+      !isFinite(value) ||
+      value <= 0
+    ) return;
+
+    /*
+      Do not show extremely distant levels.
+    */
+
+    if (
+      value < minPrice ||
+      value > maxPrice
+    ) return;
+
+    levels.push({
+      label,
+      value,
+      rawY: y(value)
+    });
+
+  }
+
+  addLevel("Resistance", resistance);
+  addLevel("Target 1", target1);
+  addLevel("Target 2", target2);
+  addLevel("Support", support);
+  addLevel("Invalidation", stop);
+  addLevel("Current", current);
+
+  /*
+    Sort labels vertically so they don't overlap.
+  */
+
+  levels.sort((a, b) => a.rawY - b.rawY);
+
+  const minSpacing = 24;
+
+  levels.forEach((level, index) => {
+
+    if (index === 0) {
+
+      level.labelY = Math.max(
+        pad.top + 10,
+        level.rawY
+      );
+
+    } else {
+
+      level.labelY = Math.max(
+        level.rawY,
+        levels[index - 1].labelY + minSpacing
+      );
+
+    }
+
+  });
+
+  /*
+    Keep last labels inside chart.
+  */
+
+  for (
+    let i = levels.length - 1;
+    i >= 0;
+    i--
+  ) {
+
+    if (
+      levels[i].labelY >
+      H - pad.bottom - 10
+    ) {
+
+      levels[i].labelY =
+        H - pad.bottom - 10 -
+        (levels.length - 1 - i) * minSpacing;
+
+    }
+
+  }
+
+  levels.forEach(level => {
+
+    const actualY = level.rawY;
+    const labelY = level.labelY;
+
+    /*
+      Leader line
+    */
+
+    ctx.strokeStyle = "#c9c9c9";
+    ctx.lineWidth = 1;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      W - pad.right,
+      actualY
+    );
+
+    ctx.lineTo(
+      W - pad.right + 8,
+      labelY
+    );
+
+    ctx.stroke();
+
+    /*
+      Horizontal level line
+    */
+
+    ctx.setLineDash([4, 4]);
+
+    ctx.strokeStyle = "#dddddd";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      pad.left,
+      actualY
+    );
+
+    ctx.lineTo(
+      W - pad.right,
+      actualY
+    );
+
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    /*
+      Label background
+    */
+
+    ctx.fillStyle = "white";
+
+    ctx.fillRect(
+      W - pad.right + 10,
+      labelY - 9,
+      108,
+      18
+    );
+
+    ctx.fillStyle = "#444";
+    ctx.font = "11px Arial";
+
+    ctx.fillText(
+      level.label + " " + money(level.value),
+      W - pad.right + 13,
+      labelY + 4
+    );
+
+  });
+
+  /*
+    Current price marker
+  */
+
+  if (isFinite(current)) {
+
+    const cy = y(current);
+
+    ctx.beginPath();
+
+    ctx.arc(
+      x(history.length - 1),
+      cy,
+      4,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fillStyle = "#111";
+    ctx.fill();
+
+  }
+
+  /*
+    Dates
+  */
+
+  const firstDate = history[0]?.date;
+  const lastDate =
+    history[history.length - 1]?.date;
+
+  ctx.fillStyle = "#888";
+  ctx.font = "10px Arial";
+
+  if (firstDate) {
+
+    ctx.fillText(
+      firstDate,
+      pad.left,
+      H - 8
+    );
+
+  }
+
+  if (lastDate) {
+
+    ctx.fillText(
+      lastDate,
+      W - pad.right - 70,
+      H - 8
+    );
+
+  }
+
+}
+
+function drawIndicatorLine(
+  ctx,
+  history,
+  field,
+  x,
+  y,
+  stroke,
+  width
+) {
+
+  ctx.beginPath();
+
+  let started = false;
+
+  history.forEach((item, i) => {
+
+    const value = Number(item[field]);
+
+    if (!isFinite(value)) return;
+
+    const xx = x(i);
+    const yy = y(value);
+
+    if (!started) {
+
+      ctx.moveTo(xx, yy);
+      started = true;
+
+    } else {
+
+      ctx.lineTo(xx, yy);
+
+    }
+
+  });
+
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = width;
+  ctx.stroke();
+
+}
+
+
+/*
+   Resize chart when phone rotates / window changes.
+*/
+
+window.addEventListener("resize", () => {
+
+  if (currentData) {
+    setTimeout(
+      () => drawChart(currentData),
+      100
+    );
+  }
+
+});
+
+
+/*
+   Initial load
+*/
+
+renderWatchlist();
+loadStock(currentTicker);
+
+</script>
+
+</body>
+</html>
