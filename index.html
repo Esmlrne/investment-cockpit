@@ -1,2866 +1,3424 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
-
-  <title>Investment Cockpit</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "SF Pro Display",
-        "SF Pro Text",
-        Inter,
-        Arial,
-        sans-serif;
-      background: #f5f7fb;
-      color: #182238;
-    }
-
-    button,
-    input {
-      font: inherit;
-    }
-
-    .app {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 28px 24px 60px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 42px;
-      line-height: 1;
-      letter-spacing: -1.8px;
-    }
-
-    .subtitle {
-      margin-top: 12px;
-      color: #7d889e;
-      font-size: 20px;
-      line-height: 1.4;
-    }
-
-    .toolbar {
-      display: flex;
-      gap: 16px;
-      margin-top: 34px;
-    }
-
-    .ticker-input {
-      flex: 1;
-      min-width: 0;
-      height: 72px;
-      border: 2px solid #dce2ed;
-      border-radius: 20px;
-      background: white;
-      padding: 0 26px;
-      font-size: 28px;
-      color: #182238;
-      outline: none;
-    }
-
-    .ticker-input:focus {
-      border-color: #182238;
-    }
-
-    .btn {
-      height: 72px;
-      border: 0;
-      border-radius: 20px;
-      padding: 0 34px;
-      background: #182238;
-      color: white;
-      font-weight: 700;
-      font-size: 19px;
-      cursor: pointer;
-    }
-
-    .btn.secondary {
-      background: #e9edf5;
-      color: #182238;
-    }
-
-    .btn:disabled {
-      opacity: 0.55;
-      cursor: default;
-    }
-
-    .watchlist {
-      display: flex;
-      gap: 14px;
-      overflow-x: auto;
-      padding: 26px 0 12px;
-      scrollbar-width: none;
-    }
-
-    .watchlist::-webkit-scrollbar {
-      display: none;
-    }
-
-    .ticker-btn {
-      flex: 0 0 auto;
-      border: 2px solid #dce2ed;
-      background: white;
-      color: #182238;
-      border-radius: 40px;
-      padding: 15px 27px;
-      font-size: 22px;
-      font-weight: 750;
-      cursor: pointer;
-    }
-
-    .ticker-btn.active {
-      background: #182238;
-      color: white;
-      border-color: #182238;
-    }
-
-    .error {
-      display: none;
-      margin-top: 26px;
-      padding: 22px 26px;
-      border-radius: 18px;
-      border: 1px solid #f3b6ae;
-      background: #fff1ef;
-      color: #b52b20;
-      font-size: 18px;
-      line-height: 1.5;
-      overflow-wrap: anywhere;
-    }
-
-    .loading {
-      display: none;
-      margin-top: 26px;
-      padding: 20px;
-      border-radius: 18px;
-      background: white;
-      text-align: center;
-      color: #7d889e;
-      font-size: 18px;
-    }
-
-    .section {
-      margin-top: 28px;
-    }
-
-    .section-title {
-      margin: 0 0 14px;
-      color: #7d889e;
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 18px;
-    }
-
-    .card {
-      background: white;
-      border: 1px solid #dfe4ed;
-      border-radius: 24px;
-      padding: 27px;
-      box-shadow: 0 3px 15px rgba(30, 45, 75, 0.035);
-      min-width: 0;
-    }
-
-    .label {
-      color: #7c89a2;
-      font-size: 16px;
-      letter-spacing: 1.1px;
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    .value {
-      margin-top: 12px;
-      font-size: 30px;
-      line-height: 1.15;
-      font-weight: 800;
-      letter-spacing: -0.8px;
-      overflow-wrap: anywhere;
-    }
-
-    .large-value {
-      font-size: 38px;
-    }
-
-    .decision-card {
-      grid-column: 1 / -1;
-      background: #182238;
-      color: white;
-      border: 0;
-      padding: 30px;
-    }
-
-    .decision-card .label {
-      color: #aeb8ca;
-    }
-
-    .decision {
-      margin-top: 10px;
-      font-size: 44px;
-      font-weight: 850;
-      letter-spacing: -1.5px;
-    }
-
-    .decision-reason {
-      margin-top: 10px;
-      color: #c4ccda;
-      font-size: 18px;
-      line-height: 1.5;
-    }
-
-    .decision.buy {
-      background: #163d2d;
-    }
-
-    .decision.strong-buy {
-      background: #0e4d31;
-    }
-
-    .decision.sell {
-      background: #5a211e;
-    }
-
-    .decision.avoid {
-      background: #363b46;
-    }
-
-    .pill-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 9px;
-      margin-top: 18px;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      min-height: 34px;
-      padding: 7px 12px;
-      border-radius: 20px;
-      background: #eef1f6;
-      color: #3b4659;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .pill.bullish {
-      background: #e4f4eb;
-      color: #177142;
-    }
-
-    .pill.bearish {
-      background: #fbe8e6;
-      color: #b52b20;
-    }
-
-    .pill.neutral {
-      background: #edf0f5;
-      color: #667188;
-    }
-
-    .formation {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 15px;
-      padding: 16px 0;
-      border-bottom: 1px solid #edf0f5;
-    }
-
-    .formation:last-child {
-      border-bottom: 0;
-      padding-bottom: 0;
-    }
-
-    .formation-name {
-      font-weight: 750;
-      font-size: 18px;
-    }
-
-    .formation-meta {
-      margin-top: 5px;
-      color: #7d889e;
-      font-size: 14px;
-    }
-
-    .confidence {
-      font-weight: 800;
-      font-size: 17px;
-      white-space: nowrap;
-    }
-
-    .strategy {
-      position: relative;
-      overflow: hidden;
-    }
-
-    .strategy-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 20px;
-    }
-
-    .strategy-name {
-      font-size: 27px;
-      font-weight: 800;
-      letter-spacing: -0.8px;
-    }
-
-    .strategy-status {
-      display: inline-flex;
-      padding: 8px 13px;
-      border-radius: 18px;
-      background: #eef1f6;
-      font-size: 13px;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .levels {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 22px;
-    }
-
-    .level {
-      background: #f7f8fb;
-      border-radius: 15px;
-      padding: 15px;
-    }
-
-    .level-label {
-      color: #7d889e;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-weight: 700;
-    }
-
-    .level-value {
-      margin-top: 5px;
-      font-size: 20px;
-      font-weight: 800;
-    }
-
-    .rr {
-      margin-top: 22px;
-      padding: 18px;
-      border-radius: 16px;
-      background: #f7f8fb;
-    }
-
-    .rr-title {
-      font-weight: 800;
-      margin-bottom: 12px;
-    }
-
-    .rr-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
-
-    .rr-item {
-      text-align: center;
-      padding: 10px;
-      border-radius: 12px;
-      background: white;
-    }
-
-    .rr-item small {
-      display: block;
-      color: #7d889e;
-      margin-bottom: 5px;
-    }
-
-    .rr-item strong {
-      font-size: 18px;
-    }
-
-    .conditions {
-      margin-top: 18px;
-    }
-
-    .condition {
-      padding: 11px 0;
-      border-bottom: 1px solid #edf0f5;
-      font-size: 16px;
-    }
-
-    .condition:last-child {
-      border-bottom: 0;
-    }
-
-    .condition.met {
-      color: #177142;
-      font-weight: 700;
-    }
-
-    .condition.not-met {
-      color: #7d889e;
-    }
-
-    .two-columns {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 18px;
-    }
-
-    .bullet {
-      margin: 0;
-      padding-left: 21px;
-    }
-
-    .bullet li {
-      margin: 11px 0;
-      line-height: 1.45;
-    }
-
-    .chart-card {
-      padding: 24px;
-      overflow: hidden;
-    }
-
-    .chart-wrap {
-      margin-top: 15px;
-      width: 100%;
-      overflow-x: auto;
-      overflow-y: hidden;
-    }
-
-    canvas {
-      display: block;
-      width: 100%;
-      height: 420px;
-      min-width: 700px;
-    }
-
-    .footer {
-      margin-top: 35px;
-      text-align: center;
-      color: #9aa4b7;
-      font-size: 13px;
-    }
-
-    @media (max-width: 700px) {
-      .app {
-        padding: 22px 16px 45px;
-      }
-
-      h1 {
-        font-size: 34px;
-      }
-
-      .subtitle {
-        font-size: 17px;
-      }
-
-      .toolbar {
-        display: grid;
-        grid-template-columns: 1fr 110px;
-      }
-
-      .ticker-input {
-        width: 100%;
-        height: 64px;
-        font-size: 23px;
-        padding: 0 19px;
-      }
-
-      .btn {
-        height: 64px;
-        padding: 0 15px;
-        font-size: 17px;
-      }
-
-      .btn.secondary {
-        grid-column: 1 / -1;
-      }
-
-      .grid,
-      .two-columns {
-        grid-template-columns: 1fr;
-      }
-
-      .decision-card {
-        grid-column: auto;
-      }
-
-      .decision {
-        font-size: 36px;
-      }
-
-      .large-value {
-        font-size: 32px;
-      }
-
-      .levels {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .rr-grid {
-        grid-template-columns: 1fr 1fr 1fr;
-      }
-
-      .card {
-        padding: 22px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<title>Investment Cockpit</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f5f7fb;
+  color: #182238;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "SF Pro Text", Inter, Arial, sans-serif;
+}
+
+.app {
+  max-width: 1050px;
+  margin: auto;
+  padding: 28px 18px 60px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 38px;
+  letter-spacing: -1.7px;
+}
+
+.subtitle {
+  margin-top: 8px;
+  color: #7d889e;
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+/* =========================
+   SEARCH
+========================= */
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+input {
+  flex: 1;
+  min-width: 0;
+  height: 60px;
+  border: 2px solid #dce2ed;
+  border-radius: 17px;
+  background: white;
+  padding: 0 20px;
+  font-size: 22px;
+  color: #182238;
+  outline: none;
+}
+
+button {
+  border: 0;
+  border-radius: 17px;
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.analyze {
+  padding: 0 25px;
+  background: #182238;
+  color: white;
+  font-size: 17px;
+}
+
+.add {
+  padding: 0 22px;
+  background: #e8ecf4;
+  color: #182238;
+  font-size: 16px;
+}
+
+button:disabled {
+  opacity: .5;
+}
+
+/* =========================
+   WATCHLIST
+========================= */
+
+.watchlist {
+  display: flex;
+  gap: 9px;
+  overflow-x: auto;
+  padding: 18px 0 5px;
+  scrollbar-width: none;
+}
+
+.watchlist::-webkit-scrollbar {
+  display: none;
+}
+
+.watch {
+  flex: 0 0 auto;
+  padding: 11px 19px;
+  border: 2px solid #dce2ed;
+  border-radius: 30px;
+  background: white;
+  color: #182238;
+  font-size: 17px;
+}
+
+.watch.active {
+  background: #182238;
+  border-color: #182238;
+  color: white;
+}
+
+/* =========================
+   STATUS
+========================= */
+
+.loading,
+.error {
+  display: none;
+  margin-top: 18px;
+  padding: 17px;
+  border-radius: 16px;
+}
+
+.loading {
+  background: white;
+  color: #7d889e;
+}
+
+.error {
+  background: #fff0ee;
+  border: 1px solid #f2b9b2;
+  color: #b52b20;
+  overflow-wrap: anywhere;
+}
+
+/* =========================
+   SECTIONS
+========================= */
+
+.section {
+  margin-top: 26px;
+}
+
+.section-title {
+  margin-bottom: 11px;
+  color: #7d889e;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.card {
+  min-width: 0;
+  padding: 21px;
+  background: white;
+  border: 1px solid #dfe4ed;
+  border-radius: 21px;
+  box-shadow: 0 3px 14px rgba(30,45,75,.035);
+}
+
+.label {
+  color: #7d89a1;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.value {
+  margin-top: 8px;
+  font-size: 25px;
+  line-height: 1.15;
+  font-weight: 820;
+  letter-spacing: -.5px;
+  overflow-wrap: anywhere;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+/* =========================
+   HERO
+========================= */
+
+.hero {
+  margin-top: 24px;
+  padding: 25px;
+  border-radius: 25px;
+  background: #182238;
+  color: white;
+}
+
+.hero-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.company-name {
+  font-size: 14px;
+  color: #aeb8ca;
+  margin-top: 5px;
+}
+
+.hero-ticker {
+  font-size: 34px;
+  font-weight: 850;
+}
+
+.hero-price {
+  margin-top: 16px;
+  font-size: 40px;
+  font-weight: 850;
+  letter-spacing: -1.5px;
+}
+
+.hero-change {
+  margin-top: 3px;
+  font-size: 16px;
+  color: #bfc8d7;
+}
+
+.decision {
+  min-width: 105px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 15px;
+  border-radius: 16px;
+  background: #e7f4ec;
+  color: #176b3f;
+  font-size: 16px;
+  font-weight: 850;
+}
+
+.decision.watch {
+  background: #fff5d9;
+  color: #87630b;
+}
+
+.decision.avoid,
+.decision.sell {
+  background: #fbe8e6;
+  color: #ad2b20;
+}
+
+.hero-score {
+  margin-top: 21px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,.12);
+}
+
+.score-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.score-number {
+  font-size: 28px;
+  font-weight: 850;
+}
+
+.score-bar {
+  height: 8px;
+  margin-top: 10px;
+  border-radius: 10px;
+  background: #343d51;
+  overflow: hidden;
+}
+
+.score-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 10px;
+  background: #b7d9c5;
+}
+
+/* =========================
+   HEALTH
+========================= */
+
+.health-score {
+  font-size: 42px;
+  font-weight: 850;
+}
+
+.health-status {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.health-list {
+  margin-top: 17px;
+}
+
+.health-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid #edf0f5;
+  font-size: 14px;
+}
+
+.health-row:last-child {
+  border-bottom: 0;
+}
+
+.good {
+  color: #197143;
+  font-weight: 750;
+}
+
+.bad {
+  color: #b52b20;
+  font-weight: 750;
+}
+
+.neutral {
+  color: #7d889e;
+  font-weight: 700;
+}
+
+/* =========================
+   GROWTH
+========================= */
+
+.metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.metric:last-child {
+  border-bottom: 0;
+}
+
+.metric-name {
+  color: #67748c;
+  font-size: 14px;
+}
+
+.metric-value {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.trend-up {
+  color: #197143;
+}
+
+.trend-down {
+  color: #b52b20;
+}
+
+.trend-flat {
+  color: #7d889e;
+}
+
+/* =========================
+   FUNDAMENTALS
+========================= */
+
+.fundamental-description {
+  margin-top: 5px;
+  color: #7d889e;
+  font-size: 13px;
+}
+
+/* =========================
+   NEWS
+========================= */
+
+.news-item {
+  padding: 15px 0;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.news-item:last-child {
+  border-bottom: 0;
+}
+
+.news-title {
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 750;
+}
+
+.news-meta {
+  margin-top: 6px;
+  color: #8a95a8;
+  font-size: 12px;
+}
+
+.news-sentiment {
+  display: inline-block;
+  margin-top: 7px;
+  padding: 4px 9px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 800;
+  background: #edf0f5;
+}
+
+.news-sentiment.positive {
+  background: #e5f4eb;
+  color: #197143;
+}
+
+.news-sentiment.negative {
+  background: #fbe8e6;
+  color: #b52b20;
+}
+
+.news-sentiment.neutral {
+  background: #edf0f5;
+  color: #667188;
+}
+
+.news-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* =========================
+   SUMMARY
+========================= */
+
+.summary {
+  padding: 23px;
+  border-radius: 21px;
+  background: white;
+  border: 1px solid #dfe4ed;
+}
+
+.summary-main {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.summary-sub {
+  margin-top: 8px;
+  color: #7d889e;
+  line-height: 1.5;
+}
+
+/* =========================
+   ENTRY
+========================= */
+
+.entry-card {
+  padding: 23px;
+}
+
+.entry-title {
+  font-size: 23px;
+  font-weight: 820;
+}
+
+.entry-subtitle {
+  margin-top: 5px;
+  color: #7d889e;
+  font-size: 14px;
+}
+
+.levels {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
+  margin-top: 17px;
+}
+
+.level {
+  padding: 13px;
+  border-radius: 14px;
+  background: #f7f8fb;
+}
+
+.level-label {
+  color: #7d889e;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+}
+
+.level-value {
+  margin-top: 5px;
+  font-size: 18px;
+  font-weight: 820;
+}
+
+/* =========================
+   RISK REWARD
+========================= */
+
+.rr {
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 15px;
+  background: #f7f8fb;
+}
+
+.rr-title {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.rr-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.rr-item {
+  padding: 9px;
+  background: white;
+  border-radius: 11px;
+  text-align: center;
+}
+
+.rr-item small {
+  display: block;
+  color: #7d889e;
+  font-size: 10px;
+}
+
+.rr-item strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 16px;
+}
+
+/* =========================
+   TECHNICAL
+========================= */
+
+.technical-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.technical-toggle {
+  padding: 9px 13px;
+  background: #e9edf5;
+  color: #182238;
+  border-radius: 13px;
+  font-size: 12px;
+}
+
+.technical-content {
+  display: none;
+}
+
+.technical-content.open {
+  display: block;
+}
+
+/* =========================
+   FORMATIONS
+========================= */
+
+.formation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 13px 0;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.formation:last-child {
+  border-bottom: 0;
+}
+
+.formation-name {
+  font-weight: 750;
+}
+
+.formation-meta {
+  margin-top: 4px;
+  color: #7d889e;
+  font-size: 12px;
+}
+
+/* =========================
+   CONDITIONS
+========================= */
+
+.condition {
+  padding: 10px 0;
+  border-bottom: 1px solid #edf0f5;
+  font-size: 14px;
+}
+
+.condition:last-child {
+  border-bottom: 0;
+}
+
+.condition.met {
+  color: #197143;
+  font-weight: 750;
+}
+
+.condition.not-met {
+  color: #7d889e;
+}
+
+/* =========================
+   REASONS / RISKS
+========================= */
+
+ul {
+  margin: 10px 0 0;
+  padding-left: 19px;
+}
+
+li {
+  margin: 9px 0;
+  line-height: 1.4;
+  font-size: 14px;
+}
+
+/* =========================
+   CHART
+========================= */
+
+.chart-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  min-width: 700px;
+  height: 390px;
+}
+
+/* =========================
+   FOOTER
+========================= */
+
+.footer {
+  margin-top: 30px;
+  text-align: center;
+  color: #9aa4b7;
+  font-size: 11px;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 700px) {
+
+  .app {
+    padding: 22px 14px 45px;
+  }
+
+  h1 {
+    font-size: 31px;
+  }
+
+  .subtitle {
+    font-size: 15px;
+  }
+
+  .toolbar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+  }
+
+  input {
+    width: 100%;
+    height: 56px;
+    font-size: 20px;
+  }
+
+  .analyze {
+    height: 56px;
+    padding: 0 18px;
+  }
+
+  .add {
+    grid-column: 1 / -1;
+    height: 48px;
+  }
+
+  .grid {
+    gap: 9px;
+  }
+
+  .card {
+    padding: 17px;
+    border-radius: 18px;
+  }
+
+  .value {
+    font-size: 21px;
+  }
+
+  .hero {
+    padding: 20px;
+    border-radius: 21px;
+  }
+
+  .hero-ticker {
+    font-size: 29px;
+  }
+
+  .hero-price {
+    font-size: 35px;
+  }
+
+  .decision {
+    min-width: 90px;
+    height: 45px;
+    font-size: 13px;
+  }
+
+  .health-score {
+    font-size: 34px;
+  }
+
+  .levels {
+    gap: 7px;
+  }
+
+  .level {
+    padding: 11px;
+  }
+
+  .level-value {
+    font-size: 16px;
+  }
+
+  .section {
+    margin-top: 21px;
+  }
+}
+</style>
 </head>
 
 <body>
-  <div class="app">
 
-    <header>
-      <h1>Investment Cockpit</h1>
-
-      <div class="subtitle">
-        Technical Analysis · Trend · Structure · Entries ·
-        Risk/Reward · Chart Formations
-      </div>
-    </header>
-
-    <div class="toolbar">
-      <input
-        id="tickerInput"
-        class="ticker-input"
-        type="text"
-        value="AAPL"
-        placeholder="Add ticker e.g. NVDA"
-        autocomplete="off"
-        autocapitalize="characters"
-      />
-
-      <button id="analyzeBtn" class="btn">
-        Analyze
-      </button>
-
-      <button id="addBtn" class="btn secondary">
-        + Add ticker
-      </button>
-    </div>
-
-    <div id="watchlist" class="watchlist"></div>
-
-    <div id="error" class="error"></div>
-
-    <div id="loading" class="loading">
-      Analyzing market data...
-    </div>
-
-    <main id="dashboard" style="display:none;">
-
-      <!-- DECISION -->
-      <section class="section">
-        <div class="grid">
-
-          <div id="decisionCard" class="card decision-card">
-            <div class="label">
-              Investment Decision
-            </div>
-
-            <div id="decision" class="decision">
-              —
-            </div>
-
-            <div id="decisionReason" class="decision-reason">
-              —
-            </div>
-
-            <div id="decisionPills" class="pill-row"></div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- OVERVIEW -->
-      <section class="section">
-        <div class="section-title">
-          Overview
-        </div>
-
-        <div class="grid">
-
-          <div class="card">
-            <div class="label">Ticker</div>
-            <div id="ticker" class="value large-value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">Price</div>
-            <div id="price" class="value large-value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">Investment Score</div>
-            <div id="score" class="value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">Signal</div>
-            <div id="signal" class="value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">Trend</div>
-            <div id="trend" class="value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">Trend Confidence</div>
-            <div id="trendConfidence" class="value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">Market Structure</div>
-            <div id="structure" class="value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">Short-Term Trend</div>
-            <div id="shortTermTrend" class="value">—</div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- TECHNICAL -->
-      <section class="section">
-        <div class="section-title">
-          Technical Indicators
-        </div>
-
-        <div class="grid">
-
-          <div class="card">
-            <div class="label">SMA20</div>
-            <div id="sma20" class="value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">SMA50</div>
-            <div id="sma50" class="value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">RSI14</div>
-            <div id="rsi" class="value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">Relative Volume</div>
-            <div id="relativeVolume" class="value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">MACD</div>
-            <div id="macd" class="value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">MACD Histogram</div>
-            <div id="macdHistogram" class="value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">Support</div>
-            <div id="support" class="value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">Resistance</div>
-            <div id="resistance" class="value">—</div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- CANDLE -->
-      <section class="section">
-        <div class="section-title">
-          Candlestick Analysis
-        </div>
-
-        <div class="grid">
-
-          <div class="card">
-            <div class="label">Candle Pattern</div>
-            <div id="candlePattern" class="value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">Candle Signal</div>
-            <div id="candleSignal" class="value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">Candle Strength</div>
-            <div id="candleStrength" class="value">—</div>
-          </div>
-
-          <div class="card">
-            <div class="label">Volume Confirmation</div>
-            <div id="volumeConfirmation" class="value">—</div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- FORMATIONS -->
-      <section class="section">
-        <div class="section-title">
-          Chart Formations
-        </div>
-
-        <div class="card">
-          <div id="formations"></div>
-        </div>
-      </section>
-
-      <!-- BREAKOUT -->
-      <section class="section">
-        <div class="section-title">
-          Breakout Strategy
-        </div>
-
-        <div class="card strategy">
-
-          <div class="strategy-header">
-
-            <div>
-              <div class="strategy-name">
-                Breakout Entry
-              </div>
-
-              <div class="formation-meta">
-                Enter after price confirms a break above resistance.
-              </div>
-            </div>
-
-            <div id="breakoutStatus" class="strategy-status">
-              —
-            </div>
-
-          </div>
-
-          <div class="levels">
-
-            <div class="level">
-              <div class="level-label">
-                Resistance
-              </div>
-              <div id="breakoutResistance" class="level-value">
-                —
-              </div>
-            </div>
-
-            <div class="level">
-              <div class="level-label">
-                Trigger
-              </div>
-              <div id="breakoutTrigger" class="level-value">
-                —
-              </div>
-            </div>
-
-            <div class="level">
-              <div class="level-label">
-                Invalidation
-              </div>
-              <div id="breakoutStop" class="level-value">
-                —
-              </div>
-            </div>
-
-            <div class="level">
-              <div class="level-label">
-                Target 1
-              </div>
-              <div id="breakoutTarget1" class="level-value">
-                —
-              </div>
-            </div>
-
-            <div class="level">
-              <div class="level-label">
-                Target 2
-              </div>
-              <div id="breakoutTarget2" class="level-value">
-                —
-              </div>
-            </div>
-
-            <div class="level">
-              <div class="level-label">
-                R/R Target 1
-              </div>
-              <div id="breakoutRR" class="level-value">
-                —
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      <!-- PULLBACK -->
-      <section class="section">
-        <div class="section-title">
-          Pullback Strategy
-        </div>
-
-        <div class="card strategy">
-
-          <div class="strategy-header">
-
-            <div>
-              <div class="strategy-name">
-                Pullback Entry
-              </div>
-
-              <div class="formation-meta">
-                Buy inside the preferred support / moving-average zone.
-              </div>
-            </div>
-
-            <div id="pullbackStatus" class="strategy-status">
-              —
-            </div>
-
-          </div>
-
-          <div class="levels">
-
-            <div class="level">
-              <div class="level-label">
-                Zone Low
-              </div>
-              <div id="pullbackLow" class="level-value">
-                —
-              </div>
-            </div>
-
-            <div class="level">
-              <div class="level-label">
-                Zone High
-              </div>
-              <div id="pullbackHigh" class="level-value">
-                —
-              </div>
-            </div>
-
-            <div class="level">
-              <div class="level-label">
-                Preferred Entry
-              </div>
-              <div id="preferredEntry" class="level-value">
-                —
-              </div>
-            </div>
-
-            <div class="level">
-              <div class="level-label">
-                Invalidation
-              </div>
-              <div id="pullbackStop" class="level-value">
-                —
-              </div>
-            </div>
-
-            <div class="level">
-              <div class="level-label">
-                Target 1
-              </div>
-              <div id="pullbackTarget1" class="level-value">
-                —
-              </div>
-            </div>
-
-            <div class="level">
-              <div class="level-label">
-                Target 2
-              </div>
-              <div id="pullbackTarget2" class="level-value">
-                —
-              </div>
-            </div>
-
-          </div>
-
-          <div class="rr">
-
-            <div class="rr-title">
-              Risk / Reward
-            </div>
-
-            <div class="rr-grid">
-
-              <div class="rr-item">
-                <small>Target 1</small>
-                <strong id="pullbackRR1">—</strong>
-              </div>
-
-              <div class="rr-item">
-                <small>Target 2</small>
-                <strong id="pullbackRR2">—</strong>
-              </div>
-
-              <div class="rr-item">
-                <small>Quality</small>
-                <strong id="pullbackRRQuality">—</strong>
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      <!-- DECISION CONDITIONS -->
-      <section class="section">
-        <div class="section-title">
-          Decision Conditions
-        </div>
-
-        <div class="card">
-
-          <div id="conditionSummary" class="formation-meta">
-            —
-          </div>
-
-          <div id="conditionList" class="conditions"></div>
-
-        </div>
-      </section>
-
-      <!-- SCENARIOS -->
-      <section class="section">
-        <div class="section-title">
-          Entry Scenarios
-        </div>
-
-        <div class="grid">
-
-          <div class="card">
-            <div class="label">Best Case Entry</div>
-
-            <div id="bestEntry" class="value">
-              —
-            </div>
-
-            <div class="levels">
-
-              <div class="level">
-                <div class="level-label">Target 1</div>
-                <div id="bestTarget1" class="level-value">—</div>
-              </div>
-
-              <div class="level">
-                <div class="level-label">R/R</div>
-                <div id="bestRR1" class="level-value">—</div>
-              </div>
-
-              <div class="level">
-                <div class="level-label">Target 2</div>
-                <div id="bestTarget2" class="level-value">—</div>
-              </div>
-
-              <div class="level">
-                <div class="level-label">R/R</div>
-                <div id="bestRR2" class="level-value">—</div>
-              </div>
-
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="label">Base Case Entry</div>
-
-            <div id="baseEntry" class="value">
-              —
-            </div>
-
-            <div class="levels">
-
-              <div class="level">
-                <div class="level-label">Target 1</div>
-                <div id="baseTarget1" class="level-value">—</div>
-              </div>
-
-              <div class="level">
-                <div class="level-label">R/R</div>
-                <div id="baseRR1" class="level-value">—</div>
-              </div>
-
-              <div class="level">
-                <div class="level-label">Target 2</div>
-                <div id="baseTarget2" class="level-value">—</div>
-              </div>
-
-              <div class="level">
-                <div class="level-label">R/R</div>
-                <div id="baseRR2" class="level-value">—</div>
-              </div>
-
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="label">Worst Case Entry</div>
-
-            <div id="worstEntry" class="value">
-              —
-            </div>
-
-            <div class="levels">
-
-              <div class="level">
-                <div class="level-label">Target 1</div>
-                <div id="worstTarget1" class="level-value">—</div>
-              </div>
-
-              <div class="level">
-                <div class="level-label">R/R</div>
-                <div id="worstRR1" class="level-value">—</div>
-              </div>
-
-              <div class="level">
-                <div class="level-label">Target 2</div>
-                <div id="worstTarget2" class="level-value">—</div>
-              </div>
-
-              <div class="level">
-                <div class="level-label">R/R</div>
-                <div id="worstRR2" class="level-value">—</div>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- CHART -->
-      <section class="section">
-        <div class="section-title">
-          Price Chart
-        </div>
-
-        <div class="card chart-card">
-
-          <div class="chart-wrap">
-            <canvas id="priceChart"></canvas>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- REASONS / RISKS -->
-      <section class="section">
-        <div class="two-columns">
-
-          <div class="card">
-            <div class="label">
-              Bullish Reasons
-            </div>
-
-            <ul id="reasons" class="bullet"></ul>
-          </div>
-
-          <div class="card">
-            <div class="label">
-              Risks
-            </div>
-
-            <ul id="risks" class="bullet"></ul>
-          </div>
-
-        </div>
-      </section>
-
-      <div id="updated" class="footer">
-        —
-      </div>
-
-    </main>
+<div class="app">
+
+  <h1>Investment Cockpit</h1>
+
+  <div class="subtitle">
+    Understand the company first. Then decide when to buy.
+  </div>
+
+  <div class="toolbar">
+
+    <input
+      id="tickerInput"
+      value="AAPL"
+      placeholder="Add ticker e.g. NVDA"
+      autocomplete="off"
+      autocapitalize="characters"
+    >
+
+    <button
+      id="analyzeBtn"
+      class="analyze"
+    >
+      Analyze
+    </button>
+
+    <button
+      id="addBtn"
+      class="add"
+    >
+      + Add ticker
+    </button>
 
   </div>
 
+  <div
+    id="watchlist"
+    class="watchlist"
+  ></div>
+
+  <div
+    id="loading"
+    class="loading"
+  >
+    Analyzing company and market data...
+  </div>
+
+  <div
+    id="error"
+    class="error"
+  ></div>
+
+  <main
+    id="dashboard"
+    style="display:none;"
+  >
+
+    <!-- HERO -->
+
+    <section class="hero">
+
+      <div class="hero-top">
+
+        <div>
+
+          <div
+            id="heroTicker"
+            class="hero-ticker"
+          >
+            —
+          </div>
+
+          <div
+            id="companyName"
+            class="company-name"
+          >
+            —
+          </div>
+
+        </div>
+
+        <div
+          id="heroDecision"
+          class="decision"
+        >
+          —
+        </div>
+
+      </div>
+
+      <div
+        id="heroPrice"
+        class="hero-price"
+      >
+        —
+      </div>
+
+      <div
+        id="heroChange"
+        class="hero-change"
+      >
+        —
+      </div>
+
+      <div class="hero-score">
+
+        <div class="score-row">
+
+          <span>Investment Score</span>
+
+          <span
+            id="heroScore"
+            class="score-number"
+          >
+            —
+          </span>
+
+        </div>
+
+        <div class="score-bar">
+
+          <div
+            id="scoreFill"
+            class="score-fill"
+          ></div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- INVESTOR VIEW -->
+
+    <section class="section">
+
+      <div class="section-title">
+        Investor View
+      </div>
+
+      <div class="summary">
+
+        <div
+          id="investorSummary"
+          class="summary-main"
+        >
+          —
+        </div>
+
+        <div
+          id="investorSummarySub"
+          class="summary-sub"
+        >
+          —
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- COMPANY HEALTH -->
+
+    <section class="section">
+
+      <div class="section-title">
+        Company Health
+      </div>
+
+      <div class="grid">
+
+        <div class="card">
+
+          <div class="label">
+            Overall Health
+          </div>
+
+          <div
+            id="healthScore"
+            class="health-score"
+          >
+            —
+          </div>
+
+          <div
+            id="healthStatus"
+            class="health-status"
+          >
+            —
+          </div>
+
+        </div>
+
+        <div class="card">
+
+          <div class="label">
+            Business
+          </div>
+
+          <div
+            id="sector"
+            class="value"
+          >
+            —
+          </div>
+
+          <div
+            id="industry"
+            class="fundamental-description"
+          >
+            —
+          </div>
+
+        </div>
+
+        <div class="card full">
+
+          <div class="label">
+            Health Breakdown
+          </div>
+
+          <div
+            id="healthBreakdown"
+            class="health-list"
+          ></div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- GROWTH -->
+
+    <section class="section">
+
+      <div class="section-title">
+        Growth
+      </div>
+
+      <div class="grid">
+
+        <div class="card">
+
+          <div class="label">
+            Growth Quality
+          </div>
+
+          <div
+            id="growthTrend"
+            class="value"
+          >
+            —
+          </div>
+
+          <div
+            id="growthScore"
+            class="fundamental-description"
+          >
+            —
+          </div>
+
+        </div>
+
+        <div class="card">
+
+          <div class="label">
+            Revenue Growth
+          </div>
+
+          <div
+            id="revenueGrowth"
+            class="value"
+          >
+            —
+          </div>
+
+          <div class="fundamental-description">
+            Year over year
+          </div>
+
+        </div>
+
+        <div class="card">
+
+          <div class="label">
+            Profit Growth
+          </div>
+
+          <div
+            id="profitGrowth"
+            class="value"
+          >
+            —
+          </div>
+
+          <div class="fundamental-description">
+            Year over year
+          </div>
+
+        </div>
+
+        <div class="card">
+
+          <div class="label">
+            EPS Growth
+          </div>
+
+          <div
+            id="epsGrowth"
+            class="value"
+          >
+            —
+          </div>
+
+          <div class="fundamental-description">
+            Year over year
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- PROFITABILITY -->
+
+    <section class="section">
+
+      <div class="section-title">
+        Profitability
+      </div>
+
+      <div class="grid">
+
+        <div class="card">
+
+          <div class="label">
+            Profitability
+          </div>
+
+          <div
+            id="profitabilityTrend"
+            class="value"
+          >
+            —
+          </div>
+
+          <div
+            id="profitabilityScore"
+            class="fundamental-description"
+          >
+            —
+          </div>
+
+        </div>
+
+        <div class="card">
+
+          <div class="label">
+            Profit Margin
+          </div>
+
+          <div
+            id="profitMargin"
+            class="value"
+          >
+            —
+          </div>
+
+        </div>
+
+        <div class="card">
+
+          <div class="label">
+            Operating Margin
+          </div>
+
+          <div
+            id="operatingMargin"
+            class="value"
+          >
+            —
+          </div>
+
+        </div>
+
+        <div class="card">
+
+          <div class="label">
+            Return on Equity
+          </div>
+
+          <div
+            id="roe"
+            class="value"
+          >
+            —
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- VALUATION -->
+
+    <section class="section">
+
+      <div class="section-title">
+        Valuation
+      </div>
+
+      <div class="grid">
+
+        <div class="card">
+
+          <div class="label">
+            Valuation View
+          </div>
+
+          <div
+            id="valuationView"
+            class="value"
+          >
+            —
+          </div>
+
+          <div
+            id="valuationScore"
+            class="fundamental-description"
+          >
+            —
+          </div>
+
+        </div>
+
+        <div class="card">
+
+          <div class="label">
+            P/E
+          </div>
+
+          <div
+            id="pe"
+            class="value"
+          >
+            —
+          </div>
+
+        </div>
+
+        <div class="card">
+
+          <div class="label">
+            PEG
+          </div>
+
+          <div
+            id="peg"
+            class="value"
+          >
+            —
+          </div>
+
+        </div>
+
+        <div class="card">
+
+          <div class="label">
+            EPS
+          </div>
+
+          <div
+            id="eps"
+            class="value"
+          >
+            —
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- NEWS -->
+
+    <section class="section">
+
+      <div class="section-title">
+        Latest News
+      </div>
+
+      <div class="card">
+
+        <div class="label">
+          News Sentiment
+        </div>
+
+        <div
+          id="newsSentiment"
+          class="value"
+        >
+          —
+        </div>
+
+        <div
+          id="newsList"
+          style="margin-top:12px;"
+        ></div>
+
+      </div>
+
+    </section>
+
+    <!-- ENTRY -->
+
+    <section class="section">
+
+      <div class="section-title">
+        Price & Entry
+      </div>
+
+      <div class="card entry-card">
+
+        <div class="entry-title">
+          Best Opportunity
+        </div>
+
+        <div
+          id="entrySubtitle"
+          class="entry-subtitle"
+        >
+          —
+        </div>
+
+        <div class="levels">
+
+          <div class="level">
+            <div class="level-label">
+              Buy Zone Low
+            </div>
+
+            <div
+              id="entryLow"
+              class="level-value"
+            >
+              —
+            </div>
+          </div>
+
+          <div class="level">
+            <div class="level-label">
+              Buy Zone High
+            </div>
+
+            <div
+              id="entryHigh"
+              class="level-value"
+            >
+              —
+            </div>
+          </div>
+
+          <div class="level">
+            <div class="level-label">
+              Preferred Entry
+            </div>
+
+            <div
+              id="preferredEntry"
+              class="level-value"
+            >
+              —
+            </div>
+          </div>
+
+          <div class="level">
+            <div class="level-label">
+              Invalidation
+            </div>
+
+            <div
+              id="invalidation"
+              class="level-value"
+            >
+              —
+            </div>
+          </div>
+
+          <div class="level">
+            <div class="level-label">
+              Target 1
+            </div>
+
+            <div
+              id="target1"
+              class="level-value"
+            >
+              —
+            </div>
+          </div>
+
+          <div class="level">
+            <div class="level-label">
+              Target 2
+            </div>
+
+            <div
+              id="target2"
+              class="level-value"
+            >
+              —
+            </div>
+          </div>
+
+        </div>
+
+        <div class="rr">
+
+          <div class="rr-title">
+            Risk / Reward
+          </div>
+
+          <div class="rr-grid">
+
+            <div class="rr-item">
+              <small>Target 1</small>
+              <strong id="rr1">—</strong>
+            </div>
+
+            <div class="rr-item">
+              <small>Target 2</small>
+              <strong id="rr2">—</strong>
+            </div>
+
+            <div class="rr-item">
+              <small>Quality</small>
+              <strong id="rrQuality">—</strong>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TECHNICAL -->
+
+    <section class="section">
+
+      <div class="section-title">
+        Technical Analysis
+      </div>
+
+      <div class="card">
+
+        <div class="technical-header">
+
+          <div>
+
+            <div class="label">
+              Market Timing
+            </div>
+
+            <div
+              id="technicalHeadline"
+              class="value"
+            >
+              —
+            </div>
+
+          </div>
+
+          <button
+            id="technicalToggle"
+            class="technical-toggle"
+          >
+            Show details
+          </button>
+
+        </div>
+
+        <div
+          id="technicalContent"
+          class="technical-content"
+        >
+
+          <div class="grid" style="margin-top:18px;">
+
+            <div class="card">
+              <div class="label">Trend</div>
+              <div id="trend" class="value">—</div>
+            </div>
+
+            <div class="card">
+              <div class="label">Structure</div>
+              <div id="structure" class="value">—</div>
+            </div>
+
+            <div class="card">
+              <div class="label">SMA20</div>
+              <div id="sma20" class="value">—</div>
+            </div>
+
+            <div class="card">
+              <div class="label">SMA50</div>
+              <div id="sma50" class="value">—</div>
+            </div>
+
+            <div class="card">
+              <div class="label">RSI14</div>
+              <div id="rsi" class="value">—</div>
+            </div>
+
+            <div class="card">
+              <div class="label">MACD</div>
+              <div id="macd" class="value">—</div>
+            </div>
+
+            <div class="card">
+              <div class="label">Support</div>
+              <div id="support" class="value">—</div>
+            </div>
+
+            <div class="card">
+              <div class="label">Resistance</div>
+              <div id="resistance" class="value">—</div>
+            </div>
+
+          </div>
+
+          <div class="section">
+
+            <div class="section-title">
+              Chart Formations
+            </div>
+
+            <div class="card">
+              <div id="formations"></div>
+            </div>
+
+          </div>
+
+          <div class="section">
+
+            <div class="section-title">
+              Decision Conditions
+            </div>
+
+            <div class="card">
+
+              <div
+                id="conditionSummary"
+                class="fundamental-description"
+              >
+                —
+              </div>
+
+              <div
+                id="conditionList"
+                style="margin-top:10px;"
+              ></div>
+
+            </div>
+
+          </div>
+
+          <div class="section">
+
+            <div class="grid">
+
+              <div class="card">
+
+                <div class="label">
+                  Positive Factors
+                </div>
+
+                <ul id="reasons"></ul>
+
+              </div>
+
+              <div class="card">
+
+                <div class="label">
+                  Risks
+                </div>
+
+                <ul id="risks"></ul>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="section">
+
+            <div class="section-title">
+              Price Chart
+            </div>
+
+            <div class="card">
+
+              <div class="chart-wrap">
+
+                <canvas
+                  id="priceChart"
+                ></canvas>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <div
+      id="updated"
+      class="footer"
+    >
+      —
+    </div>
+
+  </main>
+
+</div>
+
 <script>
-  // ============================================================
-  // INVESTMENT COCKPIT FRONTEND
-  // ============================================================
 
-  const DEFAULT_TICKERS = [
-    "AAPL",
-    "NVDA",
-    "MSFT",
-    "AMZN"
-  ];
+const DEFAULT_TICKERS = [
+  "AAPL",
+  "NVDA",
+  "MSFT",
+  "AMZN"
+];
 
-  let watchlist = [...DEFAULT_TICKERS];
-  let currentData = null;
-  let activeTicker = "AAPL";
+let watchlist = [
+  ...DEFAULT_TICKERS
+];
 
-  const $ = (id) => document.getElementById(id);
+let currentData = null;
 
-  // ------------------------------------------------------------
-  // Helpers
-  // ------------------------------------------------------------
+let activeTicker = "AAPL";
 
-  function setText(id, value) {
-    const element = $(id);
+/* =========================
+   HELPERS
+========================= */
 
-    if (!element) return;
+const $ = id =>
+  document.getElementById(id);
 
-    if (
-      value === null ||
-      value === undefined ||
-      value === ""
-    ) {
-      element.textContent = "—";
-    } else {
-      element.textContent = value;
-    }
+function setText(id, value) {
+
+  const el = $(id);
+
+  if (!el) return;
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    el.textContent = "—";
+  } else {
+    el.textContent = value;
+  }
+}
+
+function money(value) {
+
+  if (
+    value === null ||
+    value === undefined ||
+    !Number.isFinite(Number(value))
+  ) {
+    return "—";
   }
 
-  function number(value, decimals = 2) {
-    if (
-      value === null ||
-      value === undefined ||
-      !Number.isFinite(Number(value))
-    ) {
-      return "—";
-    }
+  return "$" +
+    Number(value).toFixed(2);
+}
 
-    return Number(value).toFixed(decimals);
+function percentage(value) {
+
+  if (
+    value === null ||
+    value === undefined ||
+    !Number.isFinite(Number(value))
+  ) {
+    return "—";
   }
 
-  function money(value) {
-    if (
-      value === null ||
-      value === undefined ||
-      !Number.isFinite(Number(value))
-    ) {
-      return "—";
-    }
+  const n = Number(value);
 
-    return "$" + Number(value).toFixed(2);
+  return (
+    n >= 0 ? "+" : ""
+  ) +
+  n.toFixed(1) +
+  "%";
+}
+
+function multiple(value) {
+
+  if (
+    value === null ||
+    value === undefined ||
+    !Number.isFinite(Number(value))
+  ) {
+    return "—";
   }
 
-  function percent(value) {
-    if (
-      value === null ||
-      value === undefined ||
-      !Number.isFinite(Number(value))
-    ) {
-      return "—";
-    }
+  return Number(value).toFixed(2) + "x";
+}
 
-    const n = Number(value);
+function escapeHtml(value) {
 
-    return (
-      (n >= 0 ? "+" : "") +
-      n.toFixed(2) +
-      "%"
-    );
-  }
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
 
-  function multiple(value) {
-    if (
-      value === null ||
-      value === undefined ||
-      !Number.isFinite(Number(value))
-    ) {
-      return "—";
-    }
+function showError(message) {
 
-    return Number(value).toFixed(2) + "x";
-  }
+  $("error").textContent =
+    "Error: " + message;
 
-  function escapeHtml(value) {
-    return String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
+  $("error").style.display =
+    "block";
+}
 
-  function clearError() {
-    $("error").style.display = "none";
-    $("error").textContent = "";
-  }
+function clearError() {
 
-  function showError(message) {
-    $("error").style.display = "block";
-    $("error").textContent = message;
-  }
+  $("error").style.display =
+    "none";
+}
 
-  function setLoading(value) {
-    $("loading").style.display =
-      value ? "block" : "none";
+function setLoading(value) {
 
-    $("analyzeBtn").disabled = value;
-  }
+  $("loading").style.display =
+    value ? "block" : "none";
 
-  function signalClass(value) {
-    const text =
-      String(value || "").toUpperCase();
+  $("analyzeBtn").disabled =
+    value;
+}
 
-    if (
-      text.includes("BULL") ||
-      text.includes("BUY") ||
-      text.includes("POSITIVE")
-    ) {
-      return "bullish";
-    }
+/* =========================
+   WATCHLIST
+========================= */
 
-    if (
-      text.includes("BEAR") ||
-      text.includes("SELL") ||
-      text.includes("NEGATIVE")
-    ) {
-      return "bearish";
-    }
+function renderWatchlist() {
 
-    return "neutral";
-  }
+  const container =
+    $("watchlist");
 
-  // ------------------------------------------------------------
-  // Watchlist
-  // ------------------------------------------------------------
+  container.innerHTML = "";
 
-  function renderWatchlist() {
-    const container = $("watchlist");
+  watchlist.forEach(ticker => {
 
-    container.innerHTML = "";
+    const button =
+      document.createElement("button");
 
-    watchlist.forEach((ticker) => {
-      const button =
-        document.createElement("button");
-
-      button.className =
-        "ticker-btn" +
-        (
-          ticker === activeTicker
-            ? " active"
-            : ""
-        );
-
-      button.textContent = ticker;
-
-      button.addEventListener(
-        "click",
-        () => {
-          activeTicker = ticker;
-
-          $("tickerInput").value =
-            ticker;
-
-          renderWatchlist();
-
-          analyze(ticker);
-        }
+    button.className =
+      "watch" +
+      (
+        ticker === activeTicker
+          ? " active"
+          : ""
       );
 
-      container.appendChild(button);
-    });
-  }
+    button.textContent =
+      ticker;
 
-  function addTicker() {
-    const ticker =
-      $("tickerInput")
-        .value
-        .trim()
-        .toUpperCase();
+    button.onclick = () => {
 
-    if (!ticker) return;
+      activeTicker =
+        ticker;
 
-    if (!watchlist.includes(ticker)) {
-      watchlist.push(ticker);
-    }
-
-    activeTicker = ticker;
-
-    renderWatchlist();
-
-    analyze(ticker);
-  }
-
-  // ------------------------------------------------------------
-  // API
-  // ------------------------------------------------------------
-
-  async function analyze(ticker) {
-    const symbol =
-      String(ticker || "")
-        .trim()
-        .toUpperCase();
-
-    if (!symbol) {
-      showError("Please enter a ticker.");
-      return;
-    }
-
-    clearError();
-
-    setLoading(true);
-
-    try {
-      const response =
-        await fetch(
-          "/api/stock?ticker=" +
-          encodeURIComponent(symbol),
-          {
-            cache: "no-store"
-          }
-        );
-
-      let data = null;
-
-      try {
-        data = await response.json();
-      } catch (jsonError) {
-        throw new Error(
-          "The API returned an invalid response."
-        );
-      }
-
-      if (!response.ok) {
-        throw new Error(
-          data?.message ||
-          data?.error ||
-          "API request failed."
-        );
-      }
-
-      if (data?.error) {
-        throw new Error(
-          data.message ||
-          data.error
-        );
-      }
-
-      if (!data.price) {
-        throw new Error(
-          "No market price was returned."
-        );
-      }
-
-      currentData = data;
-
-      activeTicker = symbol;
+      $("tickerInput").value =
+        ticker;
 
       renderWatchlist();
 
-      renderDashboard(data);
-
-      $("dashboard").style.display =
-        "block";
-
-    } catch (error) {
-
-      console.error(error);
-
-      $("dashboard").style.display =
-        currentData ? "block" : "none";
-
-      showError(
-        "Error: " +
-        (
-          error?.message ||
-          "Unable to analyze ticker."
-        )
-      );
-
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // ------------------------------------------------------------
-  // Dashboard
-  // ------------------------------------------------------------
-
-  function renderDashboard(d) {
-
-    // ---------------------------
-    // Overview
-    // ---------------------------
-
-    setText(
-      "ticker",
-      d.symbol
-    );
-
-    setText(
-      "price",
-      money(d.price)
-    );
-
-    setText(
-      "score",
-      d.score
-    );
-
-    setText(
-      "signal",
-      d.decision
-    );
-
-    setText(
-      "trend",
-      d.trend
-    );
-
-    setText(
-      "trendConfidence",
-      d.trend_confidence !== null &&
-      d.trend_confidence !== undefined
-        ? d.trend_confidence + "%"
-        : "—"
-    );
-
-    setText(
-      "structure",
-      d.structure
-    );
-
-    setText(
-      "shortTermTrend",
-      d.short_term_trend
-    );
-
-    // ---------------------------
-    // Technical
-    // ---------------------------
-
-    setText(
-      "sma20",
-      money(d.sma20)
-    );
-
-    setText(
-      "sma50",
-      money(d.sma50)
-    );
-
-    setText(
-      "rsi",
-      number(d.rsi)
-    );
-
-    setText(
-      "relativeVolume",
-      d.relative_volume !== null &&
-      d.relative_volume !== undefined
-        ? multiple(d.relative_volume)
-        : "—"
-    );
-
-    setText(
-      "macd",
-      number(d.macd, 4)
-    );
-
-    setText(
-      "macdHistogram",
-      number(d.macd_histogram, 4)
-    );
-
-    setText(
-      "support",
-      money(d.support)
-    );
-
-    setText(
-      "resistance",
-      money(d.resistance)
-    );
-
-    // ---------------------------
-    // Candle
-    // ---------------------------
-
-    const candle =
-      d.candle || {};
-
-    setText(
-      "candlePattern",
-      d.candle_pattern ||
-      candle.pattern
-    );
-
-    setText(
-      "candleSignal",
-      d.candle_signal ||
-      candle.signal
-    );
-
-    setText(
-      "candleStrength",
-      d.candle_strength ||
-      candle.strength
-    );
-
-    setText(
-      "volumeConfirmation",
-      d.volume_confirmation ||
-      d.volume?.confirmation
-    );
-
-    // ---------------------------
-    // Decision
-    // ---------------------------
-
-    renderDecision(d);
-
-    // ---------------------------
-    // Formations
-    // ---------------------------
-
-    renderFormations(
-      d.formations || []
-    );
-
-    // ---------------------------
-    // Strategies
-    // ---------------------------
-
-    renderBreakout(d);
-
-    renderPullback(d);
-
-    // ---------------------------
-    // Conditions
-    // ---------------------------
-
-    renderConditions(d);
-
-    // ---------------------------
-    // Scenarios
-    // ---------------------------
-
-    renderScenarios(d);
-
-    // ---------------------------
-    // Reasons
-    // ---------------------------
-
-    renderBullets(
-      "reasons",
-      d.reasons || []
-    );
-
-    renderBullets(
-      "risks",
-      d.risks || []
-    );
-
-    // ---------------------------
-    // Chart
-    // ---------------------------
-
-    drawChart(d);
-
-    // ---------------------------
-    // Last updated
-    // ---------------------------
-
-    setText(
-      "updated",
-      d.last_updated
-        ? "Market data date: " +
-          d.last_updated +
-          " · Alpha Vantage daily data"
-        : "Daily market data"
-    );
-  }
-
-  // ------------------------------------------------------------
-  // Decision
-  // ------------------------------------------------------------
-
-  function renderDecision(d) {
-
-    const decision =
-      String(
-        d.decision || "WATCH"
-      ).toUpperCase();
-
-    const card =
-      $("decisionCard");
-
-    card.className =
-      "card decision-card";
-
-    if (
-      decision === "BUY"
-    ) {
-      card.classList.add("buy");
-    }
-
-    if (
-      decision === "STRONG BUY"
-    ) {
-      card.classList.add("strong-buy");
-    }
-
-    if (
-      decision === "SELL"
-    ) {
-      card.classList.add("sell");
-    }
-
-    if (
-      decision === "AVOID"
-    ) {
-      card.classList.add("avoid");
-    }
-
-    setText(
-      "decision",
-      decision
-    );
-
-    setText(
-      "decisionReason",
-      d.decision_reason ||
-      "—"
-    );
-
-    const pills =
-      $("decisionPills");
-
-    pills.innerHTML = "";
-
-    const values = [
-      [
-        "Score " +
-        (
-          d.score ??
-          "—"
-        ),
-        ""
-      ],
-      [
-        d.active_strategy ||
-        "WAIT",
-        ""
-      ],
-      [
-        d.risk_reward_quality ||
-        "—",
-        ""
-      ]
-    ];
-
-    values.forEach(
-      ([text]) => {
-
-        const pill =
-          document.createElement("div");
-
-        pill.className =
-          "pill";
-
-        pill.textContent =
-          text;
-
-        pills.appendChild(
-          pill
-        );
-      }
-    );
-  }
-
-  // ------------------------------------------------------------
-  // Formations
-  // ------------------------------------------------------------
-
-  function renderFormations(formations) {
-
-    const container =
-      $("formations");
-
-    container.innerHTML = "";
-
-    if (
-      !Array.isArray(formations) ||
-      formations.length === 0
-    ) {
-      container.innerHTML =
-        '<div class="formation-meta">' +
-        "No significant chart formation detected." +
-        "</div>";
-
-      return;
-    }
-
-    formations.forEach(
-      (formation) => {
-
-        const row =
-          document.createElement("div");
-
-        row.className =
-          "formation";
-
-        const type =
-          String(
-            formation.type || ""
-          ).toUpperCase();
-
-        const confidence =
-          formation.confidence;
-
-        row.innerHTML = `
-          <div>
-            <div class="formation-name">
-              ${escapeHtml(
-                formation.name ||
-                "Formation"
-              )}
-            </div>
-
-            <div class="formation-meta">
-              ${escapeHtml(type)}
-            </div>
-          </div>
-
-          <div class="confidence">
-            ${Number.isFinite(Number(confidence))
-              ? Number(confidence) + "%"
-              : "—"}
-          </div>
-        `;
-
-        container.appendChild(row);
-      }
-    );
-  }
-
-  // ------------------------------------------------------------
-  // Breakout
-  // ------------------------------------------------------------
-
-  function renderBreakout(d) {
-
-    const confirmed =
-      Boolean(
-        d.breakout_confirmed ||
-        d.buy_trigger_confirmed
-      );
-
-    setText(
-      "breakoutStatus",
-      confirmed
-        ? "CONFIRMED"
-        : "WAIT"
-    );
-
-    setText(
-      "breakoutResistance",
-      money(d.resistance)
-    );
-
-    setText(
-      "breakoutTrigger",
-      money(
-        d.buy_trigger_price
-      )
-    );
-
-    setText(
-      "breakoutStop",
-      money(d.invalidation)
-    );
-
-    setText(
-      "breakoutTarget1",
-      money(d.target1)
-    );
-
-    setText(
-      "breakoutTarget2",
-      money(d.target2)
-    );
-
-    setText(
-      "breakoutRR",
-      multiple(
-        d.risk_reward_target1
-      )
-    );
-  }
-
-  // ------------------------------------------------------------
-  // Pullback
-  // ------------------------------------------------------------
-
-  function renderPullback(d) {
-
-    const zone =
-      d.pullback_zone || {};
-
-    const low =
-      zone.low ??
-      d.entry_low;
-
-    const high =
-      zone.high ??
-      d.entry_high;
-
-    const preferred =
-      zone.preferred ??
-      d.preferred_entry;
-
-    let status =
-      "WAIT";
-
-    if (
-      d.in_pullback_zone
-    ) {
-      status =
-        "IN PULLBACK ZONE";
-    } else if (
-      d.price > high
-    ) {
-      status =
-        "ABOVE ZONE";
-    } else if (
-      d.price < low
-    ) {
-      status =
-        "BELOW ZONE";
-    }
-
-    setText(
-      "pullbackStatus",
-      status
-    );
-
-    setText(
-      "pullbackLow",
-      money(low)
-    );
-
-    setText(
-      "pullbackHigh",
-      money(high)
-    );
-
-    setText(
-      "preferredEntry",
-      money(preferred)
-    );
-
-    setText(
-      "pullbackStop",
-      money(d.invalidation)
-    );
-
-    setText(
-      "pullbackTarget1",
-      money(d.target1)
-    );
-
-    setText(
-      "pullbackTarget2",
-      money(d.target2)
-    );
-
-    setText(
-      "pullbackRR1",
-      multiple(
-        d.risk_reward_target1
-      )
-    );
-
-    setText(
-      "pullbackRR2",
-      multiple(
-        d.risk_reward_target2
-      )
-    );
-
-    setText(
-      "pullbackRRQuality",
-      d.risk_reward_quality
-    );
-  }
-
-  // ------------------------------------------------------------
-  // Conditions
-  // IMPORTANT:
-  // The DOM element is called "conditionList".
-  // This avoids the old "conditions" variable collision.
-  // ------------------------------------------------------------
-
-  function renderConditions(d) {
-
-    const conditionList =
-      $("conditionList");
-
-    conditionList.innerHTML = "";
-
-    const conditionData =
-      d.conditions || {};
-
-    const entries =
-      Object.entries(
-        conditionData
-      );
-
-    setText(
-      "conditionSummary",
-      (
-        d.conditions_met ??
-        0
-      ) +
-      " / " +
-      (
-        d.conditions_total ??
-        entries.length
-      ) +
-      " conditions met"
-    );
-
-    if (!entries.length) {
-
-      conditionList.innerHTML =
-        '<div class="condition not-met">' +
-        "No decision conditions available." +
-        "</div>";
-
-      return;
-    }
-
-    const labels = {
-      bullishTrend:
-        "Bullish primary trend",
-
-      bullishStructure:
-        "Bullish market structure",
-
-      positiveMACD:
-        "Positive MACD momentum",
-
-      healthyRSI:
-        "Healthy RSI zone",
-
-      bullishCandle:
-        "Bullish candle confirmation",
-
-      attractiveRiskReward:
-        "Attractive risk/reward"
+      analyze(ticker);
     };
 
-    entries.forEach(
-      ([key, met]) => {
+    container.appendChild(button);
+  });
+}
 
-        const div =
-          document.createElement("div");
+function addTicker() {
 
-        div.className =
-          "condition " +
-          (
-            met
-              ? "met"
-              : "not-met"
-          );
+  const ticker =
+    $("tickerInput")
+      .value
+      .trim()
+      .toUpperCase();
 
-        div.textContent =
-          (
-            met
-              ? "✓ "
-              : "○ "
-          ) +
-          (
-            labels[key] ||
-            key
-          );
+  if (!ticker) return;
 
-        conditionList.appendChild(
-          div
-        );
-      }
-    );
-  }
-
-  // ------------------------------------------------------------
-  // Scenarios
-  // ------------------------------------------------------------
-
-  function calculateRR(
-    entry,
-    stop,
-    target
+  if (
+    !watchlist.includes(ticker)
   ) {
-
-    if (
-      !Number.isFinite(Number(entry)) ||
-      !Number.isFinite(Number(stop)) ||
-      !Number.isFinite(Number(target))
-    ) {
-      return null;
-    }
-
-    const risk =
-      Number(entry) -
-      Number(stop);
-
-    if (risk <= 0) {
-      return null;
-    }
-
-    return (
-      Number(target) -
-      Number(entry)
-    ) / risk;
+    watchlist.push(ticker);
   }
 
-  function renderScenarios(d) {
+  activeTicker =
+    ticker;
 
-    const low =
-      Number(
-        d.entry_low
-      );
+  renderWatchlist();
 
-    const high =
-      Number(
-        d.entry_high
-      );
+  analyze(ticker);
+}
 
-    const stop =
-      Number(
-        d.invalidation
-      );
+/* =========================
+   API
+========================= */
 
-    const target1 =
-      Number(
-        d.target1
-      );
+async function analyze(ticker) {
 
-    const target2 =
-      Number(
-        d.target2
-      );
+  const symbol =
+    String(ticker || "")
+      .trim()
+      .toUpperCase();
 
-    const valid =
-      [
-        low,
-        high,
-        stop,
-        target1,
-        target2
-      ].every(
-        Number.isFinite
-      );
+  if (!symbol) {
 
-    if (!valid) {
-      return;
-    }
-
-    // Best = lower part of pullback zone
-    const bestEntry =
-      Math.max(
-        low,
-        stop + 0.01
-      );
-
-    // Base = preferred entry
-    const baseEntry =
-      Number(
-        d.preferred_entry ||
-        (low + high) / 2
-      );
-
-    // Worst = upper part of zone
-    const worstEntry =
-      Math.max(
-        high,
-        stop + 0.01
-      );
-
-    setText(
-      "bestEntry",
-      money(bestEntry)
+    showError(
+      "Please enter a ticker."
     );
 
-    setText(
-      "bestTarget1",
-      money(target1)
-    );
-
-    setText(
-      "bestRR1",
-      multiple(
-        calculateRR(
-          bestEntry,
-          stop,
-          target1
-        )
-      )
-    );
-
-    setText(
-      "bestTarget2",
-      money(target2)
-    );
-
-    setText(
-      "bestRR2",
-      multiple(
-        calculateRR(
-          bestEntry,
-          stop,
-          target2
-        )
-      )
-    );
-
-    setText(
-      "baseEntry",
-      money(baseEntry)
-    );
-
-    setText(
-      "baseTarget1",
-      money(target1)
-    );
-
-    setText(
-      "baseRR1",
-      multiple(
-        calculateRR(
-          baseEntry,
-          stop,
-          target1
-        )
-      )
-    );
-
-    setText(
-      "baseTarget2",
-      money(target2)
-    );
-
-    setText(
-      "baseRR2",
-      multiple(
-        calculateRR(
-          baseEntry,
-          stop,
-          target2
-        )
-      )
-    );
-
-    setText(
-      "worstEntry",
-      money(worstEntry)
-    );
-
-    setText(
-      "worstTarget1",
-      money(target1)
-    );
-
-    setText(
-      "worstRR1",
-      multiple(
-        calculateRR(
-          worstEntry,
-          stop,
-          target1
-        )
-      )
-    );
-
-    setText(
-      "worstTarget2",
-      money(target2)
-    );
-
-    setText(
-      "worstRR2",
-      multiple(
-        calculateRR(
-          worstEntry,
-          stop,
-          target2
-        )
-      )
-    );
+    return;
   }
 
-  // ------------------------------------------------------------
-  // Bullets
-  // ------------------------------------------------------------
+  clearError();
 
-  function renderBullets(
-    id,
-    items
-  ) {
+  setLoading(true);
 
-    const element =
-      $(id);
+  try {
 
-    element.innerHTML = "";
-
-    if (
-      !Array.isArray(items) ||
-      items.length === 0
-    ) {
-      const li =
-        document.createElement("li");
-
-      li.textContent =
-        "No information available.";
-
-      element.appendChild(li);
-
-      return;
-    }
-
-    items.forEach(
-      (item) => {
-
-        const li =
-          document.createElement("li");
-
-        li.textContent =
-          item;
-
-        element.appendChild(
-          li
-        );
-      }
-    );
-  }
-
-  // ------------------------------------------------------------
-  // Chart
-  // ------------------------------------------------------------
-
-  function drawChart(d) {
-
-    const canvas =
-      $("priceChart");
-
-    const container =
-      canvas.parentElement;
-
-    const rect =
-      container.getBoundingClientRect();
-
-    const width =
-      Math.max(
-        rect.width,
-        720
-      );
-
-    const height =
-      420;
-
-    const dpr =
-      window.devicePixelRatio || 1;
-
-    canvas.width =
-      width * dpr;
-
-    canvas.height =
-      height * dpr;
-
-    canvas.style.width =
-      width + "px";
-
-    canvas.style.height =
-      height + "px";
-
-    const ctx =
-      canvas.getContext("2d");
-
-    ctx.scale(
-      dpr,
-      dpr
-    );
-
-    const history =
-      Array.isArray(d.history)
-        ? d.history.slice(-80)
-        : [];
-
-    if (
-      history.length < 2
-    ) {
-      ctx.fillStyle =
-        "#7d889e";
-
-      ctx.font =
-        "16px -apple-system, sans-serif";
-
-      ctx.fillText(
-        "Not enough historical data for chart.",
-        20,
-        40
-      );
-
-      return;
-    }
-
-    const padding = {
-      left: 20,
-      right: 130,
-      top: 25,
-      bottom: 35
-    };
-
-    const chartWidth =
-      width -
-      padding.left -
-      padding.right;
-
-    const chartHeight =
-      height -
-      padding.top -
-      padding.bottom;
-
-    const prices =
-      history.flatMap(
-        (x) => [
-          Number(x.high),
-          Number(x.low)
-        ]
-      );
-
-    const levels = [
-      Number(d.support),
-      Number(d.resistance),
-      Number(d.target1),
-      Number(d.target2),
-      Number(d.invalidation),
-      Number(d.entry_low),
-      Number(d.entry_high)
-    ].filter(
-      Number.isFinite
-    );
-
-    const allValues =
-      prices.concat(levels);
-
-    let min =
-      Math.min(...allValues);
-
-    let max =
-      Math.max(...allValues);
-
-    const range =
-      max - min || 1;
-
-    min -= range * 0.08;
-    max += range * 0.08;
-
-    function x(index) {
-      return (
-        padding.left +
-        (
-          index /
-          (history.length - 1)
-        ) *
-        chartWidth
-      );
-    }
-
-    function y(value) {
-      return (
-        padding.top +
-        (
-          (max - value) /
-          (max - min)
-        ) *
-        chartHeight
-      );
-    }
-
-    // Background
-    ctx.clearRect(
-      0,
-      0,
-      width,
-      height
-    );
-
-    // Grid
-    ctx.strokeStyle =
-      "#edf0f5";
-
-    ctx.lineWidth = 1;
-
-    for (
-      let i = 0;
-      i <= 5;
-      i++
-    ) {
-
-      const gy =
-        padding.top +
-        (
-          i / 5
-        ) *
-        chartHeight;
-
-      ctx.beginPath();
-
-      ctx.moveTo(
-        padding.left,
-        gy
-      );
-
-      ctx.lineTo(
-        width - padding.right,
-        gy
-      );
-
-      ctx.stroke();
-
-      const value =
-        max -
-        (
-          i / 5
-        ) *
-        (max - min);
-
-      ctx.fillStyle =
-        "#8c97aa";
-
-      ctx.font =
-        "12px -apple-system, sans-serif";
-
-      ctx.fillText(
-        "$" +
-        value.toFixed(0),
-        width - padding.right + 12,
-        gy + 4
-      );
-    }
-
-    // Pullback zone
-    const zoneLow =
-      Number(d.entry_low);
-
-    const zoneHigh =
-      Number(d.entry_high);
-
-    if (
-      Number.isFinite(zoneLow) &&
-      Number.isFinite(zoneHigh)
-    ) {
-
-      const top =
-        y(zoneHigh);
-
-      const bottom =
-        y(zoneLow);
-
-      ctx.fillStyle =
-        "rgba(100,120,150,0.08)";
-
-      ctx.fillRect(
-        padding.left,
-        top,
-        chartWidth,
-        bottom - top
-      );
-    }
-
-    // Main price line
-    ctx.beginPath();
-
-    history.forEach(
-      (item, index) => {
-
-        const px =
-          x(index);
-
-        const py =
-          y(Number(item.close));
-
-        if (index === 0) {
-          ctx.moveTo(
-            px,
-            py
-          );
-        } else {
-          ctx.lineTo(
-            px,
-            py
-          );
+    const response =
+      await fetch(
+        "/api/stock?ticker=" +
+        encodeURIComponent(symbol),
+        {
+          cache: "no-store"
         }
-      }
-    );
-
-    ctx.strokeStyle =
-      "#182238";
-
-    ctx.lineWidth = 3;
-
-    ctx.stroke();
-
-    // SMA20
-    drawIndicatorLine(
-      ctx,
-      history,
-      "sma20",
-      x,
-      y,
-      width
-    );
-
-    // SMA50
-    drawIndicatorLine(
-      ctx,
-      history,
-      "sma50",
-      x,
-      y,
-      width
-    );
-
-    // Levels
-    drawLevel(
-      ctx,
-      width,
-      y,
-      d.support,
-      "Support",
-      padding
-    );
-
-    drawLevel(
-      ctx,
-      width,
-      y,
-      d.resistance,
-      "Resistance",
-      padding
-    );
-
-    drawLevel(
-      ctx,
-      width,
-      y,
-      d.target1,
-      "Target 1",
-      padding
-    );
-
-    drawLevel(
-      ctx,
-      width,
-      y,
-      d.target2,
-      "Target 2",
-      padding
-    );
-
-    drawLevel(
-      ctx,
-      width,
-      y,
-      d.invalidation,
-      "Invalidation",
-      padding
-    );
-
-    // Current price
-    const lastX =
-      x(history.length - 1);
-
-    const lastY =
-      y(
-        Number(
-          history[
-            history.length - 1
-          ].close
-        )
       );
 
-    ctx.beginPath();
+    let data;
 
-    ctx.arc(
-      lastX,
-      lastY,
-      5,
-      0,
-      Math.PI * 2
+    try {
+
+      data =
+        await response.json();
+
+    } catch {
+
+      throw new Error(
+        "The API returned an invalid response."
+      );
+    }
+
+    if (!response.ok) {
+
+      throw new Error(
+        data?.message ||
+        data?.error ||
+        "API request failed."
+      );
+    }
+
+    if (data?.error) {
+
+      throw new Error(
+        data.message ||
+        data.error
+      );
+    }
+
+    if (!data.price) {
+
+      throw new Error(
+        "No market price was returned."
+      );
+    }
+
+    currentData =
+      data;
+
+    activeTicker =
+      symbol;
+
+    renderWatchlist();
+
+    renderDashboard(data);
+
+    $("dashboard").style.display =
+      "block";
+
+  } catch (error) {
+
+    console.error(error);
+
+    showError(
+      error.message ||
+      "Unable to analyze ticker."
     );
 
-    ctx.fillStyle =
-      "#182238";
+  } finally {
 
-    ctx.fill();
+    setLoading(false);
+  }
+}
+
+/* =========================
+   DASHBOARD
+========================= */
+
+function renderDashboard(d) {
+
+  renderHero(d);
+
+  renderInvestorSummary(d);
+
+  renderHealth(d);
+
+  renderGrowth(d);
+
+  renderProfitability(d);
+
+  renderValuation(d);
+
+  renderNews(d);
+
+  renderEntry(d);
+
+  renderTechnical(d);
+
+  setText(
+    "updated",
+    d.last_updated
+      ? "Daily market data: " +
+        d.last_updated
+      : "Market data"
+  );
+}
+
+/* =========================
+   HERO
+========================= */
+
+function renderHero(d) {
+
+  setText(
+    "heroTicker",
+    d.symbol
+  );
+
+  setText(
+    "companyName",
+    d.name || d.symbol
+  );
+
+  setText(
+    "heroPrice",
+    money(d.price)
+  );
+
+  setText(
+    "heroChange",
+    percentage(d.change_pct)
+  );
+
+  const decision =
+    String(
+      d.decision || "WATCH"
+    ).toUpperCase();
+
+  const decisionEl =
+    $("heroDecision");
+
+  decisionEl.textContent =
+    decision;
+
+  decisionEl.className =
+    "decision";
+
+  if (
+    decision === "WATCH"
+  ) {
+    decisionEl.classList.add(
+      "watch"
+    );
+  }
+
+  if (
+    decision === "AVOID" ||
+    decision === "SELL"
+  ) {
+    decisionEl.classList.add(
+      decision.toLowerCase()
+    );
+  }
+
+  setText(
+    "heroScore",
+    d.score + "/100"
+  );
+
+  $("scoreFill").style.width =
+    Math.max(
+      0,
+      Math.min(
+        100,
+        Number(d.score) || 0
+      )
+    ) + "%";
+}
+
+/* =========================
+   INVESTOR SUMMARY
+========================= */
+
+function renderInvestorSummary(d) {
+
+  const health =
+    d.company_health?.status ||
+    "UNKNOWN";
+
+  const growth =
+    d.growth?.trend ||
+    "UNKNOWN";
+
+  const profitability =
+    d.profitability?.trend ||
+    "UNKNOWN";
+
+  const valuation =
+    d.valuation?.view ||
+    "UNKNOWN";
+
+  const news =
+    d.news_sentiment ||
+    "NEUTRAL";
+
+  let headline =
+    "Mixed investment picture.";
+
+  if (
+    health === "EXCELLENT" &&
+    growth === "STRONG"
+  ) {
+    headline =
+      "Strong company with attractive growth.";
+  } else if (
+    health === "HEALTHY"
+  ) {
+    headline =
+      "Healthy company with a reasonable investment setup.";
+  } else if (
+    health === "WEAK"
+  ) {
+    headline =
+      "Company fundamentals require caution.";
+  }
+
+  setText(
+    "investorSummary",
+    headline
+  );
+
+  setText(
+    "investorSummarySub",
+
+    "Health: " +
+    health +
+    " · Growth: " +
+    growth +
+    " · Profitability: " +
+    profitability +
+    " · Valuation: " +
+    valuation +
+    " · News: " +
+    news
+  );
+}
+
+/* =========================
+   HEALTH
+========================= */
+
+function renderHealth(d) {
+
+  const health =
+    d.company_health || {};
+
+  setText(
+    "healthScore",
+    health.score !== undefined
+      ? health.score + "/100"
+      : "—"
+  );
+
+  setText(
+    "healthStatus",
+    health.status || "—"
+  );
+
+  setText(
+    "sector",
+    d.sector
+  );
+
+  setText(
+    "industry",
+    d.industry
+  );
+
+  const breakdown =
+    $("healthBreakdown");
+
+  breakdown.innerHTML = "";
+
+  const items = [
+
+    [
+      "Growth",
+      d.growth?.score,
+      d.growth?.trend
+    ],
+
+    [
+      "Profitability",
+      d.profitability?.score,
+      d.profitability?.trend
+    ],
+
+    [
+      "Valuation",
+      d.valuation?.score,
+      d.valuation?.view
+    ],
+
+    [
+      "Market setup",
+      d.technical_score,
+      d.technical_score >= 65
+        ? "Strong"
+        : d.technical_score >= 50
+          ? "Neutral"
+          : "Weak"
+    ]
+
+  ];
+
+  items.forEach(
+    ([name, score, status]) => {
+
+      const row =
+        document.createElement("div");
+
+      row.className =
+        "health-row";
+
+      const positive =
+        Number(score) >= 65;
+
+      const negative =
+        Number(score) < 45;
+
+      row.innerHTML = `
+        <span>${escapeHtml(name)}</span>
+        <span class="${
+          positive
+            ? "good"
+            : negative
+              ? "bad"
+              : "neutral"
+        }">
+          ${
+            Number.isFinite(Number(score))
+              ? Number(score) + "/100"
+              : "—"
+          }
+          ·
+          ${escapeHtml(status || "—")}
+        </span>
+      `;
+
+      breakdown.appendChild(row);
+    }
+  );
+}
+
+/* =========================
+   GROWTH
+========================= */
+
+function growthClass(value) {
+
+  const n =
+    Number(value);
+
+  if (!Number.isFinite(n)) {
+    return "trend-flat";
+  }
+
+  if (n > 0) {
+    return "trend-up";
+  }
+
+  if (n < 0) {
+    return "trend-down";
+  }
+
+  return "trend-flat";
+}
+
+function renderGrowth(d) {
+
+  const g =
+    d.growth || {};
+
+  setText(
+    "growthTrend",
+    g.trend || "—"
+  );
+
+  setText(
+    "growthScore",
+    g.score !== undefined
+      ? "Growth score " +
+        g.score +
+        "/100"
+      : "—"
+  );
+
+  $("revenueGrowth").textContent =
+    percentage(
+      g.revenue_growth
+    );
+
+  $("revenueGrowth").className =
+    "value " +
+    growthClass(
+      g.revenue_growth
+    );
+
+  $("profitGrowth").textContent =
+    percentage(
+      g.profit_growth
+    );
+
+  $("profitGrowth").className =
+    "value " +
+    growthClass(
+      g.profit_growth
+    );
+
+  $("epsGrowth").textContent =
+    percentage(
+      g.eps_growth
+    );
+
+  $("epsGrowth").className =
+    "value " +
+    growthClass(
+      g.eps_growth
+    );
+}
+
+/* =========================
+   PROFITABILITY
+========================= */
+
+function renderProfitability(d) {
+
+  const p =
+    d.profitability || {};
+
+  setText(
+    "profitabilityTrend",
+    p.trend || "—"
+  );
+
+  setText(
+    "profitabilityScore",
+    p.score !== undefined
+      ? "Score " +
+        p.score +
+        "/100"
+      : "—"
+  );
+
+  setText(
+    "profitMargin",
+    p.profit_margin !== null &&
+    p.profit_margin !== undefined
+      ? p.profit_margin + "%"
+      : "—"
+  );
+
+  setText(
+    "operatingMargin",
+    p.operating_margin !== null &&
+    p.operating_margin !== undefined
+      ? p.operating_margin + "%"
+      : "—"
+  );
+
+  setText(
+    "roe",
+    p.roe !== null &&
+    p.roe !== undefined
+      ? p.roe + "%"
+      : "—"
+  );
+}
+
+/* =========================
+   VALUATION
+========================= */
+
+function renderValuation(d) {
+
+  const v =
+    d.valuation || {};
+
+  setText(
+    "valuationView",
+    v.view || "—"
+  );
+
+  setText(
+    "valuationScore",
+    v.score !== undefined
+      ? "Score " +
+        v.score +
+        "/100"
+      : "—"
+  );
+
+  setText(
+    "pe",
+    v.pe !== null &&
+    v.pe !== undefined
+      ? v.pe + "x"
+      : "—"
+  );
+
+  setText(
+    "peg",
+    v.peg !== null &&
+    v.peg !== undefined
+      ? v.peg + "x"
+      : "—"
+  );
+
+  setText(
+    "eps",
+    money(v.eps)
+  );
+}
+
+/* =========================
+   NEWS
+========================= */
+
+function renderNews(d) {
+
+  const sentiment =
+    String(
+      d.news_sentiment ||
+      "NEUTRAL"
+    ).toUpperCase();
+
+  const sentimentEl =
+    $("newsSentiment");
+
+  sentimentEl.textContent =
+    sentiment;
+
+  sentimentEl.className =
+    "value";
+
+  if (
+    sentiment === "POSITIVE"
+  ) {
+    sentimentEl.classList.add(
+      "good"
+    );
+  }
+
+  if (
+    sentiment === "NEGATIVE"
+  ) {
+    sentimentEl.classList.add(
+      "bad"
+    );
+  }
+
+  const container =
+    $("newsList");
+
+  container.innerHTML = "";
+
+  const news =
+    Array.isArray(d.news)
+      ? d.news
+      : [];
+
+  if (!news.length) {
+
+    container.innerHTML =
+      '<div class="fundamental-description">' +
+      "No recent company news available." +
+      "</div>";
+
+    return;
+  }
+
+  news.forEach(item => {
+
+    const row =
+      document.createElement("div");
+
+    row.className =
+      "news-item";
+
+    const sentimentLabel =
+      String(
+        item.sentiment ||
+        "Neutral"
+      );
+
+    const lower =
+      sentimentLabel.toLowerCase();
+
+    const sentimentClass =
+      lower.includes("positive")
+        ? "positive"
+        : lower.includes("negative")
+          ? "negative"
+          : "neutral";
+
+    const title =
+      escapeHtml(
+        item.title
+      );
+
+    const source =
+      escapeHtml(
+        item.source
+      );
+
+    const link =
+      item.url
+        ? `
+          <a
+            class="news-link"
+            href="${escapeHtml(item.url)}"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            ${title}
+          </a>
+        `
+        : title;
+
+    row.innerHTML = `
+
+      <div class="news-title">
+        ${link}
+      </div>
+
+      <div class="news-meta">
+        ${source}
+      </div>
+
+      <span class="
+        news-sentiment
+        ${sentimentClass}
+      ">
+        ${escapeHtml(sentimentLabel)}
+      </span>
+    `;
+
+    container.appendChild(row);
+  });
+}
+
+/* =========================
+   ENTRY
+========================= */
+
+function renderEntry(d) {
+
+  setText(
+    "entryLow",
+    money(d.entry_low)
+  );
+
+  setText(
+    "entryHigh",
+    money(d.entry_high)
+  );
+
+  setText(
+    "preferredEntry",
+    money(d.preferred_entry)
+  );
+
+  setText(
+    "invalidation",
+    money(d.invalidation)
+  );
+
+  setText(
+    "target1",
+    money(d.target1)
+  );
+
+  setText(
+    "target2",
+    money(d.target2)
+  );
+
+  setText(
+    "rr1",
+    multiple(
+      d.risk_reward_target1
+    )
+  );
+
+  setText(
+    "rr2",
+    multiple(
+      d.risk_reward_target2
+    )
+  );
+
+  setText(
+    "rrQuality",
+    d.risk_reward_quality
+  );
+
+  let subtitle =
+    "Wait for a better entry.";
+
+  if (
+    d.in_pullback_zone
+  ) {
+    subtitle =
+      "Price is currently inside the preferred pullback zone.";
+  } else if (
+    Number(d.price) <
+    Number(d.entry_low)
+  ) {
+    subtitle =
+      "Price is below the preferred zone.";
+  } else if (
+    Number(d.price) >
+    Number(d.entry_high)
+  ) {
+    subtitle =
+      "Price is above the preferred zone; avoid chasing.";
+  }
+
+  setText(
+    "entrySubtitle",
+    subtitle
+  );
+}
+
+/* =========================
+   TECHNICAL
+========================= */
+
+function renderTechnical(d) {
+
+  const technicalScore =
+    Number(
+      d.technical_score
+    );
+
+  let headline =
+    "Mixed technical setup.";
+
+  if (
+    technicalScore >= 70
+  ) {
+    headline =
+      "Technical setup is supportive.";
+  } else if (
+    technicalScore < 45
+  ) {
+    headline =
+      "Technical setup is weak.";
+  } else {
+    headline =
+      "Technical setup is developing.";
+  }
+
+  setText(
+    "technicalHeadline",
+    headline
+  );
+
+  setText(
+    "trend",
+    d.trend
+  );
+
+  setText(
+    "structure",
+    d.structure
+  );
+
+  setText(
+    "sma20",
+    money(d.sma20)
+  );
+
+  setText(
+    "sma50",
+    money(d.sma50)
+  );
+
+  setText(
+    "rsi",
+    d.rsi !== null &&
+    d.rsi !== undefined
+      ? Number(d.rsi).toFixed(1)
+      : "—"
+  );
+
+  setText(
+    "macd",
+    d.macd !== null &&
+    d.macd !== undefined
+      ? Number(d.macd).toFixed(3)
+      : "—"
+  );
+
+  setText(
+    "support",
+    money(d.support)
+  );
+
+  setText(
+    "resistance",
+    money(d.resistance)
+  );
+
+  renderFormations(
+    d.formations || []
+  );
+
+  renderConditions(d);
+
+  renderBullets(
+    "reasons",
+    d.reasons || []
+  );
+
+  renderBullets(
+    "risks",
+    d.risks || []
+  );
+
+  drawChart(d);
+}
+
+/* =========================
+   FORMATIONS
+========================= */
+
+function renderFormations(formations) {
+
+  const container =
+    $("formations");
+
+  container.innerHTML = "";
+
+  if (
+    !Array.isArray(formations) ||
+    formations.length === 0
+  ) {
+
+    container.innerHTML =
+      '<div class="fundamental-description">' +
+      "No significant chart formation detected." +
+      "</div>";
+
+    return;
+  }
+
+  formations.forEach(
+    formation => {
+
+      const row =
+        document.createElement("div");
+
+      row.className =
+        "formation";
+
+      const type =
+        String(
+          formation.type ||
+          "NEUTRAL"
+        ).toUpperCase();
+
+      row.innerHTML = `
+
+        <div>
+
+          <div class="formation-name">
+            ${escapeHtml(
+              formation.name ||
+              "Formation"
+            )}
+          </div>
+
+          <div class="formation-meta">
+            ${escapeHtml(type)}
+          </div>
+
+        </div>
+
+        <strong>
+          ${
+            Number.isFinite(
+              Number(
+                formation.confidence
+              )
+            )
+              ? Number(
+                  formation.confidence
+                ) + "%"
+              : "—"
+          }
+        </strong>
+      `;
+
+      container.appendChild(row);
+    }
+  );
+}
+
+/* =========================
+   CONDITIONS
+========================= */
+
+function renderConditions(d) {
+
+  const container =
+    $("conditionList");
+
+  container.innerHTML = "";
+
+  const data =
+    d.conditions || {};
+
+  const entries =
+    Object.entries(data);
+
+  setText(
+    "conditionSummary",
+    (
+      d.conditions_met ?? 0
+    ) +
+    " / " +
+    (
+      d.conditions_total ??
+      entries.length
+    ) +
+    " conditions met"
+  );
+
+  const labels = {
+
+    healthyCompany:
+      "Healthy company",
+
+    revenueGrowing:
+      "Revenue growing",
+
+    profitsGrowing:
+      "Profits growing",
+
+    profitable:
+      "Strong profitability",
+
+    valuationReasonable:
+      "Reasonable valuation",
+
+    technicalSupport:
+      "Technical support"
+
+  };
+
+  entries.forEach(
+    ([key, met]) => {
+
+      const row =
+        document.createElement("div");
+
+      row.className =
+        "condition " +
+        (
+          met
+            ? "met"
+            : "not-met"
+        );
+
+      row.textContent =
+        (
+          met
+            ? "✓ "
+            : "○ "
+        ) +
+        (
+          labels[key] ||
+          key
+        );
+
+      container.appendChild(row);
+    }
+  );
+}
+
+/* =========================
+   BULLETS
+========================= */
+
+function renderBullets(id, items) {
+
+  const container =
+    $(id);
+
+  container.innerHTML = "";
+
+  if (
+    !Array.isArray(items) ||
+    !items.length
+  ) {
+
+    const li =
+      document.createElement("li");
+
+    li.textContent =
+      "No information available.";
+
+    container.appendChild(li);
+
+    return;
+  }
+
+  items.forEach(item => {
+
+    const li =
+      document.createElement("li");
+
+    li.textContent =
+      item;
+
+    container.appendChild(li);
+  });
+}
+
+/* =========================
+   CHART
+========================= */
+
+function drawChart(d) {
+
+  const canvas =
+    $("priceChart");
+
+  if (!canvas) return;
+
+  const container =
+    canvas.parentElement;
+
+  const rect =
+    container.getBoundingClientRect();
+
+  const width =
+    Math.max(
+      rect.width,
+      720
+    );
+
+  const height =
+    390;
+
+  const dpr =
+    window.devicePixelRatio || 1;
+
+  canvas.width =
+    width * dpr;
+
+  canvas.height =
+    height * dpr;
+
+  canvas.style.width =
+    width + "px";
+
+  canvas.style.height =
+    height + "px";
+
+  const ctx =
+    canvas.getContext("2d");
+
+  ctx.scale(dpr, dpr);
+
+  const history =
+    Array.isArray(d.history)
+      ? d.history.slice(-80)
+      : [];
+
+  if (
+    history.length < 2
+  ) {
 
     ctx.fillStyle =
-      "#182238";
+      "#7d889e";
 
     ctx.font =
-      "700 13px -apple-system, sans-serif";
+      "14px sans-serif";
 
     ctx.fillText(
-      "Current " +
-      money(d.price),
-      lastX + 10,
-      lastY - 10
+      "Not enough chart data.",
+      20,
+      35
     );
 
-    // Date labels
-    ctx.fillStyle =
-      "#8c97aa";
+    return;
+  }
 
-    ctx.font =
-      "11px -apple-system, sans-serif";
+  const padding = {
+    left: 20,
+    right: 120,
+    top: 25,
+    bottom: 35
+  };
 
-    const labelIndexes = [
-      0,
-      Math.floor(
-        history.length / 2
-      ),
-      history.length - 1
-    ];
+  const chartWidth =
+    width -
+    padding.left -
+    padding.right;
 
-    labelIndexes.forEach(
-      (index) => {
+  const chartHeight =
+    height -
+    padding.top -
+    padding.bottom;
 
-        const item =
-          history[index];
+  const values =
+    history.flatMap(
+      x => [
+        Number(x.high),
+        Number(x.low)
+      ]
+    );
 
-        ctx.fillText(
-          item.date,
-          x(index) - 30,
-          height - 10
-        );
-      }
+  const levels = [
+    d.support,
+    d.resistance,
+    d.entry_low,
+    d.entry_high,
+    d.target1,
+    d.target2,
+    d.invalidation
+  ]
+  .map(Number)
+  .filter(Number.isFinite);
+
+  const all =
+    values.concat(levels);
+
+  let min =
+    Math.min(...all);
+
+  let max =
+    Math.max(...all);
+
+  const range =
+    max - min || 1;
+
+  min -= range * .08;
+  max += range * .08;
+
+  function x(i) {
+
+    return (
+      padding.left +
+      (
+        i /
+        (history.length - 1)
+      ) *
+      chartWidth
     );
   }
 
-  function drawIndicatorLine(
-    ctx,
-    history,
-    key,
-    x,
-    y,
-    width
-  ) {
+  function y(value) {
 
-    ctx.beginPath();
-
-    let started = false;
-
-    history.forEach(
-      (item, index) => {
-
-        const value =
-          Number(item[key]);
-
-        if (!Number.isFinite(value)) {
-          return;
-        }
-
-        const px =
-          x(index);
-
-        const py =
-          y(value);
-
-        if (!started) {
-
-          ctx.moveTo(
-            px,
-            py
-          );
-
-          started = true;
-
-        } else {
-
-          ctx.lineTo(
-            px,
-            py
-          );
-        }
-      }
+    return (
+      padding.top +
+      (
+        (max - value) /
+        (max - min)
+      ) *
+      chartHeight
     );
-
-    if (!started) return;
-
-    ctx.strokeStyle =
-      key === "sma20"
-        ? "#7d889e"
-        : "#a9b2c1";
-
-    ctx.lineWidth = 1.5;
-
-    ctx.stroke();
   }
 
-  function drawLevel(
-    ctx,
+  ctx.clearRect(
+    0,
+    0,
     width,
-    y,
-    value,
-    label,
-    padding
+    height
+  );
+
+  /* GRID */
+
+  ctx.strokeStyle =
+    "#edf0f5";
+
+  ctx.lineWidth = 1;
+
+  for (
+    let i = 0;
+    i <= 5;
+    i++
   ) {
 
-    const numberValue =
-      Number(value);
-
-    if (
-      !Number.isFinite(
-        numberValue
-      )
-    ) {
-      return;
-    }
-
-    const py =
-      y(numberValue);
-
-    ctx.save();
-
-    ctx.setLineDash([
-      5,
-      5
-    ]);
-
-    ctx.strokeStyle =
-      "#d7dce5";
-
-    ctx.lineWidth = 1;
+    const gy =
+      padding.top +
+      (
+        i / 5
+      ) *
+      chartHeight;
 
     ctx.beginPath();
 
     ctx.moveTo(
       padding.left,
-      py
+      gy
     );
 
     ctx.lineTo(
-      width - padding.right,
-      py
+      width -
+      padding.right,
+      gy
     );
 
     ctx.stroke();
 
-    ctx.restore();
+    const value =
+      max -
+      (
+        i / 5
+      ) *
+      (max - min);
 
     ctx.fillStyle =
-      "#6f7b90";
+      "#8994a8";
 
     ctx.font =
-      "600 11px -apple-system, sans-serif";
+      "11px sans-serif";
 
     ctx.fillText(
-      label +
-      " $" +
-      numberValue.toFixed(2),
-      width - padding.right + 10,
-      py - 4
+      "$" +
+      value.toFixed(0),
+      width -
+      padding.right +
+      10,
+      gy + 4
     );
   }
 
-  // ------------------------------------------------------------
-  // Events
-  // ------------------------------------------------------------
+  /* PULLBACK ZONE */
 
-  $("analyzeBtn")
-    .addEventListener(
-      "click",
-      () => {
+  const zoneLow =
+    Number(d.entry_low);
 
-        const ticker =
-          $("tickerInput")
-            .value
-            .trim()
-            .toUpperCase();
+  const zoneHigh =
+    Number(d.entry_high);
 
-        analyze(ticker);
-      }
+  if (
+    Number.isFinite(zoneLow) &&
+    Number.isFinite(zoneHigh)
+  ) {
+
+    ctx.fillStyle =
+      "rgba(100,120,150,.08)";
+
+    ctx.fillRect(
+      padding.left,
+      y(zoneHigh),
+      chartWidth,
+      y(zoneLow) -
+      y(zoneHigh)
     );
+  }
 
-  $("addBtn")
-    .addEventListener(
-      "click",
-      addTicker
-    );
+  /* PRICE */
 
-  $("tickerInput")
-    .addEventListener(
-      "keydown",
-      (event) => {
+  ctx.beginPath();
 
-        if (
-          event.key === "Enter"
-        ) {
-          event.preventDefault();
+  history.forEach(
+    (item, i) => {
 
-          const ticker =
-            $("tickerInput")
-              .value
-              .trim()
-              .toUpperCase();
+      const px =
+        x(i);
 
-          analyze(ticker);
-        }
-      }
-    );
+      const py =
+        y(
+          Number(item.close)
+        );
 
-  window.addEventListener(
-    "resize",
-    () => {
+      if (i === 0) {
 
-      if (currentData) {
-        drawChart(
-          currentData
+        ctx.moveTo(
+          px,
+          py
+        );
+
+      } else {
+
+        ctx.lineTo(
+          px,
+          py
         );
       }
     }
   );
 
-  // ------------------------------------------------------------
-  // Initial load
-  // ------------------------------------------------------------
+  ctx.strokeStyle =
+    "#182238";
 
-  renderWatchlist();
+  ctx.lineWidth = 2.5;
 
-  analyze("AAPL");
+  ctx.stroke();
+
+  /* SMA20 */
+
+  drawIndicator(
+    ctx,
+    history,
+    "sma20",
+    x,
+    y
+  );
+
+  /* SMA50 */
+
+  drawIndicator(
+    ctx,
+    history,
+    "sma50",
+    x,
+    y
+  );
+
+  /* LEVELS */
+
+  drawLevel(
+    ctx,
+    width,
+    y,
+    d.support,
+    "Support",
+    padding
+  );
+
+  drawLevel(
+    ctx,
+    width,
+    y,
+    d.resistance,
+    "Resistance",
+    padding
+  );
+
+  drawLevel(
+    ctx,
+    width,
+    y,
+    d.target1,
+    "Target 1",
+    padding
+  );
+
+  drawLevel(
+    ctx,
+    width,
+    y,
+    d.target2,
+    "Target 2",
+    padding
+  );
+
+  drawLevel(
+    ctx,
+    width,
+    y,
+    d.invalidation,
+    "Stop",
+    padding
+  );
+}
+
+function drawIndicator(
+  ctx,
+  history,
+  key,
+  x,
+  y
+) {
+
+  ctx.beginPath();
+
+  let started =
+    false;
+
+  history.forEach(
+    (item, i) => {
+
+      const value =
+        Number(item[key]);
+
+      if (
+        !Number.isFinite(value)
+      ) {
+        return;
+      }
+
+      if (!started) {
+
+        ctx.moveTo(
+          x(i),
+          y(value)
+        );
+
+        started = true;
+
+      } else {
+
+        ctx.lineTo(
+          x(i),
+          y(value)
+        );
+      }
+    }
+  );
+
+  if (!started) return;
+
+  ctx.strokeStyle =
+    "#9aa5b8";
+
+  ctx.lineWidth = 1.3;
+
+  ctx.stroke();
+}
+
+function drawLevel(
+  ctx,
+  width,
+  y,
+  value,
+  label,
+  padding
+) {
+
+  const n =
+    Number(value);
+
+  if (
+    !Number.isFinite(n)
+  ) {
+    return;
+  }
+
+  const py =
+    y(n);
+
+  ctx.save();
+
+  ctx.setLineDash([
+    5,
+    5
+  ]);
+
+  ctx.strokeStyle =
+    "#d9dee7";
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    padding.left,
+    py
+  );
+
+  ctx.lineTo(
+    width -
+    padding.right,
+    py
+  );
+
+  ctx.stroke();
+
+  ctx.restore();
+
+  ctx.fillStyle =
+    "#69758a";
+
+  ctx.font =
+    "600 10px sans-serif";
+
+  ctx.fillText(
+    label +
+    " $" +
+    n.toFixed(2),
+    width -
+    padding.right +
+    7,
+    py - 4
+  );
+}
+
+/* =========================
+   TECHNICAL TOGGLE
+========================= */
+
+$("technicalToggle")
+  .addEventListener(
+    "click",
+    () => {
+
+      const content =
+        $("technicalContent");
+
+      const open =
+        content.classList.toggle(
+          "open"
+        );
+
+      $("technicalToggle")
+        .textContent =
+          open
+            ? "Hide details"
+            : "Show details";
+
+      if (
+        open &&
+        currentData
+      ) {
+
+        setTimeout(
+          () => drawChart(
+            currentData
+          ),
+          50
+        );
+      }
+    }
+  );
+
+/* =========================
+   EVENTS
+========================= */
+
+$("analyzeBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      analyze(
+        $("tickerInput")
+          .value
+          .trim()
+          .toUpperCase()
+      );
+    }
+  );
+
+$("addBtn")
+  .addEventListener(
+    "click",
+    addTicker
+  );
+
+$("tickerInput")
+  .addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key === "Enter"
+      ) {
+
+        event.preventDefault();
+
+        analyze(
+          $("tickerInput")
+            .value
+            .trim()
+            .toUpperCase()
+        );
+      }
+    }
+  );
+
+window.addEventListener(
+  "resize",
+  () => {
+
+    if (
+      currentData &&
+      $("technicalContent")
+        .classList.contains("open")
+    ) {
+
+      drawChart(
+        currentData
+      );
+    }
+  }
+);
+
+/* =========================
+   START
+========================= */
+
+renderWatchlist();
+
+analyze("AAPL");
+
 </script>
 
 </body>
