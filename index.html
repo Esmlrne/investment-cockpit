@@ -1,93 +1,38 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b0d12">
-<title>Investment Cockpit</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12"><title>Investment Cockpit</title>
 <style>
 :root{--bg:#0b0d12;--card:#141821;--muted:#8992a3;--text:#f5f7fb;--line:#252b38;--green:#39d98a;--red:#ff6675;--yellow:#f4c95d;--blue:#6ea8fe}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
-main{max-width:720px;margin:auto;padding:env(safe-area-inset-top) 16px 36px}
-header{padding:22px 2px 16px;display:flex;justify-content:space-between;align-items:center}
-h1{font-size:25px;margin:0}.sub{color:var(--muted);font-size:13px;margin-top:4px}
-button,input,select{font:inherit}button{border:0;border-radius:12px;padding:11px 14px;background:#202633;color:#fff;font-weight:700}
-.search{display:flex;gap:8px;margin:8px 0 18px}.search input{flex:1;min-width:0;background:#141821;border:1px solid var(--line);border-radius:12px;padding:12px;color:#fff;text-transform:uppercase}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}.hero{padding:18px}
-.row{display:flex;justify-content:space-between;gap:12px;align-items:center}.ticker{font-size:21px;font-weight:800}.price{font-size:30px;font-weight:850;margin-top:6px}.muted{color:var(--muted)}.pill{padding:7px 10px;border-radius:999px;font-size:12px;font-weight:800}.buy{background:rgba(57,217,138,.14);color:var(--green)}.sell{background:rgba(255,102,117,.14);color:var(--red)}.watch{background:rgba(244,201,93,.14);color:var(--yellow)}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.metric{background:#10141c;border-radius:14px;padding:12px}.metric b{display:block;font-size:18px;margin-top:5px}.section{font-size:16px;font-weight:800;margin:18px 2px 10px}
-.chart{height:180px;width:100%;display:block}.line{fill:none;stroke:var(--blue);stroke-width:3}.axis{stroke:#303746;stroke-width:1}
-.watchrow{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.watchrow:last-child{border-bottom:0}
-.reason{padding:9px 0;color:#dfe4ee}.reason span{color:var(--green);font-weight:900;margin-right:7px}
-.small{font-size:12px;color:var(--muted)}.foot{font-size:11px;color:#687183;text-align:center;padding:12px 0}
-</style>
-</head>
-<body>
-<main>
-<header><div><h1>Investment Cockpit</h1><div class="sub">US stocks · mobile V1</div></div><button onclick="refresh()">↻</button></header>
-
-<div class="search"><input id="ticker" placeholder="Add ticker, e.g. NVDA" maxlength="8"><button onclick="addTicker()">＋ Add</button></div>
-
-<div class="card">
-  <div class="row"><div><div class="small">MARKET REGIME</div><strong>🟢 Risk-on</strong></div><div class="small">Demo until API connected</div></div>
-</div>
-
-<div id="app"></div>
-
-<div class="section">My watchlist</div>
-<div class="card" id="watchlist"></div>
-
-<div class="foot">Prototype only. Signals are systematic research outputs, not personalized financial advice. Never expose an API key in this browser app.</div>
+main{max-width:720px;margin:auto;padding:env(safe-area-inset-top) 16px 40px}header{padding:22px 2px 16px;display:flex;justify-content:space-between;align-items:center}h1{font-size:25px;margin:0}.sub{color:var(--muted);font-size:13px;margin-top:4px}
+button,input{font:inherit}button{border:0;border-radius:12px;padding:11px 14px;background:#202633;color:#fff;font-weight:700}.search{display:flex;gap:8px;margin:8px 0 18px}.search input{flex:1;min-width:0;background:#141821;border:1px solid var(--line);border-radius:12px;padding:12px;color:#fff;text-transform:uppercase}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}.hero{padding:18px}.row{display:flex;justify-content:space-between;gap:12px;align-items:center}.ticker{font-size:21px;font-weight:800}.price{font-size:30px;font-weight:850;margin-top:6px}.muted{color:var(--muted)}.pill{padding:7px 10px;border-radius:999px;font-size:12px;font-weight:800}.buy{background:rgba(57,217,138,.14);color:var(--green)}.sell{background:rgba(255,102,117,.14);color:var(--red)}.watch{background:rgba(244,201,93,.14);color:var(--yellow)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.metric{background:#10141c;border-radius:14px;padding:12px}.metric b{display:block;font-size:18px;margin-top:5px}.section{font-size:16px;font-weight:800;margin:18px 2px 10px}.small{font-size:12px;color:var(--muted)}.reason{padding:9px 0}.reason span{color:var(--green);font-weight:900;margin-right:7px}.error{color:var(--red);font-size:13px}.foot{font-size:11px;color:#687183;text-align:center;padding:12px 0}
+</style></head>
+<body><main>
+<header><div><h1>Investment Cockpit</h1><div class="sub">US stocks · Live data V2</div></div><button onclick="load()">↻</button></header>
+<div class="search"><input id="ticker" placeholder="Add ticker, e.g. NVDA" maxlength="8"><button onclick="add()">＋ Add</button></div>
+<div id="status" class="small"></div><div id="app"></div>
+<div class="section">My watchlist</div><div class="card" id="watchlist"></div>
+<div class="foot">Market data is provided through the configured server API. Signals are research outputs, not personalized financial advice.</div>
 </main>
-
 <script>
-const demo={
- AAPL:{price:238.45,chg:1.24,score:84,signal:"BUY",rsi:57,entry:"232–239",t1:"257",t2:"271",stop:"224",reasons:["Price above 200-day trend","Positive momentum","Quality large-cap profile"],risks:["Earnings/event volatility"]},
- MSFT:{price:507.12,chg:.62,score:87,signal:"BUY",rsi:59,entry:"498–509",t1:"536",t2:"559",stop:"485",reasons:["Strong trend structure","High business quality","Positive momentum"],risks:["Valuation sensitivity"]},
- NVDA:{price:177.83,chg:2.31,score:91,signal:"STRONG BUY",rsi:63,entry:"172–179",t1:"194",t2:"207",stop:"164",reasons:["Strong long-term trend","Positive momentum","High growth profile"],risks:["High valuation sensitivity","Semiconductor cyclicality"]},
- GOOGL:{price:294.21,chg:1.08,score:88,signal:"BUY",rsi:56,entry:"287–296",t1:"318",t2:"337",stop:"278",reasons:["Strong trend","Attractive quality profile","Healthy momentum"],risks:["Regulatory risk"]},
- AMZN:{price:235.40,chg:.41,score:79,signal:"BUY",rsi:54,entry:"229–237",t1:"254",t2:"268",stop:"221",reasons:["Positive trend","Good earnings profile"],risks:["Margin and valuation sensitivity"]},
- TSLA:{price:346.92,chg:-2.17,score:43,signal:"SELL",rsi:39,entry:"—",t1:"319",t2:"295",stop:"—",reasons:["Trend deterioration"],risks:["Momentum weakness","High valuation sensitivity"]}
-};
-let list=JSON.parse(localStorage.getItem("watchlist")||'["NVDA","MSFT","GOOGL","AAPL","AMZN","TSLA"]');
-let selected=localStorage.getItem("selected")||"NVDA";
-
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function getData(t){
- if(demo[t]) return demo[t];
- let seed=[...t].reduce((a,c)=>a+c.charCodeAt(0),0), p=80+(seed%180);
- return {price:p,chg:0,score:50,signal:"WATCH",rsi:50,entry:(p*.98).toFixed(2)+"–"+(p*1.01).toFixed(2),t1:(p*1.08).toFixed(2),t2:(p*1.15).toFixed(2),stop:(p*.94).toFixed(2),reasons:["Ticker added; live provider not connected"],risks:["No live fundamental data available"]};
-}
-function chart(){
- let vals=Array.from({length:42},(_,i)=>100+i*.55+Math.sin(i/3)*3+(i%7)*.25);
- let min=Math.min(...vals),max=Math.max(...vals);
- let pts=vals.map((v,i)=>`${i/(vals.length-1)*100},${100-(v-min)/(max-min)*82-9}`).join(" ");
- return `<svg class="chart" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="0" y1="91" x2="100" y2="91" class="axis"/><polyline points="${pts}" class="line"/></svg>`;
-}
-function render(){
- const d=getData(selected), cls=d.signal.includes("SELL")?"sell":d.signal.includes("WATCH")?"watch":"buy";
- document.getElementById("app").innerHTML=`
- <div class="card hero">
-  <div class="row"><div><div class="ticker">${esc(selected)}</div><div class="small">US Equity</div></div><div class="pill ${cls}">${d.signal}</div></div>
-  <div class="price">$${Number(d.price).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-  <div class="small">${d.chg>=0?"▲":"▼"} ${Math.abs(d.chg).toFixed(2)}% today · ${d.signal==="SELL"?"Risk rising":"Setup being monitored"}</div>
-  ${chart()}
- </div>
- <div class="grid">
-  <div class="metric"><div class="small">Investment score</div><b>${d.score}/100</b></div>
-  <div class="metric"><div class="small">RSI</div><b>${d.rsi}</b></div>
-  <div class="metric"><div class="small">Buy zone</div><b>${d.entry}</b></div>
-  <div class="metric"><div class="small">Invalidation</div><b>${d.stop}</b></div>
-  <div class="metric"><div class="small">Target 1</div><b>${d.t1}</b></div>
-  <div class="metric"><div class="small">Target 2</div><b>${d.t2}</b></div>
- </div>
- <div class="section">🧠 Why?</div><div class="card">${d.reasons.map(x=>`<div class="reason"><span>✓</span>${esc(x)}</div>`).join("")}</div>
- <div class="section">⚠️ What could go wrong?</div><div class="card">${d.risks.map(x=>`<div class="reason">• ${esc(x)}</div>`).join("")}</div>`;
- document.getElementById("watchlist").innerHTML=list.map(t=>{let x=getData(t),c=x.signal.includes("SELL")?"sell":x.signal==="WATCH"?"watch":"buy";return `<div class="watchrow"><div><b>${esc(t)}</b><div class="small">$${Number(x.price).toFixed(2)}</div></div><div class="pill ${c}">${x.signal}</div><b>${x.score}</b></div>`}).join("");
-}
-function addTicker(){let t=document.getElementById("ticker").value.trim().toUpperCase();if(!/^[A-Z.]{1,8}$/.test(t))return alert("Enter a valid US ticker.");if(!list.includes(t))list.unshift(t);selected=t;localStorage.setItem("watchlist",JSON.stringify(list));localStorage.setItem("selected",selected);document.getElementById("ticker").value="";render()}
-function refresh(){render()}
-render();
-</script>
-</body>
-</html>
+const key="ic_watchlist";let list=JSON.parse(localStorage.getItem(key)||'["NVDA","MSFT","GOOGL","AAPL","AMZN","TSLA"]');let selected=localStorage.getItem("ic_selected")||"NVDA";
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function add(){let t=document.getElementById("ticker").value.trim().toUpperCase();if(!/^[A-Z.]{1,8}$/.test(t))return alert("Enter a valid US ticker.");if(!list.includes(t))list.unshift(t);selected=t;save();load()}
+function save(){localStorage.setItem(key,JSON.stringify(list));localStorage.setItem("ic_selected",selected)}
+async function api(t){let r=await fetch("/api/stock?ticker="+encodeURIComponent(t));let d=await r.json();if(!r.ok)throw Error(d.error||"Unable to load data");return d}
+function signalClass(s){return s.includes("SELL")?"sell":s==="WATCH"?"watch":"buy"}
+function render(d){
+let c=signalClass(d.signal);document.getElementById("status").textContent="Last updated: "+new Date().toLocaleString();
+document.getElementById("app").innerHTML=`<div class="card hero"><div class="row"><div><div class="ticker">${esc(d.symbol)}</div><div class="small">${esc(d.name||"US Equity")}</div></div><div class="pill ${c}">${esc(d.signal)}</div></div><div class="price">$${Number(d.price).toFixed(2)}</div><div class="small">${d.change_pct>=0?"▲":"▼"} ${Math.abs(d.change_pct).toFixed(2)}% today</div></div>
+<div class="grid"><div class="metric"><div class="small">Investment score</div><b>${d.score}/100</b></div><div class="metric"><div class="small">RSI</div><b>${d.rsi??"—"}</b></div><div class="metric"><div class="small">Buy zone</div><b>${d.entry_low?"$"+d.entry_low+"–$"+d.entry_high:"—"}</b></div><div class="metric"><div class="small">Invalidation</div><b>${d.stop?"$"+d.stop:"—"}</b></div><div class="metric"><div class="small">Target 1</div><b>${d.target1?"$"+d.target1:"—"}</b></div><div class="metric"><div class="small">Target 2</div><b>${d.target2?"$"+d.target2:"—"}</b></div></div>
+<div class="section">🧠 Why?</div><div class="card">${(d.reasons||[]).map(x=>`<div class="reason"><span>✓</span>${esc(x)}</div>`).join("")||"Not enough evidence yet."}</div>
+<div class="section">⚠️ What could go wrong?</div><div class="card">${(d.risks||[]).map(x=>`<div class="reason">• ${esc(x)}</div>`).join("")||"No major warning triggered."}</div>
+<div class="section">📊 Fundamentals</div><div class="card"><div class="grid">${Object.entries(d.fundamentals||{}).map(([k,v])=>`<div class="metric"><div class="small">${esc(k)}</div><b>${esc(v)}</b></div>`).join("")}</div></div>`}
+async function load(){
+document.getElementById("status").textContent="Loading live data…";try{let d=await api(selected);render(d);let rows=[];for(let t of list.slice(0,10)){try{let x=await api(t);rows.push(`<div class="row" style="padding:10px 0;border-bottom:1px solid #252b38" onclick="selected='${t}';save();load()"><b>${esc(t)}</b><span>$${Number(x.price).toFixed(2)}</span><span class="pill ${signalClass(x.signal)}">${esc(x.signal)}</span><b>${x.score}</b></div>`)}catch(e){}}document.getElementById("watchlist").innerHTML=rows.join("")}catch(e){document.getElementById("status").innerHTML='<span class="error">'+esc(e.message)+'</span>'}}
+load();
+</script></body></html>

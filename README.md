@@ -1,38 +1,15 @@
-# Investment Cockpit — iPhone Mobile V1
+# Investment Cockpit V2 — Live API
 
-This is a mobile-first web app that can be opened in Safari and added to the iPhone Home Screen.
+Upload `index.html`, `vercel.json`, and the `api` folder to the existing GitHub repository.
 
-## Current version
-- iPhone-optimized UI
-- Add/remove-ready ticker architecture
-- Persistent watchlist using localStorage
-- Stock analysis cards
-- Investment score
-- Buy / Watch / Sell
-- Buy zone, targets and invalidation
-- Mobile chart
-- Clearly labeled demo data
+## Vercel secret
+In Vercel: Project → Settings → Environment Variables → add:
+Name: `ALPHAVANTAGE_API_KEY`
+Value: your private Alpha Vantage key
+Environment: Production (and Preview if desired)
 
-## Important: live data
-Do NOT put an Alpha Vantage API key inside index.html. Anyone could see it.
+Redeploy after saving.
 
-For live data, deploy a small server-side API endpoint (Vercel/Netlify/Cloudflare Worker, etc.) that stores the API key securely and proxies only the permitted data to the app.
+The browser calls `/api/stock?ticker=NVDA`; the server calls Alpha Vantage, so the API key is not exposed to the iPhone.
 
-The next version should connect:
-- `/api/quote?ticker=NVDA`
-- `/api/history?ticker=NVDA`
-- `/api/fundamentals?ticker=NVDA`
-- `/api/news?ticker=NVDA`
-
-Then the frontend will replace the demo provider with those endpoints.
-
-## Easiest iPhone use
-1. Host this folder on any static web host.
-2. Open the site in Safari.
-3. Tap Share → Add to Home Screen.
-4. Launch it like an app.
-
-## Roadmap
-V2: server-side live API + fundamentals + earnings + news
-V3: real investment engine + backtesting
-V4: AI analyst + alerts + portfolio
+V2 currently provides a real live quote and a conservative WATCH placeholder score. Do not treat it as a completed investment strategy yet.
