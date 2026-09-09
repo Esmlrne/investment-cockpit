@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Investment Cockpit</title>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>Investment Cockpit</title>
 
   <style>
     * {
@@ -14,1674 +16,2851 @@
 
     body {
       margin: 0;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "SF Pro Display",
+        "SF Pro Text",
+        Inter,
+        Arial,
+        sans-serif;
       background: #f5f7fb;
-      color: #172033;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      color: #182238;
     }
 
-    .container {
-      max-width: 1400px;
-      margin: auto;
-      padding: 20px;
+    button,
+    input {
+      font: inherit;
+    }
+
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 24px 60px;
     }
 
     h1 {
       margin: 0;
-      font-size: 30px;
-    }
-
-    h2 {
-      margin-top: 0;
-      font-size: 20px;
+      font-size: 42px;
+      line-height: 1;
+      letter-spacing: -1.8px;
     }
 
     .subtitle {
-      color: #697386;
-      margin-top: 5px;
-      margin-bottom: 20px;
+      margin-top: 12px;
+      color: #7d889e;
+      font-size: 20px;
+      line-height: 1.4;
     }
 
     .toolbar {
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
+      gap: 16px;
+      margin-top: 34px;
     }
 
-    input {
+    .ticker-input {
       flex: 1;
-      min-width: 180px;
-      padding: 13px;
-      border: 1px solid #d7dce5;
-      border-radius: 10px;
-      font-size: 16px;
+      min-width: 0;
+      height: 72px;
+      border: 2px solid #dce2ed;
+      border-radius: 20px;
       background: white;
+      padding: 0 26px;
+      font-size: 28px;
+      color: #182238;
+      outline: none;
     }
 
-    button {
-      border: none;
-      border-radius: 10px;
-      padding: 13px 18px;
-      background: #172033;
+    .ticker-input:focus {
+      border-color: #182238;
+    }
+
+    .btn {
+      height: 72px;
+      border: 0;
+      border-radius: 20px;
+      padding: 0 34px;
+      background: #182238;
       color: white;
       font-weight: 700;
+      font-size: 19px;
       cursor: pointer;
     }
 
-    button.secondary {
-      background: #e8ecf3;
-      color: #172033;
+    .btn.secondary {
+      background: #e9edf5;
+      color: #182238;
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: default;
     }
 
     .watchlist {
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
+      gap: 14px;
+      overflow-x: auto;
+      padding: 26px 0 12px;
+      scrollbar-width: none;
     }
 
-    .ticker {
+    .watchlist::-webkit-scrollbar {
+      display: none;
+    }
+
+    .ticker-btn {
+      flex: 0 0 auto;
+      border: 2px solid #dce2ed;
       background: white;
-      border: 1px solid #dce1e9;
-      border-radius: 999px;
-      padding: 8px 13px;
+      color: #182238;
+      border-radius: 40px;
+      padding: 15px 27px;
+      font-size: 22px;
+      font-weight: 750;
       cursor: pointer;
-      font-weight: 700;
     }
 
-    .ticker.active {
-      background: #172033;
+    .ticker-btn.active {
+      background: #182238;
       color: white;
+      border-color: #182238;
+    }
+
+    .error {
+      display: none;
+      margin-top: 26px;
+      padding: 22px 26px;
+      border-radius: 18px;
+      border: 1px solid #f3b6ae;
+      background: #fff1ef;
+      color: #b52b20;
+      font-size: 18px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .loading {
+      display: none;
+      margin-top: 26px;
+      padding: 20px;
+      border-radius: 18px;
+      background: white;
+      text-align: center;
+      color: #7d889e;
+      font-size: 18px;
+    }
+
+    .section {
+      margin-top: 28px;
+    }
+
+    .section-title {
+      margin: 0 0 14px;
+      color: #7d889e;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-      margin-bottom: 18px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
     }
 
     .card {
       background: white;
-      border: 1px solid #e1e5ec;
-      border-radius: 15px;
-      padding: 18px;
-      box-shadow: 0 3px 12px rgba(20, 30, 50, 0.04);
+      border: 1px solid #dfe4ed;
+      border-radius: 24px;
+      padding: 27px;
+      box-shadow: 0 3px 15px rgba(30, 45, 75, 0.035);
+      min-width: 0;
     }
 
-    .metric-label {
-      font-size: 12px;
-      color: #758096;
+    .label {
+      color: #7c89a2;
+      font-size: 16px;
+      letter-spacing: 1.1px;
       text-transform: uppercase;
-      letter-spacing: .04em;
-      margin-bottom: 7px;
+      font-weight: 600;
     }
 
-    .metric-value {
-      font-size: 22px;
+    .value {
+      margin-top: 12px;
+      font-size: 30px;
+      line-height: 1.15;
       font-weight: 800;
+      letter-spacing: -0.8px;
+      overflow-wrap: anywhere;
     }
 
-    .signal {
-      font-size: 28px;
-      font-weight: 900;
+    .large-value {
+      font-size: 38px;
     }
 
-    .buy {
-      color: #087443;
+    .decision-card {
+      grid-column: 1 / -1;
+      background: #182238;
+      color: white;
+      border: 0;
+      padding: 30px;
     }
 
-    .watch {
-      color: #a26a00;
-    }
-
-    .sell {
-      color: #b42318;
-    }
-
-    .neutral {
-      color: #596579;
+    .decision-card .label {
+      color: #aeb8ca;
     }
 
     .decision {
-      border: 2px solid #dce2eb;
-    }
-
-    .decision-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-
-    .decision-price {
-      font-size: 34px;
-      font-weight: 900;
+      margin-top: 10px;
+      font-size: 44px;
+      font-weight: 850;
+      letter-spacing: -1.5px;
     }
 
     .decision-reason {
-      color: #687388;
-      margin-top: 7px;
-      max-width: 850px;
+      margin-top: 10px;
+      color: #c4ccda;
+      font-size: 18px;
       line-height: 1.5;
     }
 
-    .decision-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
+    .decision.buy {
+      background: #163d2d;
+    }
+
+    .decision.strong-buy {
+      background: #0e4d31;
+    }
+
+    .decision.sell {
+      background: #5a211e;
+    }
+
+    .decision.avoid {
+      background: #363b46;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
       margin-top: 18px;
     }
 
-    .decision-box {
-      background: #f7f8fb;
-      border-radius: 11px;
-      padding: 12px;
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 7px 12px;
+      border-radius: 20px;
+      background: #eef1f6;
+      color: #3b4659;
+      font-size: 14px;
+      font-weight: 700;
     }
 
-    .decision-box .value {
-      font-weight: 800;
-      font-size: 18px;
+    .pill.bullish {
+      background: #e4f4eb;
+      color: #177142;
     }
 
-    .quality {
-      display: inline-block;
-      padding: 5px 9px;
-      border-radius: 7px;
-      font-size: 12px;
-      font-weight: 800;
+    .pill.bearish {
+      background: #fbe8e6;
+      color: #b52b20;
     }
 
-    .quality.good {
-      background: #e6f6ed;
-      color: #087443;
-    }
-
-    .quality.ok {
-      background: #fff4d6;
-      color: #8a5b00;
-    }
-
-    .quality.bad {
-      background: #fde9e7;
-      color: #b42318;
-    }
-
-    .conditions {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-top: 15px;
-    }
-
-    .condition {
-      padding: 9px;
-      border-radius: 8px;
-      font-size: 13px;
-      background: #f5f6f9;
-    }
-
-    .condition.met {
-      background: #eaf7ef;
-      color: #087443;
-    }
-
-    .condition.not-met {
-      background: #fff1ef;
-      color: #9d2b20;
-    }
-
-    .section {
-      margin-bottom: 18px;
+    .pill.neutral {
+      background: #edf0f5;
+      color: #667188;
     }
 
     .formation {
-      border: 1px solid #e1e5ec;
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 10px;
-      background: #fafbfc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 16px 0;
+      border-bottom: 1px solid #edf0f5;
     }
 
-    .formation-title {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-      font-weight: 900;
+    .formation:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .formation-name {
+      font-weight: 750;
+      font-size: 18px;
     }
 
     .formation-meta {
-      color: #687388;
+      margin-top: 5px;
+      color: #7d889e;
+      font-size: 14px;
+    }
+
+    .confidence {
+      font-weight: 800;
+      font-size: 17px;
+      white-space: nowrap;
+    }
+
+    .strategy {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .strategy-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .strategy-name {
+      font-size: 27px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+    }
+
+    .strategy-status {
+      display: inline-flex;
+      padding: 8px 13px;
+      border-radius: 18px;
+      background: #eef1f6;
       font-size: 13px;
-      margin-top: 6px;
+      font-weight: 800;
+      white-space: nowrap;
     }
 
-    .formation-description {
-      margin-top: 9px;
-      font-size: 14px;
-      line-height: 1.45;
-      color: #4f5a6e;
-    }
-
-    .strategy-grid {
+    .levels {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 22px;
     }
 
-    .strategy-card {
-      border: 1px solid #e1e5ec;
-      border-radius: 13px;
-      padding: 16px;
+    .level {
+      background: #f7f8fb;
+      border-radius: 15px;
+      padding: 15px;
     }
 
-    .strategy-card h3 {
-      margin-top: 0;
-    }
-
-    .strategy-value {
-      font-size: 24px;
-      font-weight: 900;
-      margin: 5px 0 15px;
-    }
-
-    .scenario-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    .scenario-table th,
-    .scenario-table td {
-      padding: 10px;
-      border-bottom: 1px solid #e7eaf0;
-      text-align: left;
-      font-size: 14px;
-    }
-
-    .scenario-table th {
-      color: #697386;
+    .level-label {
+      color: #7d889e;
       font-size: 12px;
       text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
     }
 
-    .chart-wrapper {
-      position: relative;
-      height: 520px;
+    .level-value {
+      margin-top: 5px;
+      font-size: 20px;
+      font-weight: 800;
     }
 
-    .logic {
-      line-height: 1.6;
-      color: #4f5a6e;
+    .rr {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 16px;
+      background: #f7f8fb;
     }
 
-    .logic strong {
-      color: #172033;
+    .rr-title {
+      font-weight: 800;
+      margin-bottom: 12px;
     }
 
-    .loading {
+    .rr-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .rr-item {
       text-align: center;
-      padding: 40px;
-      color: #697386;
+      padding: 10px;
+      border-radius: 12px;
+      background: white;
     }
 
-    .error {
-      background: #fff0ee;
-      color: #a5281e;
-      border: 1px solid #f1c6c1;
-      padding: 14px;
-      border-radius: 10px;
-      margin-bottom: 18px;
-      display: none;
+    .rr-item small {
+      display: block;
+      color: #7d889e;
+      margin-bottom: 5px;
     }
 
-    @media (max-width: 1000px) {
-      .grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .decision-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
-
-      .strategy-grid {
-        grid-template-columns: 1fr;
-      }
+    .rr-item strong {
+      font-size: 18px;
     }
 
-    @media (max-width: 650px) {
-      .container {
-        padding: 12px;
+    .conditions {
+      margin-top: 18px;
+    }
+
+    .condition {
+      padding: 11px 0;
+      border-bottom: 1px solid #edf0f5;
+      font-size: 16px;
+    }
+
+    .condition:last-child {
+      border-bottom: 0;
+    }
+
+    .condition.met {
+      color: #177142;
+      font-weight: 700;
+    }
+
+    .condition.not-met {
+      color: #7d889e;
+    }
+
+    .two-columns {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .bullet {
+      margin: 0;
+      padding-left: 21px;
+    }
+
+    .bullet li {
+      margin: 11px 0;
+      line-height: 1.45;
+    }
+
+    .chart-card {
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    .chart-wrap {
+      margin-top: 15px;
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 420px;
+      min-width: 700px;
+    }
+
+    .footer {
+      margin-top: 35px;
+      text-align: center;
+      color: #9aa4b7;
+      font-size: 13px;
+    }
+
+    @media (max-width: 700px) {
+      .app {
+        padding: 22px 16px 45px;
       }
 
       h1 {
-        font-size: 25px;
+        font-size: 34px;
       }
 
-      .grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 9px;
+      .subtitle {
+        font-size: 17px;
       }
 
-      .card {
-        padding: 13px;
+      .toolbar {
+        display: grid;
+        grid-template-columns: 1fr 110px;
       }
 
-      .metric-value {
-        font-size: 18px;
+      .ticker-input {
+        width: 100%;
+        height: 64px;
+        font-size: 23px;
+        padding: 0 19px;
       }
 
-      .decision-price {
-        font-size: 29px;
+      .btn {
+        height: 64px;
+        padding: 0 15px;
+        font-size: 17px;
       }
 
-      .decision-grid {
-        grid-template-columns: repeat(2, 1fr);
+      .btn.secondary {
+        grid-column: 1 / -1;
       }
 
-      .conditions {
+      .grid,
+      .two-columns {
         grid-template-columns: 1fr;
       }
 
-      .chart-wrapper {
-        height: 430px;
+      .decision-card {
+        grid-column: auto;
       }
 
-      .scenario-table {
-        font-size: 12px;
+      .decision {
+        font-size: 36px;
       }
 
-      .scenario-table th,
-      .scenario-table td {
-        padding: 7px 4px;
+      .large-value {
+        font-size: 32px;
+      }
+
+      .levels {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .rr-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+
+      .card {
+        padding: 22px;
       }
     }
   </style>
 </head>
 
 <body>
+  <div class="app">
 
-<div class="container">
+    <header>
+      <h1>Investment Cockpit</h1>
 
-  <h1>Investment Cockpit</h1>
-  <div class="subtitle">
-    Technical analysis • Trend • Structure • Entries • Risk/Reward • Chart Formations
+      <div class="subtitle">
+        Technical Analysis · Trend · Structure · Entries ·
+        Risk/Reward · Chart Formations
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <input
+        id="tickerInput"
+        class="ticker-input"
+        type="text"
+        value="AAPL"
+        placeholder="Add ticker e.g. NVDA"
+        autocomplete="off"
+        autocapitalize="characters"
+      />
+
+      <button id="analyzeBtn" class="btn">
+        Analyze
+      </button>
+
+      <button id="addBtn" class="btn secondary">
+        + Add ticker
+      </button>
+    </div>
+
+    <div id="watchlist" class="watchlist"></div>
+
+    <div id="error" class="error"></div>
+
+    <div id="loading" class="loading">
+      Analyzing market data...
+    </div>
+
+    <main id="dashboard" style="display:none;">
+
+      <!-- DECISION -->
+      <section class="section">
+        <div class="grid">
+
+          <div id="decisionCard" class="card decision-card">
+            <div class="label">
+              Investment Decision
+            </div>
+
+            <div id="decision" class="decision">
+              —
+            </div>
+
+            <div id="decisionReason" class="decision-reason">
+              —
+            </div>
+
+            <div id="decisionPills" class="pill-row"></div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- OVERVIEW -->
+      <section class="section">
+        <div class="section-title">
+          Overview
+        </div>
+
+        <div class="grid">
+
+          <div class="card">
+            <div class="label">Ticker</div>
+            <div id="ticker" class="value large-value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Price</div>
+            <div id="price" class="value large-value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Investment Score</div>
+            <div id="score" class="value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Signal</div>
+            <div id="signal" class="value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Trend</div>
+            <div id="trend" class="value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Trend Confidence</div>
+            <div id="trendConfidence" class="value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Market Structure</div>
+            <div id="structure" class="value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Short-Term Trend</div>
+            <div id="shortTermTrend" class="value">—</div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TECHNICAL -->
+      <section class="section">
+        <div class="section-title">
+          Technical Indicators
+        </div>
+
+        <div class="grid">
+
+          <div class="card">
+            <div class="label">SMA20</div>
+            <div id="sma20" class="value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">SMA50</div>
+            <div id="sma50" class="value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">RSI14</div>
+            <div id="rsi" class="value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Relative Volume</div>
+            <div id="relativeVolume" class="value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">MACD</div>
+            <div id="macd" class="value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">MACD Histogram</div>
+            <div id="macdHistogram" class="value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Support</div>
+            <div id="support" class="value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Resistance</div>
+            <div id="resistance" class="value">—</div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- CANDLE -->
+      <section class="section">
+        <div class="section-title">
+          Candlestick Analysis
+        </div>
+
+        <div class="grid">
+
+          <div class="card">
+            <div class="label">Candle Pattern</div>
+            <div id="candlePattern" class="value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Candle Signal</div>
+            <div id="candleSignal" class="value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Candle Strength</div>
+            <div id="candleStrength" class="value">—</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Volume Confirmation</div>
+            <div id="volumeConfirmation" class="value">—</div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- FORMATIONS -->
+      <section class="section">
+        <div class="section-title">
+          Chart Formations
+        </div>
+
+        <div class="card">
+          <div id="formations"></div>
+        </div>
+      </section>
+
+      <!-- BREAKOUT -->
+      <section class="section">
+        <div class="section-title">
+          Breakout Strategy
+        </div>
+
+        <div class="card strategy">
+
+          <div class="strategy-header">
+
+            <div>
+              <div class="strategy-name">
+                Breakout Entry
+              </div>
+
+              <div class="formation-meta">
+                Enter after price confirms a break above resistance.
+              </div>
+            </div>
+
+            <div id="breakoutStatus" class="strategy-status">
+              —
+            </div>
+
+          </div>
+
+          <div class="levels">
+
+            <div class="level">
+              <div class="level-label">
+                Resistance
+              </div>
+              <div id="breakoutResistance" class="level-value">
+                —
+              </div>
+            </div>
+
+            <div class="level">
+              <div class="level-label">
+                Trigger
+              </div>
+              <div id="breakoutTrigger" class="level-value">
+                —
+              </div>
+            </div>
+
+            <div class="level">
+              <div class="level-label">
+                Invalidation
+              </div>
+              <div id="breakoutStop" class="level-value">
+                —
+              </div>
+            </div>
+
+            <div class="level">
+              <div class="level-label">
+                Target 1
+              </div>
+              <div id="breakoutTarget1" class="level-value">
+                —
+              </div>
+            </div>
+
+            <div class="level">
+              <div class="level-label">
+                Target 2
+              </div>
+              <div id="breakoutTarget2" class="level-value">
+                —
+              </div>
+            </div>
+
+            <div class="level">
+              <div class="level-label">
+                R/R Target 1
+              </div>
+              <div id="breakoutRR" class="level-value">
+                —
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- PULLBACK -->
+      <section class="section">
+        <div class="section-title">
+          Pullback Strategy
+        </div>
+
+        <div class="card strategy">
+
+          <div class="strategy-header">
+
+            <div>
+              <div class="strategy-name">
+                Pullback Entry
+              </div>
+
+              <div class="formation-meta">
+                Buy inside the preferred support / moving-average zone.
+              </div>
+            </div>
+
+            <div id="pullbackStatus" class="strategy-status">
+              —
+            </div>
+
+          </div>
+
+          <div class="levels">
+
+            <div class="level">
+              <div class="level-label">
+                Zone Low
+              </div>
+              <div id="pullbackLow" class="level-value">
+                —
+              </div>
+            </div>
+
+            <div class="level">
+              <div class="level-label">
+                Zone High
+              </div>
+              <div id="pullbackHigh" class="level-value">
+                —
+              </div>
+            </div>
+
+            <div class="level">
+              <div class="level-label">
+                Preferred Entry
+              </div>
+              <div id="preferredEntry" class="level-value">
+                —
+              </div>
+            </div>
+
+            <div class="level">
+              <div class="level-label">
+                Invalidation
+              </div>
+              <div id="pullbackStop" class="level-value">
+                —
+              </div>
+            </div>
+
+            <div class="level">
+              <div class="level-label">
+                Target 1
+              </div>
+              <div id="pullbackTarget1" class="level-value">
+                —
+              </div>
+            </div>
+
+            <div class="level">
+              <div class="level-label">
+                Target 2
+              </div>
+              <div id="pullbackTarget2" class="level-value">
+                —
+              </div>
+            </div>
+
+          </div>
+
+          <div class="rr">
+
+            <div class="rr-title">
+              Risk / Reward
+            </div>
+
+            <div class="rr-grid">
+
+              <div class="rr-item">
+                <small>Target 1</small>
+                <strong id="pullbackRR1">—</strong>
+              </div>
+
+              <div class="rr-item">
+                <small>Target 2</small>
+                <strong id="pullbackRR2">—</strong>
+              </div>
+
+              <div class="rr-item">
+                <small>Quality</small>
+                <strong id="pullbackRRQuality">—</strong>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- DECISION CONDITIONS -->
+      <section class="section">
+        <div class="section-title">
+          Decision Conditions
+        </div>
+
+        <div class="card">
+
+          <div id="conditionSummary" class="formation-meta">
+            —
+          </div>
+
+          <div id="conditionList" class="conditions"></div>
+
+        </div>
+      </section>
+
+      <!-- SCENARIOS -->
+      <section class="section">
+        <div class="section-title">
+          Entry Scenarios
+        </div>
+
+        <div class="grid">
+
+          <div class="card">
+            <div class="label">Best Case Entry</div>
+
+            <div id="bestEntry" class="value">
+              —
+            </div>
+
+            <div class="levels">
+
+              <div class="level">
+                <div class="level-label">Target 1</div>
+                <div id="bestTarget1" class="level-value">—</div>
+              </div>
+
+              <div class="level">
+                <div class="level-label">R/R</div>
+                <div id="bestRR1" class="level-value">—</div>
+              </div>
+
+              <div class="level">
+                <div class="level-label">Target 2</div>
+                <div id="bestTarget2" class="level-value">—</div>
+              </div>
+
+              <div class="level">
+                <div class="level-label">R/R</div>
+                <div id="bestRR2" class="level-value">—</div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="label">Base Case Entry</div>
+
+            <div id="baseEntry" class="value">
+              —
+            </div>
+
+            <div class="levels">
+
+              <div class="level">
+                <div class="level-label">Target 1</div>
+                <div id="baseTarget1" class="level-value">—</div>
+              </div>
+
+              <div class="level">
+                <div class="level-label">R/R</div>
+                <div id="baseRR1" class="level-value">—</div>
+              </div>
+
+              <div class="level">
+                <div class="level-label">Target 2</div>
+                <div id="baseTarget2" class="level-value">—</div>
+              </div>
+
+              <div class="level">
+                <div class="level-label">R/R</div>
+                <div id="baseRR2" class="level-value">—</div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="label">Worst Case Entry</div>
+
+            <div id="worstEntry" class="value">
+              —
+            </div>
+
+            <div class="levels">
+
+              <div class="level">
+                <div class="level-label">Target 1</div>
+                <div id="worstTarget1" class="level-value">—</div>
+              </div>
+
+              <div class="level">
+                <div class="level-label">R/R</div>
+                <div id="worstRR1" class="level-value">—</div>
+              </div>
+
+              <div class="level">
+                <div class="level-label">Target 2</div>
+                <div id="worstTarget2" class="level-value">—</div>
+              </div>
+
+              <div class="level">
+                <div class="level-label">R/R</div>
+                <div id="worstRR2" class="level-value">—</div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- CHART -->
+      <section class="section">
+        <div class="section-title">
+          Price Chart
+        </div>
+
+        <div class="card chart-card">
+
+          <div class="chart-wrap">
+            <canvas id="priceChart"></canvas>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- REASONS / RISKS -->
+      <section class="section">
+        <div class="two-columns">
+
+          <div class="card">
+            <div class="label">
+              Bullish Reasons
+            </div>
+
+            <ul id="reasons" class="bullet"></ul>
+          </div>
+
+          <div class="card">
+            <div class="label">
+              Risks
+            </div>
+
+            <ul id="risks" class="bullet"></ul>
+          </div>
+
+        </div>
+      </section>
+
+      <div id="updated" class="footer">
+        —
+      </div>
+
+    </main>
+
   </div>
-
-  <div class="toolbar">
-    <input
-      id="tickerInput"
-      placeholder="Enter ticker e.g. AAPL"
-      value="AAPL"
-    >
-
-    <button onclick="analyzeTicker()">
-      Analyze
-    </button>
-
-    <button class="secondary" onclick="addTicker()">
-      + Add ticker
-    </button>
-  </div>
-
-  <div id="watchlist" class="watchlist"></div>
-
-  <div id="error" class="error"></div>
-
-  <div id="loading" class="loading">
-    Loading analysis...
-  </div>
-
-  <div id="dashboard" style="display:none;">
-
-    <!-- OVERVIEW -->
-
-    <div class="grid">
-
-      <div class="card">
-        <div class="metric-label">Ticker</div>
-        <div id="ticker" class="metric-value">—</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label">Price</div>
-        <div id="price" class="metric-value">—</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label">Investment Score</div>
-        <div id="score" class="metric-value">—</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label">Signal</div>
-        <div id="signal" class="signal">—</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label">Trend</div>
-        <div id="trend" class="metric-value">—</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label">Trend Confidence</div>
-        <div id="trendConfidence" class="metric-value">—</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label">Market Structure</div>
-        <div id="structure" class="metric-value">—</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label">Short-Term Trend</div>
-        <div id="shortTermTrend" class="metric-value">—</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label">SMA20</div>
-        <div id="sma20" class="metric-value">—</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label">SMA50</div>
-        <div id="sma50" class="metric-value">—</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label">RSI14</div>
-        <div id="rsi" class="metric-value">—</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label">Relative Volume</div>
-        <div id="relativeVolume" class="metric-value">—</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label">Candle Pattern</div>
-        <div id="candlePattern" class="metric-value">—</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label">Candle Signal</div>
-        <div id="candleSignal" class="metric-value">—</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label">Candle Strength</div>
-        <div id="candleStrength" class="metric-value">—</div>
-      </div>
-
-      <div class="card">
-        <div class="metric-label">Volume</div>
-        <div id="volume" class="metric-value">—</div>
-      </div>
-
-    </div>
-
-    <!-- DECISION COCKPIT -->
-
-    <div class="section card decision">
-
-      <div class="decision-header">
-
-        <div>
-          <h2>Decision Cockpit</h2>
-
-          <div id="decisionSignal"
-               class="signal">
-            —
-          </div>
-
-          <div id="decisionReason"
-               class="decision-reason">
-            —
-          </div>
-        </div>
-
-        <div>
-          <div class="metric-label">
-            Current Price
-          </div>
-
-          <div id="decisionPrice"
-               class="decision-price">
-            —
-          </div>
-        </div>
-
-      </div>
-
-      <div class="decision-grid">
-
-        <div class="decision-box">
-          <div class="metric-label">Setup</div>
-          <div id="setup" class="value">—</div>
-        </div>
-
-        <div class="decision-box">
-          <div class="metric-label">Entry Trigger</div>
-          <div id="buyTrigger" class="value">—</div>
-        </div>
-
-        <div class="decision-box">
-          <div class="metric-label">Trigger Price</div>
-          <div id="triggerPrice" class="value">—</div>
-        </div>
-
-        <div class="decision-box">
-          <div class="metric-label">Invalidation</div>
-          <div id="invalidation" class="value">—</div>
-        </div>
-
-        <div class="decision-box">
-          <div class="metric-label">Confirmation</div>
-          <div id="confirmation" class="value">—</div>
-        </div>
-
-        <div class="decision-box">
-          <div class="metric-label">Risk / Share</div>
-          <div id="risk" class="value">—</div>
-        </div>
-
-        <div class="decision-box">
-          <div class="metric-label">Target 1</div>
-          <div id="target1" class="value">—</div>
-        </div>
-
-        <div class="decision-box">
-          <div class="metric-label">Target 2</div>
-          <div id="target2" class="value">—</div>
-        </div>
-
-        <div class="decision-box">
-          <div class="metric-label">R/R Target 1</div>
-          <div id="rr1" class="value">—</div>
-        </div>
-
-        <div class="decision-box">
-          <div class="metric-label">R/R Target 2</div>
-          <div id="rr2" class="value">—</div>
-        </div>
-
-      </div>
-
-      <div style="margin-top:15px;">
-        <span class="metric-label">
-          Risk / Reward Quality
-        </span>
-        <span id="rrQuality" class="quality">
-          —
-        </span>
-      </div>
-
-      <div id="conditions"
-           class="conditions">
-      </div>
-
-    </div>
-
-    <!-- CHART FORMATIONS -->
-
-    <div class="section card">
-
-      <h2>Chart Formations</h2>
-
-      <div id="chartPatterns">
-      </div>
-
-    </div>
-
-    <!-- STRATEGIES -->
-
-    <div class="section card">
-
-      <h2>Entry Strategies</h2>
-
-      <div class="strategy-grid">
-
-        <div class="strategy-card">
-
-          <h3>Breakout Strategy</h3>
-
-          <div class="metric-label">
-            Resistance
-          </div>
-
-          <div id="breakoutResistance"
-               class="strategy-value">
-            —
-          </div>
-
-          <div class="metric-label">
-            Trigger
-          </div>
-
-          <div id="breakoutTrigger"
-               class="strategy-value">
-            —
-          </div>
-
-          <div id="breakoutStatus">
-            —
-          </div>
-
-        </div>
-
-        <div class="strategy-card">
-
-          <h3>Pullback Strategy</h3>
-
-          <div class="metric-label">
-            Pullback Zone
-          </div>
-
-          <div id="pullbackZone"
-               class="strategy-value">
-            —
-          </div>
-
-          <div class="metric-label">
-            Preferred Entry
-          </div>
-
-          <div id="pullbackEntry"
-               class="strategy-value">
-            —
-          </div>
-
-          <div id="pullbackStatus">
-            —
-          </div>
-
-        </div>
-
-        <div class="strategy-card">
-
-          <h3>Execution View</h3>
-
-          <div class="metric-label">
-            Preferred Strategy
-          </div>
-
-          <div id="strategy"
-               class="strategy-value">
-            —
-          </div>
-
-          <div id="strategyExplanation"
-               class="logic">
-            —
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-    <!-- SCENARIOS -->
-
-    <div class="section card">
-
-      <h2>Realistic Entry Scenarios</h2>
-
-      <table class="scenario-table">
-
-        <thead>
-          <tr>
-            <th>Scenario</th>
-            <th>Entry</th>
-            <th>Invalidation</th>
-            <th>Target 1</th>
-            <th>Target 2</th>
-            <th>R/R T1</th>
-            <th>R/R T2</th>
-          </tr>
-        </thead>
-
-        <tbody id="scenarioBody">
-        </tbody>
-
-      </table>
-
-    </div>
-
-    <!-- CHART -->
-
-    <div class="section card">
-
-      <h2>Price Chart</h2>
-
-      <div class="chart-wrapper">
-        <canvas id="priceChart"></canvas>
-      </div>
-
-    </div>
-
-    <!-- TECHNICAL DIAGNOSIS -->
-
-    <div class="section card">
-
-      <h2>Technical Diagnosis</h2>
-
-      <div class="logic">
-
-        <p>
-          <strong>Candle indication:</strong>
-          <span id="candleDescription">—</span>
-        </p>
-
-        <p>
-          <strong>Reasons:</strong>
-        </p>
-
-        <ul id="reasons"></ul>
-
-        <p>
-          <strong>Risks:</strong>
-        </p>
-
-        <ul id="risks"></ul>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
 
 <script>
+  // ============================================================
+  // INVESTMENT COCKPIT FRONTEND
+  // ============================================================
 
-let watchlist =
-  JSON.parse(
-    localStorage.getItem("investmentWatchlist") ||
-    '["AAPL","NVDA","MSFT","AMZN"]'
-  );
+  const DEFAULT_TICKERS = [
+    "AAPL",
+    "NVDA",
+    "MSFT",
+    "AMZN"
+  ];
 
-let activeTicker = "AAPL";
+  let watchlist = [...DEFAULT_TICKERS];
+  let currentData = null;
+  let activeTicker = "AAPL";
 
-let priceChart = null;
+  const $ = (id) => document.getElementById(id);
 
-function money(value) {
-  if (
-    value === null ||
-    value === undefined ||
-    !Number.isFinite(Number(value))
-  ) {
-    return "—";
+  // ------------------------------------------------------------
+  // Helpers
+  // ------------------------------------------------------------
+
+  function setText(id, value) {
+    const element = $(id);
+
+    if (!element) return;
+
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
+      element.textContent = "—";
+    } else {
+      element.textContent = value;
+    }
   }
 
-  return "$" + Number(value).toFixed(2);
-}
+  function number(value, decimals = 2) {
+    if (
+      value === null ||
+      value === undefined ||
+      !Number.isFinite(Number(value))
+    ) {
+      return "—";
+    }
 
-function percent(value) {
-  if (
-    value === null ||
-    value === undefined ||
-    !Number.isFinite(Number(value))
-  ) {
-    return "—";
+    return Number(value).toFixed(decimals);
   }
 
-  return Number(value).toFixed(1) + "%";
-}
+  function money(value) {
+    if (
+      value === null ||
+      value === undefined ||
+      !Number.isFinite(Number(value))
+    ) {
+      return "—";
+    }
 
-function rr(value) {
-  if (
-    value === null ||
-    value === undefined ||
-    !Number.isFinite(Number(value))
-  ) {
-    return "—";
+    return "$" + Number(value).toFixed(2);
   }
 
-  return Number(value).toFixed(2) + "x";
-}
+  function percent(value) {
+    if (
+      value === null ||
+      value === undefined ||
+      !Number.isFinite(Number(value))
+    ) {
+      return "—";
+    }
 
-function signalClass(signal) {
+    const n = Number(value);
 
-  if (
-    signal === "BUY" ||
-    signal === "STRONG BUY"
-  ) {
-    return "buy";
+    return (
+      (n >= 0 ? "+" : "") +
+      n.toFixed(2) +
+      "%"
+    );
   }
 
-  if (signal === "SELL") {
-    return "sell";
+  function multiple(value) {
+    if (
+      value === null ||
+      value === undefined ||
+      !Number.isFinite(Number(value))
+    ) {
+      return "—";
+    }
+
+    return Number(value).toFixed(2) + "x";
   }
 
-  if (signal === "WATCH") {
-    return "watch";
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 
-  return "neutral";
-}
+  function clearError() {
+    $("error").style.display = "none";
+    $("error").textContent = "";
+  }
 
-function renderWatchlist() {
+  function showError(message) {
+    $("error").style.display = "block";
+    $("error").textContent = message;
+  }
 
-  const el =
-    document.getElementById("watchlist");
+  function setLoading(value) {
+    $("loading").style.display =
+      value ? "block" : "none";
 
-  el.innerHTML = "";
+    $("analyzeBtn").disabled = value;
+  }
 
-  watchlist.forEach(ticker => {
+  function signalClass(value) {
+    const text =
+      String(value || "").toUpperCase();
 
-    const button =
-      document.createElement("div");
+    if (
+      text.includes("BULL") ||
+      text.includes("BUY") ||
+      text.includes("POSITIVE")
+    ) {
+      return "bullish";
+    }
 
-    button.className =
-      "ticker " +
-      (ticker === activeTicker
-        ? "active"
-        : "");
+    if (
+      text.includes("BEAR") ||
+      text.includes("SELL") ||
+      text.includes("NEGATIVE")
+    ) {
+      return "bearish";
+    }
 
-    button.textContent = ticker;
+    return "neutral";
+  }
 
-    button.onclick = () => {
+  // ------------------------------------------------------------
+  // Watchlist
+  // ------------------------------------------------------------
 
-      activeTicker = ticker;
+  function renderWatchlist() {
+    const container = $("watchlist");
 
-      document.getElementById(
-        "tickerInput"
-      ).value = ticker;
+    container.innerHTML = "";
+
+    watchlist.forEach((ticker) => {
+      const button =
+        document.createElement("button");
+
+      button.className =
+        "ticker-btn" +
+        (
+          ticker === activeTicker
+            ? " active"
+            : ""
+        );
+
+      button.textContent = ticker;
+
+      button.addEventListener(
+        "click",
+        () => {
+          activeTicker = ticker;
+
+          $("tickerInput").value =
+            ticker;
+
+          renderWatchlist();
+
+          analyze(ticker);
+        }
+      );
+
+      container.appendChild(button);
+    });
+  }
+
+  function addTicker() {
+    const ticker =
+      $("tickerInput")
+        .value
+        .trim()
+        .toUpperCase();
+
+    if (!ticker) return;
+
+    if (!watchlist.includes(ticker)) {
+      watchlist.push(ticker);
+    }
+
+    activeTicker = ticker;
+
+    renderWatchlist();
+
+    analyze(ticker);
+  }
+
+  // ------------------------------------------------------------
+  // API
+  // ------------------------------------------------------------
+
+  async function analyze(ticker) {
+    const symbol =
+      String(ticker || "")
+        .trim()
+        .toUpperCase();
+
+    if (!symbol) {
+      showError("Please enter a ticker.");
+      return;
+    }
+
+    clearError();
+
+    setLoading(true);
+
+    try {
+      const response =
+        await fetch(
+          "/api/stock?ticker=" +
+          encodeURIComponent(symbol),
+          {
+            cache: "no-store"
+          }
+        );
+
+      let data = null;
+
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        throw new Error(
+          "The API returned an invalid response."
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+          data?.error ||
+          "API request failed."
+        );
+      }
+
+      if (data?.error) {
+        throw new Error(
+          data.message ||
+          data.error
+        );
+      }
+
+      if (!data.price) {
+        throw new Error(
+          "No market price was returned."
+        );
+      }
+
+      currentData = data;
+
+      activeTicker = symbol;
 
       renderWatchlist();
 
-      analyzeTicker();
+      renderDashboard(data);
+
+      $("dashboard").style.display =
+        "block";
+
+    } catch (error) {
+
+      console.error(error);
+
+      $("dashboard").style.display =
+        currentData ? "block" : "none";
+
+      showError(
+        "Error: " +
+        (
+          error?.message ||
+          "Unable to analyze ticker."
+        )
+      );
+
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ------------------------------------------------------------
+  // Dashboard
+  // ------------------------------------------------------------
+
+  function renderDashboard(d) {
+
+    // ---------------------------
+    // Overview
+    // ---------------------------
+
+    setText(
+      "ticker",
+      d.symbol
+    );
+
+    setText(
+      "price",
+      money(d.price)
+    );
+
+    setText(
+      "score",
+      d.score
+    );
+
+    setText(
+      "signal",
+      d.decision
+    );
+
+    setText(
+      "trend",
+      d.trend
+    );
+
+    setText(
+      "trendConfidence",
+      d.trend_confidence !== null &&
+      d.trend_confidence !== undefined
+        ? d.trend_confidence + "%"
+        : "—"
+    );
+
+    setText(
+      "structure",
+      d.structure
+    );
+
+    setText(
+      "shortTermTrend",
+      d.short_term_trend
+    );
+
+    // ---------------------------
+    // Technical
+    // ---------------------------
+
+    setText(
+      "sma20",
+      money(d.sma20)
+    );
+
+    setText(
+      "sma50",
+      money(d.sma50)
+    );
+
+    setText(
+      "rsi",
+      number(d.rsi)
+    );
+
+    setText(
+      "relativeVolume",
+      d.relative_volume !== null &&
+      d.relative_volume !== undefined
+        ? multiple(d.relative_volume)
+        : "—"
+    );
+
+    setText(
+      "macd",
+      number(d.macd, 4)
+    );
+
+    setText(
+      "macdHistogram",
+      number(d.macd_histogram, 4)
+    );
+
+    setText(
+      "support",
+      money(d.support)
+    );
+
+    setText(
+      "resistance",
+      money(d.resistance)
+    );
+
+    // ---------------------------
+    // Candle
+    // ---------------------------
+
+    const candle =
+      d.candle || {};
+
+    setText(
+      "candlePattern",
+      d.candle_pattern ||
+      candle.pattern
+    );
+
+    setText(
+      "candleSignal",
+      d.candle_signal ||
+      candle.signal
+    );
+
+    setText(
+      "candleStrength",
+      d.candle_strength ||
+      candle.strength
+    );
+
+    setText(
+      "volumeConfirmation",
+      d.volume_confirmation ||
+      d.volume?.confirmation
+    );
+
+    // ---------------------------
+    // Decision
+    // ---------------------------
+
+    renderDecision(d);
+
+    // ---------------------------
+    // Formations
+    // ---------------------------
+
+    renderFormations(
+      d.formations || []
+    );
+
+    // ---------------------------
+    // Strategies
+    // ---------------------------
+
+    renderBreakout(d);
+
+    renderPullback(d);
+
+    // ---------------------------
+    // Conditions
+    // ---------------------------
+
+    renderConditions(d);
+
+    // ---------------------------
+    // Scenarios
+    // ---------------------------
+
+    renderScenarios(d);
+
+    // ---------------------------
+    // Reasons
+    // ---------------------------
+
+    renderBullets(
+      "reasons",
+      d.reasons || []
+    );
+
+    renderBullets(
+      "risks",
+      d.risks || []
+    );
+
+    // ---------------------------
+    // Chart
+    // ---------------------------
+
+    drawChart(d);
+
+    // ---------------------------
+    // Last updated
+    // ---------------------------
+
+    setText(
+      "updated",
+      d.last_updated
+        ? "Market data date: " +
+          d.last_updated +
+          " · Alpha Vantage daily data"
+        : "Daily market data"
+    );
+  }
+
+  // ------------------------------------------------------------
+  // Decision
+  // ------------------------------------------------------------
+
+  function renderDecision(d) {
+
+    const decision =
+      String(
+        d.decision || "WATCH"
+      ).toUpperCase();
+
+    const card =
+      $("decisionCard");
+
+    card.className =
+      "card decision-card";
+
+    if (
+      decision === "BUY"
+    ) {
+      card.classList.add("buy");
+    }
+
+    if (
+      decision === "STRONG BUY"
+    ) {
+      card.classList.add("strong-buy");
+    }
+
+    if (
+      decision === "SELL"
+    ) {
+      card.classList.add("sell");
+    }
+
+    if (
+      decision === "AVOID"
+    ) {
+      card.classList.add("avoid");
+    }
+
+    setText(
+      "decision",
+      decision
+    );
+
+    setText(
+      "decisionReason",
+      d.decision_reason ||
+      "—"
+    );
+
+    const pills =
+      $("decisionPills");
+
+    pills.innerHTML = "";
+
+    const values = [
+      [
+        "Score " +
+        (
+          d.score ??
+          "—"
+        ),
+        ""
+      ],
+      [
+        d.active_strategy ||
+        "WAIT",
+        ""
+      ],
+      [
+        d.risk_reward_quality ||
+        "—",
+        ""
+      ]
+    ];
+
+    values.forEach(
+      ([text]) => {
+
+        const pill =
+          document.createElement("div");
+
+        pill.className =
+          "pill";
+
+        pill.textContent =
+          text;
+
+        pills.appendChild(
+          pill
+        );
+      }
+    );
+  }
+
+  // ------------------------------------------------------------
+  // Formations
+  // ------------------------------------------------------------
+
+  function renderFormations(formations) {
+
+    const container =
+      $("formations");
+
+    container.innerHTML = "";
+
+    if (
+      !Array.isArray(formations) ||
+      formations.length === 0
+    ) {
+      container.innerHTML =
+        '<div class="formation-meta">' +
+        "No significant chart formation detected." +
+        "</div>";
+
+      return;
+    }
+
+    formations.forEach(
+      (formation) => {
+
+        const row =
+          document.createElement("div");
+
+        row.className =
+          "formation";
+
+        const type =
+          String(
+            formation.type || ""
+          ).toUpperCase();
+
+        const confidence =
+          formation.confidence;
+
+        row.innerHTML = `
+          <div>
+            <div class="formation-name">
+              ${escapeHtml(
+                formation.name ||
+                "Formation"
+              )}
+            </div>
+
+            <div class="formation-meta">
+              ${escapeHtml(type)}
+            </div>
+          </div>
+
+          <div class="confidence">
+            ${Number.isFinite(Number(confidence))
+              ? Number(confidence) + "%"
+              : "—"}
+          </div>
+        `;
+
+        container.appendChild(row);
+      }
+    );
+  }
+
+  // ------------------------------------------------------------
+  // Breakout
+  // ------------------------------------------------------------
+
+  function renderBreakout(d) {
+
+    const confirmed =
+      Boolean(
+        d.breakout_confirmed ||
+        d.buy_trigger_confirmed
+      );
+
+    setText(
+      "breakoutStatus",
+      confirmed
+        ? "CONFIRMED"
+        : "WAIT"
+    );
+
+    setText(
+      "breakoutResistance",
+      money(d.resistance)
+    );
+
+    setText(
+      "breakoutTrigger",
+      money(
+        d.buy_trigger_price
+      )
+    );
+
+    setText(
+      "breakoutStop",
+      money(d.invalidation)
+    );
+
+    setText(
+      "breakoutTarget1",
+      money(d.target1)
+    );
+
+    setText(
+      "breakoutTarget2",
+      money(d.target2)
+    );
+
+    setText(
+      "breakoutRR",
+      multiple(
+        d.risk_reward_target1
+      )
+    );
+  }
+
+  // ------------------------------------------------------------
+  // Pullback
+  // ------------------------------------------------------------
+
+  function renderPullback(d) {
+
+    const zone =
+      d.pullback_zone || {};
+
+    const low =
+      zone.low ??
+      d.entry_low;
+
+    const high =
+      zone.high ??
+      d.entry_high;
+
+    const preferred =
+      zone.preferred ??
+      d.preferred_entry;
+
+    let status =
+      "WAIT";
+
+    if (
+      d.in_pullback_zone
+    ) {
+      status =
+        "IN PULLBACK ZONE";
+    } else if (
+      d.price > high
+    ) {
+      status =
+        "ABOVE ZONE";
+    } else if (
+      d.price < low
+    ) {
+      status =
+        "BELOW ZONE";
+    }
+
+    setText(
+      "pullbackStatus",
+      status
+    );
+
+    setText(
+      "pullbackLow",
+      money(low)
+    );
+
+    setText(
+      "pullbackHigh",
+      money(high)
+    );
+
+    setText(
+      "preferredEntry",
+      money(preferred)
+    );
+
+    setText(
+      "pullbackStop",
+      money(d.invalidation)
+    );
+
+    setText(
+      "pullbackTarget1",
+      money(d.target1)
+    );
+
+    setText(
+      "pullbackTarget2",
+      money(d.target2)
+    );
+
+    setText(
+      "pullbackRR1",
+      multiple(
+        d.risk_reward_target1
+      )
+    );
+
+    setText(
+      "pullbackRR2",
+      multiple(
+        d.risk_reward_target2
+      )
+    );
+
+    setText(
+      "pullbackRRQuality",
+      d.risk_reward_quality
+    );
+  }
+
+  // ------------------------------------------------------------
+  // Conditions
+  // IMPORTANT:
+  // The DOM element is called "conditionList".
+  // This avoids the old "conditions" variable collision.
+  // ------------------------------------------------------------
+
+  function renderConditions(d) {
+
+    const conditionList =
+      $("conditionList");
+
+    conditionList.innerHTML = "";
+
+    const conditionData =
+      d.conditions || {};
+
+    const entries =
+      Object.entries(
+        conditionData
+      );
+
+    setText(
+      "conditionSummary",
+      (
+        d.conditions_met ??
+        0
+      ) +
+      " / " +
+      (
+        d.conditions_total ??
+        entries.length
+      ) +
+      " conditions met"
+    );
+
+    if (!entries.length) {
+
+      conditionList.innerHTML =
+        '<div class="condition not-met">' +
+        "No decision conditions available." +
+        "</div>";
+
+      return;
+    }
+
+    const labels = {
+      bullishTrend:
+        "Bullish primary trend",
+
+      bullishStructure:
+        "Bullish market structure",
+
+      positiveMACD:
+        "Positive MACD momentum",
+
+      healthyRSI:
+        "Healthy RSI zone",
+
+      bullishCandle:
+        "Bullish candle confirmation",
+
+      attractiveRiskReward:
+        "Attractive risk/reward"
     };
 
-    el.appendChild(button);
+    entries.forEach(
+      ([key, met]) => {
 
-  });
-}
+        const div =
+          document.createElement("div");
 
-function addTicker() {
+        div.className =
+          "condition " +
+          (
+            met
+              ? "met"
+              : "not-met"
+          );
 
-  const input =
-    document.getElementById(
-      "tickerInput"
-    );
+        div.textContent =
+          (
+            met
+              ? "✓ "
+              : "○ "
+          ) +
+          (
+            labels[key] ||
+            key
+          );
 
-  const ticker =
-    input.value.trim().toUpperCase();
-
-  if (!ticker) return;
-
-  if (!watchlist.includes(ticker)) {
-
-    watchlist.push(ticker);
-
-    localStorage.setItem(
-      "investmentWatchlist",
-      JSON.stringify(watchlist)
+        conditionList.appendChild(
+          div
+        );
+      }
     );
   }
 
-  activeTicker = ticker;
+  // ------------------------------------------------------------
+  // Scenarios
+  // ------------------------------------------------------------
 
-  renderWatchlist();
+  function calculateRR(
+    entry,
+    stop,
+    target
+  ) {
 
-  analyzeTicker();
-}
+    if (
+      !Number.isFinite(Number(entry)) ||
+      !Number.isFinite(Number(stop)) ||
+      !Number.isFinite(Number(target))
+    ) {
+      return null;
+    }
 
-async function analyzeTicker() {
+    const risk =
+      Number(entry) -
+      Number(stop);
 
-  const input =
-    document.getElementById(
-      "tickerInput"
-    );
+    if (risk <= 0) {
+      return null;
+    }
 
-  const ticker =
-    input.value.trim().toUpperCase();
+    return (
+      Number(target) -
+      Number(entry)
+    ) / risk;
+  }
 
-  if (!ticker) return;
+  function renderScenarios(d) {
 
-  activeTicker = ticker;
-
-  renderWatchlist();
-
-  document.getElementById(
-    "loading"
-  ).style.display = "block";
-
-  document.getElementById(
-    "dashboard"
-  ).style.display = "none";
-
-  document.getElementById(
-    "error"
-  ).style.display = "none";
-
-  try {
-
-    const response =
-      await fetch(
-        `/api/stock?ticker=${encodeURIComponent(ticker)}`
+    const low =
+      Number(
+        d.entry_low
       );
 
-    const data =
-      await response.json();
+    const high =
+      Number(
+        d.entry_high
+      );
 
-    if (!response.ok) {
-      throw new Error(
-        data.error ||
-        "Unable to load stock data"
+    const stop =
+      Number(
+        d.invalidation
+      );
+
+    const target1 =
+      Number(
+        d.target1
+      );
+
+    const target2 =
+      Number(
+        d.target2
+      );
+
+    const valid =
+      [
+        low,
+        high,
+        stop,
+        target1,
+        target2
+      ].every(
+        Number.isFinite
+      );
+
+    if (!valid) {
+      return;
+    }
+
+    // Best = lower part of pullback zone
+    const bestEntry =
+      Math.max(
+        low,
+        stop + 0.01
+      );
+
+    // Base = preferred entry
+    const baseEntry =
+      Number(
+        d.preferred_entry ||
+        (low + high) / 2
+      );
+
+    // Worst = upper part of zone
+    const worstEntry =
+      Math.max(
+        high,
+        stop + 0.01
+      );
+
+    setText(
+      "bestEntry",
+      money(bestEntry)
+    );
+
+    setText(
+      "bestTarget1",
+      money(target1)
+    );
+
+    setText(
+      "bestRR1",
+      multiple(
+        calculateRR(
+          bestEntry,
+          stop,
+          target1
+        )
+      )
+    );
+
+    setText(
+      "bestTarget2",
+      money(target2)
+    );
+
+    setText(
+      "bestRR2",
+      multiple(
+        calculateRR(
+          bestEntry,
+          stop,
+          target2
+        )
+      )
+    );
+
+    setText(
+      "baseEntry",
+      money(baseEntry)
+    );
+
+    setText(
+      "baseTarget1",
+      money(target1)
+    );
+
+    setText(
+      "baseRR1",
+      multiple(
+        calculateRR(
+          baseEntry,
+          stop,
+          target1
+        )
+      )
+    );
+
+    setText(
+      "baseTarget2",
+      money(target2)
+    );
+
+    setText(
+      "baseRR2",
+      multiple(
+        calculateRR(
+          baseEntry,
+          stop,
+          target2
+        )
+      )
+    );
+
+    setText(
+      "worstEntry",
+      money(worstEntry)
+    );
+
+    setText(
+      "worstTarget1",
+      money(target1)
+    );
+
+    setText(
+      "worstRR1",
+      multiple(
+        calculateRR(
+          worstEntry,
+          stop,
+          target1
+        )
+      )
+    );
+
+    setText(
+      "worstTarget2",
+      money(target2)
+    );
+
+    setText(
+      "worstRR2",
+      multiple(
+        calculateRR(
+          worstEntry,
+          stop,
+          target2
+        )
+      )
+    );
+  }
+
+  // ------------------------------------------------------------
+  // Bullets
+  // ------------------------------------------------------------
+
+  function renderBullets(
+    id,
+    items
+  ) {
+
+    const element =
+      $(id);
+
+    element.innerHTML = "";
+
+    if (
+      !Array.isArray(items) ||
+      items.length === 0
+    ) {
+      const li =
+        document.createElement("li");
+
+      li.textContent =
+        "No information available.";
+
+      element.appendChild(li);
+
+      return;
+    }
+
+    items.forEach(
+      (item) => {
+
+        const li =
+          document.createElement("li");
+
+        li.textContent =
+          item;
+
+        element.appendChild(
+          li
+        );
+      }
+    );
+  }
+
+  // ------------------------------------------------------------
+  // Chart
+  // ------------------------------------------------------------
+
+  function drawChart(d) {
+
+    const canvas =
+      $("priceChart");
+
+    const container =
+      canvas.parentElement;
+
+    const rect =
+      container.getBoundingClientRect();
+
+    const width =
+      Math.max(
+        rect.width,
+        720
+      );
+
+    const height =
+      420;
+
+    const dpr =
+      window.devicePixelRatio || 1;
+
+    canvas.width =
+      width * dpr;
+
+    canvas.height =
+      height * dpr;
+
+    canvas.style.width =
+      width + "px";
+
+    canvas.style.height =
+      height + "px";
+
+    const ctx =
+      canvas.getContext("2d");
+
+    ctx.scale(
+      dpr,
+      dpr
+    );
+
+    const history =
+      Array.isArray(d.history)
+        ? d.history.slice(-80)
+        : [];
+
+    if (
+      history.length < 2
+    ) {
+      ctx.fillStyle =
+        "#7d889e";
+
+      ctx.font =
+        "16px -apple-system, sans-serif";
+
+      ctx.fillText(
+        "Not enough historical data for chart.",
+        20,
+        40
+      );
+
+      return;
+    }
+
+    const padding = {
+      left: 20,
+      right: 130,
+      top: 25,
+      bottom: 35
+    };
+
+    const chartWidth =
+      width -
+      padding.left -
+      padding.right;
+
+    const chartHeight =
+      height -
+      padding.top -
+      padding.bottom;
+
+    const prices =
+      history.flatMap(
+        (x) => [
+          Number(x.high),
+          Number(x.low)
+        ]
+      );
+
+    const levels = [
+      Number(d.support),
+      Number(d.resistance),
+      Number(d.target1),
+      Number(d.target2),
+      Number(d.invalidation),
+      Number(d.entry_low),
+      Number(d.entry_high)
+    ].filter(
+      Number.isFinite
+    );
+
+    const allValues =
+      prices.concat(levels);
+
+    let min =
+      Math.min(...allValues);
+
+    let max =
+      Math.max(...allValues);
+
+    const range =
+      max - min || 1;
+
+    min -= range * 0.08;
+    max += range * 0.08;
+
+    function x(index) {
+      return (
+        padding.left +
+        (
+          index /
+          (history.length - 1)
+        ) *
+        chartWidth
       );
     }
 
-    renderDashboard(data);
+    function y(value) {
+      return (
+        padding.top +
+        (
+          (max - value) /
+          (max - min)
+        ) *
+        chartHeight
+      );
+    }
 
-  } catch (error) {
+    // Background
+    ctx.clearRect(
+      0,
+      0,
+      width,
+      height
+    );
 
-    const errorEl =
-      document.getElementById(
-        "error"
+    // Grid
+    ctx.strokeStyle =
+      "#edf0f5";
+
+    ctx.lineWidth = 1;
+
+    for (
+      let i = 0;
+      i <= 5;
+      i++
+    ) {
+
+      const gy =
+        padding.top +
+        (
+          i / 5
+        ) *
+        chartHeight;
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        padding.left,
+        gy
       );
 
-    errorEl.textContent =
-      error.message;
+      ctx.lineTo(
+        width - padding.right,
+        gy
+      );
 
-    errorEl.style.display =
-      "block";
+      ctx.stroke();
 
-  } finally {
+      const value =
+        max -
+        (
+          i / 5
+        ) *
+        (max - min);
 
-    document.getElementById(
-      "loading"
-    ).style.display = "none";
-  }
-}
+      ctx.fillStyle =
+        "#8c97aa";
 
-function renderDashboard(d) {
+      ctx.font =
+        "12px -apple-system, sans-serif";
 
-  document.getElementById(
-    "dashboard"
-  ).style.display = "block";
+      ctx.fillText(
+        "$" +
+        value.toFixed(0),
+        width - padding.right + 12,
+        gy + 4
+      );
+    }
 
-  document.getElementById(
-    "ticker"
-  ).textContent = d.ticker;
+    // Pullback zone
+    const zoneLow =
+      Number(d.entry_low);
 
-  document.getElementById(
-    "price"
-  ).textContent = money(d.price);
+    const zoneHigh =
+      Number(d.entry_high);
 
-  document.getElementById(
-    "score"
-  ).textContent = d.score;
+    if (
+      Number.isFinite(zoneLow) &&
+      Number.isFinite(zoneHigh)
+    ) {
 
-  const signalEl =
-    document.getElementById(
-      "signal"
+      const top =
+        y(zoneHigh);
+
+      const bottom =
+        y(zoneLow);
+
+      ctx.fillStyle =
+        "rgba(100,120,150,0.08)";
+
+      ctx.fillRect(
+        padding.left,
+        top,
+        chartWidth,
+        bottom - top
+      );
+    }
+
+    // Main price line
+    ctx.beginPath();
+
+    history.forEach(
+      (item, index) => {
+
+        const px =
+          x(index);
+
+        const py =
+          y(Number(item.close));
+
+        if (index === 0) {
+          ctx.moveTo(
+            px,
+            py
+          );
+        } else {
+          ctx.lineTo(
+            px,
+            py
+          );
+        }
+      }
     );
 
-  signalEl.textContent =
-    d.signal;
+    ctx.strokeStyle =
+      "#182238";
 
-  signalEl.className =
-    "signal " +
-    signalClass(d.signal);
+    ctx.lineWidth = 3;
 
-  document.getElementById(
-    "trend"
-  ).textContent =
-    d.trend;
+    ctx.stroke();
 
-  document.getElementById(
-    "trendConfidence"
-  ).textContent =
-    percent(d.trendConfidence);
-
-  document.getElementById(
-    "structure"
-  ).textContent =
-    d.structure;
-
-  document.getElementById(
-    "shortTermTrend"
-  ).textContent =
-    d.shortTermTrend;
-
-  document.getElementById(
-    "sma20"
-  ).textContent =
-    money(d.sma20);
-
-  document.getElementById(
-    "sma50"
-  ).textContent =
-    money(d.sma50);
-
-  document.getElementById(
-    "rsi"
-  ).textContent =
-    d.rsi14 ?? "—";
-
-  document.getElementById(
-    "relativeVolume"
-  ).textContent =
-    d.relativeVolume
-      ? d.relativeVolume + "x"
-      : "—";
-
-  document.getElementById(
-    "candlePattern"
-  ).textContent =
-    d.candlePattern;
-
-  document.getElementById(
-    "candleSignal"
-  ).textContent =
-    d.candleSignal;
-
-  document.getElementById(
-    "candleStrength"
-  ).textContent =
-    d.candleStrength;
-
-  document.getElementById(
-    "volume"
-  ).textContent =
-    d.volume
-      ? Number(d.volume).toLocaleString()
-      : "—";
-
-  renderDecision(d);
-
-  renderPatterns(d);
-
-  renderStrategies(d);
-
-  renderScenarios(d);
-
-  renderDiagnosis(d);
-
-  renderChart(d);
-}
-
-function renderDecision(d) {
-
-  const signal =
-    document.getElementById(
-      "decisionSignal"
+    // SMA20
+    drawIndicatorLine(
+      ctx,
+      history,
+      "sma20",
+      x,
+      y,
+      width
     );
 
-  signal.textContent =
-    d.signal;
-
-  signal.className =
-    "signal " +
-    signalClass(d.signal);
-
-  document.getElementById(
-    "decisionReason"
-  ).textContent =
-    d.signalReason;
-
-  document.getElementById(
-    "decisionPrice"
-  ).textContent =
-    money(d.price);
-
-  document.getElementById(
-    "setup"
-  ).textContent =
-    d.setup;
-
-  document.getElementById(
-    "buyTrigger"
-  ).textContent =
-    d.buyTrigger;
-
-  document.getElementById(
-    "triggerPrice"
-  ).textContent =
-    money(d.buyTriggerPrice);
-
-  document.getElementById(
-    "invalidation"
-  ).textContent =
-    money(d.invalidation);
-
-  document.getElementById(
-    "confirmation"
-  ).textContent =
-    `${d.conditionsMet}/${d.conditionsTotal}`;
-
-  document.getElementById(
-    "risk"
-  ).textContent =
-    money(d.riskPerShare);
-
-  document.getElementById(
-    "target1"
-  ).textContent =
-    money(d.target1);
-
-  document.getElementById(
-    "target2"
-  ).textContent =
-    money(d.target2);
-
-  document.getElementById(
-    "rr1"
-  ).textContent =
-    rr(d.riskRewardTarget1);
-
-  document.getElementById(
-    "rr2"
-  ).textContent =
-    rr(d.riskRewardTarget2);
-
-  const quality =
-    document.getElementById(
-      "rrQuality"
+    // SMA50
+    drawIndicatorLine(
+      ctx,
+      history,
+      "sma50",
+      x,
+      y,
+      width
     );
 
-  quality.textContent =
-    d.riskRewardQuality;
-
-  quality.className =
-    "quality " +
-    (
-      d.riskRewardQuality === "ATTRACTIVE"
-        ? "good"
-        : d.riskRewardQuality === "ACCEPTABLE"
-        ? "ok"
-        : "bad"
+    // Levels
+    drawLevel(
+      ctx,
+      width,
+      y,
+      d.support,
+      "Support",
+      padding
     );
 
-  const conditions =
-    document.getElementById(
-      "conditions"
+    drawLevel(
+      ctx,
+      width,
+      y,
+      d.resistance,
+      "Resistance",
+      padding
     );
 
-  conditions.innerHTML = "";
-
-  (d.conditions || []).forEach(c => {
-
-    const div =
-      document.createElement("div");
-
-    div.className =
-      "condition " +
-      (c.met
-        ? "met"
-        : "not-met");
-
-    div.textContent =
-      (c.met ? "✓ " : "○ ") +
-      c.name;
-
-    conditions.appendChild(div);
-
-  });
-}
-
-function renderPatterns(d) {
-
-  const container =
-    document.getElementById(
-      "chartPatterns"
+    drawLevel(
+      ctx,
+      width,
+      y,
+      d.target1,
+      "Target 1",
+      padding
     );
 
-  container.innerHTML = "";
+    drawLevel(
+      ctx,
+      width,
+      y,
+      d.target2,
+      "Target 2",
+      padding
+    );
 
-  const patterns =
-    d.chartPatterns || [];
+    drawLevel(
+      ctx,
+      width,
+      y,
+      d.invalidation,
+      "Invalidation",
+      padding
+    );
 
-  if (!patterns.length) {
+    // Current price
+    const lastX =
+      x(history.length - 1);
 
-    container.innerHTML =
-      `<div class="formation">
-        No major chart formation detected.
-        The engine will continue monitoring the structure.
-      </div>`;
+    const lastY =
+      y(
+        Number(
+          history[
+            history.length - 1
+          ].close
+        )
+      );
 
-    return;
+    ctx.beginPath();
+
+    ctx.arc(
+      lastX,
+      lastY,
+      5,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fillStyle =
+      "#182238";
+
+    ctx.fill();
+
+    ctx.fillStyle =
+      "#182238";
+
+    ctx.font =
+      "700 13px -apple-system, sans-serif";
+
+    ctx.fillText(
+      "Current " +
+      money(d.price),
+      lastX + 10,
+      lastY - 10
+    );
+
+    // Date labels
+    ctx.fillStyle =
+      "#8c97aa";
+
+    ctx.font =
+      "11px -apple-system, sans-serif";
+
+    const labelIndexes = [
+      0,
+      Math.floor(
+        history.length / 2
+      ),
+      history.length - 1
+    ];
+
+    labelIndexes.forEach(
+      (index) => {
+
+        const item =
+          history[index];
+
+        ctx.fillText(
+          item.date,
+          x(index) - 30,
+          height - 10
+        );
+      }
+    );
   }
 
-  patterns.slice(0, 5).forEach(p => {
-
-    const div =
-      document.createElement("div");
-
-    div.className =
-      "formation";
-
-    const typeClass =
-      p.type === "BULLISH"
-        ? "buy"
-        : p.type === "BEARISH"
-        ? "sell"
-        : "neutral";
-
-    div.innerHTML = `
-      <div class="formation-title">
-        <span>${p.name}</span>
-        <span class="${typeClass}">
-          ${p.type} • ${p.confidence}% confidence
-        </span>
-      </div>
-
-      <div class="formation-meta">
-        Status: <strong>${p.status}</strong>
-        ${p.trigger !== null && p.trigger !== undefined
-          ? ` • Trigger: <strong>${money(p.trigger)}</strong>`
-          : ""}
-        ${p.target !== null && p.target !== undefined
-          ? ` • Target: <strong>${money(p.target)}</strong>`
-          : ""}
-      </div>
-
-      <div class="formation-description">
-        ${p.description}
-      </div>
-    `;
-
-    container.appendChild(div);
-
-  });
-}
-
-function renderStrategies(d) {
-
-  document.getElementById(
-    "breakoutResistance"
-  ).textContent =
-    money(d.resistance);
-
-  document.getElementById(
-    "breakoutTrigger"
-  ).textContent =
-    money(d.breakoutTrigger);
-
-  document.getElementById(
-    "breakoutStatus"
-  ).innerHTML =
-    d.breakoutConfirmed
-      ? `<span class="quality good">BREAKOUT CONFIRMED</span>`
-      : `<span class="quality ok">WAIT FOR BREAKOUT</span>`;
-
-  document.getElementById(
-    "pullbackZone"
-  ).textContent =
-    `${money(d.pullbackZoneLow)} – ${money(d.pullbackZoneHigh)}`;
-
-  document.getElementById(
-    "pullbackEntry"
-  ).textContent =
-    money(d.pullbackEntry);
-
-  let pullbackStatus =
-    "WAIT FOR PULLBACK";
-
-  if (
-    d.price >= d.pullbackZoneLow &&
-    d.price <= d.pullbackZoneHigh
+  function drawIndicatorLine(
+    ctx,
+    history,
+    key,
+    x,
+    y,
+    width
   ) {
-    pullbackStatus =
-      "PRICE IN PULLBACK ZONE";
-  }
 
-  if (d.pullbackConfirmed) {
-    pullbackStatus =
-      "PULLBACK CONFIRMED";
-  }
+    ctx.beginPath();
 
-  document.getElementById(
-    "pullbackStatus"
-  ).innerHTML =
-    `<span class="quality ${
-      d.pullbackConfirmed
-        ? "good"
-        : "ok"
-    }">${pullbackStatus}</span>`;
+    let started = false;
 
-  document.getElementById(
-    "strategy"
-  ).textContent =
-    d.strategy;
+    history.forEach(
+      (item, index) => {
 
-  document.getElementById(
-    "strategyExplanation"
-  ).innerHTML =
+        const value =
+          Number(item[key]);
 
-    d.strategy === "PULLBACK"
-
-      ? `The pullback setup offers the more attractive risk/reward profile. Preferred entry is around <strong>${money(d.pullbackEntry)}</strong>, with invalidation below <strong>${money(d.invalidation)}</strong>.`
-
-      : d.strategy === "BREAKOUT"
-
-      ? `The breakout setup becomes attractive above <strong>${money(d.breakoutTrigger)}</strong>, provided momentum and structure remain bullish.`
-
-      : `Wait for a cleaner entry. Monitor both the pullback zone and breakout level.`;
-}
-
-function scenario(
-  name,
-  entry,
-  invalidation,
-  target1,
-  target2
-) {
-
-  const risk =
-    Math.max(
-      0.01,
-      entry - invalidation
-    );
-
-  return {
-    name,
-    entry,
-    invalidation,
-    target1,
-    target2,
-    rr1:
-      (target1 - entry) / risk,
-    rr2:
-      (target2 - entry) / risk
-  };
-}
-
-function renderScenarios(d) {
-
-  const body =
-    document.getElementById(
-      "scenarioBody"
-    );
-
-  body.innerHTML = "";
-
-  const pullbackEntry =
-    d.pullbackEntry;
-
-  const breakoutEntry =
-    d.breakoutTrigger;
-
-  const invalidation =
-    d.invalidation;
-
-  const target1 =
-    d.target1;
-
-  const target2 =
-    d.target2;
-
-  const bestEntry =
-    pullbackEntry;
-
-  const baseEntry =
-    (
-      pullbackEntry +
-      breakoutEntry
-    ) / 2;
-
-  const worstEntry =
-    breakoutEntry;
-
-  const scenarios = [
-
-    scenario(
-      "Best",
-      bestEntry,
-      invalidation,
-      target1,
-      target2
-    ),
-
-    scenario(
-      "Base",
-      baseEntry,
-      invalidation,
-      target1,
-      target2
-    ),
-
-    scenario(
-      "Worst",
-      worstEntry,
-      invalidation,
-      target1,
-      target2
-    )
-
-  ];
-
-  scenarios.forEach(s => {
-
-    const row =
-      document.createElement("tr");
-
-    row.innerHTML = `
-      <td><strong>${s.name}</strong></td>
-      <td>${money(s.entry)}</td>
-      <td>${money(s.invalidation)}</td>
-      <td>${money(s.target1)}</td>
-      <td>${money(s.target2)}</td>
-      <td>${rr(s.rr1)}</td>
-      <td>${rr(s.rr2)}</td>
-    `;
-
-    body.appendChild(row);
-
-  });
-}
-
-function renderDiagnosis(d) {
-
-  document.getElementById(
-    "candleDescription"
-  ).textContent =
-    d.candleDescription ||
-    "No additional candle interpretation.";
-
-  const reasons =
-    document.getElementById(
-      "reasons"
-    );
-
-  reasons.innerHTML = "";
-
-  (d.reasons || []).forEach(reason => {
-
-    const li =
-      document.createElement("li");
-
-    li.textContent =
-      reason;
-
-    reasons.appendChild(li);
-
-  });
-
-  const risks =
-    document.getElementById(
-      "risks"
-    );
-
-  risks.innerHTML = "";
-
-  (d.risks || []).forEach(risk => {
-
-    const li =
-      document.createElement("li");
-
-    li.textContent =
-      risk;
-
-    risks.appendChild(li);
-
-  });
-}
-
-function renderChart(d) {
-
-  const ctx =
-    document.getElementById(
-      "priceChart"
-    ).getContext("2d");
-
-  if (priceChart) {
-    priceChart.destroy();
-  }
-
-  const history =
-    d.history || [];
-
-  const labels =
-    history.map(x => x.date);
-
-  const prices =
-    history.map(x => x.close);
-
-  const sma20 =
-    history.map(x => x.sma20);
-
-  const sma50 =
-    history.map(x => x.sma50);
-
-  const pullbackLow =
-    history.map(() =>
-      d.pullbackZoneLow
-    );
-
-  const pullbackHigh =
-    history.map(() =>
-      d.pullbackZoneHigh
-    );
-
-  priceChart =
-    new Chart(ctx, {
-
-      type: "line",
-
-      data: {
-
-        labels,
-
-        datasets: [
-
-          {
-            label: d.ticker,
-            data: prices,
-            borderWidth: 2,
-            pointRadius: 0,
-            tension: 0.15
-          },
-
-          {
-            label: "SMA20",
-            data: sma20,
-            borderWidth: 1.5,
-            pointRadius: 0,
-            borderDash: [5, 5],
-            tension: 0.1
-          },
-
-          {
-            label: "SMA50",
-            data: sma50,
-            borderWidth: 1.5,
-            pointRadius: 0,
-            borderDash: [8, 5],
-            tension: 0.1
-          },
-
-          {
-            label: "Pullback Low",
-            data: pullbackLow,
-            borderWidth: 1,
-            pointRadius: 0,
-            borderDash: [3, 5]
-          },
-
-          {
-            label: "Pullback High",
-            data: pullbackHigh,
-            borderWidth: 1,
-            pointRadius: 0,
-            borderDash: [3, 5]
-          },
-
-          {
-            label: "Resistance",
-            data: history.map(() =>
-              d.resistance
-            ),
-            borderWidth: 1,
-            pointRadius: 0,
-            borderDash: [10, 4]
-          }
-
-        ]
-
-      },
-
-      options: {
-
-        responsive: true,
-
-        maintainAspectRatio: false,
-
-        interaction: {
-          intersect: false,
-          mode: "index"
-        },
-
-        plugins: {
-
-          legend: {
-            position: "bottom"
-          }
-
-        },
-
-        scales: {
-
-          x: {
-            ticks: {
-              maxTicksLimit: 8
-            }
-          },
-
-          y: {
-            beginAtZero: false,
-
-            grace: "5%"
-          }
-
+        if (!Number.isFinite(value)) {
+          return;
         }
 
+        const px =
+          x(index);
+
+        const py =
+          y(value);
+
+        if (!started) {
+
+          ctx.moveTo(
+            px,
+            py
+          );
+
+          started = true;
+
+        } else {
+
+          ctx.lineTo(
+            px,
+            py
+          );
+        }
       }
+    );
 
-    });
-}
+    if (!started) return;
 
-renderWatchlist();
+    ctx.strokeStyle =
+      key === "sma20"
+        ? "#7d889e"
+        : "#a9b2c1";
 
-document.getElementById(
-  "tickerInput"
-).addEventListener(
-  "keydown",
-  function(e) {
+    ctx.lineWidth = 1.5;
 
-    if (e.key === "Enter") {
-      analyzeTicker();
+    ctx.stroke();
+  }
+
+  function drawLevel(
+    ctx,
+    width,
+    y,
+    value,
+    label,
+    padding
+  ) {
+
+    const numberValue =
+      Number(value);
+
+    if (
+      !Number.isFinite(
+        numberValue
+      )
+    ) {
+      return;
     }
 
+    const py =
+      y(numberValue);
+
+    ctx.save();
+
+    ctx.setLineDash([
+      5,
+      5
+    ]);
+
+    ctx.strokeStyle =
+      "#d7dce5";
+
+    ctx.lineWidth = 1;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      padding.left,
+      py
+    );
+
+    ctx.lineTo(
+      width - padding.right,
+      py
+    );
+
+    ctx.stroke();
+
+    ctx.restore();
+
+    ctx.fillStyle =
+      "#6f7b90";
+
+    ctx.font =
+      "600 11px -apple-system, sans-serif";
+
+    ctx.fillText(
+      label +
+      " $" +
+      numberValue.toFixed(2),
+      width - padding.right + 10,
+      py - 4
+    );
   }
-);
 
-analyzeTicker();
+  // ------------------------------------------------------------
+  // Events
+  // ------------------------------------------------------------
 
+  $("analyzeBtn")
+    .addEventListener(
+      "click",
+      () => {
+
+        const ticker =
+          $("tickerInput")
+            .value
+            .trim()
+            .toUpperCase();
+
+        analyze(ticker);
+      }
+    );
+
+  $("addBtn")
+    .addEventListener(
+      "click",
+      addTicker
+    );
+
+  $("tickerInput")
+    .addEventListener(
+      "keydown",
+      (event) => {
+
+        if (
+          event.key === "Enter"
+        ) {
+          event.preventDefault();
+
+          const ticker =
+            $("tickerInput")
+              .value
+              .trim()
+              .toUpperCase();
+
+          analyze(ticker);
+        }
+      }
+    );
+
+  window.addEventListener(
+    "resize",
+    () => {
+
+      if (currentData) {
+        drawChart(
+          currentData
+        );
+      }
+    }
+  );
+
+  // ------------------------------------------------------------
+  // Initial load
+  // ------------------------------------------------------------
+
+  renderWatchlist();
+
+  analyze("AAPL");
 </script>
 
 </body>
