@@ -1,6 +1,9 @@
 # Investment Cockpit V2 — Live API
 
-Upload `index.html`, `vercel.json`, and the `api` folder to the existing GitHub repository.
+This corrected V2 removes the custom `vercel.json` runtime configuration that caused the deployment error. Vercel will auto-detect the Node.js API function in `api/stock.js`.
+
+## Upload
+Replace the existing `index.html` and add/replace the `api/stock.js` file. You do not need a `vercel.json`.
 
 ## Vercel secret
 In Vercel: Project → Settings → Environment Variables → add:
