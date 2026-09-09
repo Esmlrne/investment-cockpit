@@ -1,5 +1,7 @@
 export default async function handler(req, res) {
-  const ticker = String(req.query.ticker || "").trim().toUpperCase();
+  const ticker = String(req.query.ticker || "")
+    .trim()
+    .toUpperCase();
 
   if (!/^[A-Z.]{1,8}$/.test(ticker)) {
     return res.status(400).json({
@@ -16,6 +18,10 @@ export default async function handler(req, res) {
   }
 
   try {
+    /* =========================================================
+       DATA
+    ========================================================= */
+
     const response = await fetch(
       `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${encodeURIComponent(
         ticker
@@ -26,7 +32,8 @@ export default async function handler(req, res) {
 
     if (data.Note) {
       return res.status(429).json({
-        error: "Alpha Vantage rate limit reached. Please try again later."
+        error:
+          "Alpha Vantage rate limit reached. Please try again later."
       });
     }
 
@@ -55,11 +62,11 @@ export default async function handler(req, res) {
         close: Number(series[date]["4. close"]),
         volume: Number(series[date]["5. volume"])
       }))
-      .filter(x =>
-        Number.isFinite(x.open) &&
-        Number.isFinite(x.high) &&
-        Number.isFinite(x.low) &&
-        Number.isFinite(x.close)
+      .filter(item =>
+        Number.isFinite(item.open) &&
+        Number.isFinite(item.high) &&
+        Number.isFinite(item.low) &&
+        Number.isFinite(item.close)
       );
 
     if (history.length < 50) {
@@ -70,9 +77,9 @@ export default async function handler(req, res) {
 
     const closes = history.map(x => x.close);
 
-    /* =========================
+    /* =========================================================
        MOVING AVERAGES
-    ========================= */
+    ========================================================= */
 
     function sma(values, period) {
       const result = new Array(values.length).fill(null);
@@ -84,7 +91,11 @@ export default async function handler(req, res) {
       for (let i = period - 1; i < values.length; i++) {
         let sum = 0;
 
-        for (let j = i - period + 1; j <= i; j++) {
+        for (
+          let j = i - period + 1;
+          j <= i;
+          j++
+        ) {
           sum += values[j];
         }
 
@@ -120,9 +131,9 @@ export default async function handler(req, res) {
       return result;
     }
 
-    /* =========================
+    /* =========================================================
        RSI
-    ========================= */
+    ========================================================= */
 
     function calculateRSI(values, period = 14) {
       const result = new Array(values.length).fill(null);
@@ -150,19 +161,27 @@ export default async function handler(req, res) {
       result[period] =
         averageLoss === 0
           ? 100
-          : 100 - 100 / (1 + averageGain / averageLoss);
+          : 100 -
+            100 /
+              (1 + averageGain / averageLoss);
 
       for (let i = period + 1; i < values.length; i++) {
-        const change = values[i] - values[i - 1];
+        const change =
+          values[i] - values[i - 1];
 
-        const gain = change > 0 ? change : 0;
-        const loss = change < 0 ? Math.abs(change) : 0;
+        const gain =
+          change > 0 ? change : 0;
+
+        const loss =
+          change < 0 ? Math.abs(change) : 0;
 
         averageGain =
-          (averageGain * (period - 1) + gain) / period;
+          (averageGain * (period - 1) + gain) /
+          period;
 
         averageLoss =
-          (averageLoss * (period - 1) + loss) / period;
+          (averageLoss * (period - 1) + loss) /
+          period;
 
         result[i] =
           averageLoss === 0
@@ -175,22 +194,24 @@ export default async function handler(req, res) {
       return result;
     }
 
-    /* =========================
+    /* =========================================================
        MACD
-    ========================= */
+    ========================================================= */
 
     function calculateMACD(values) {
       const ema12 = ema(values, 12);
       const ema26 = ema(values, 26);
 
-      const macdLine = new Array(values.length).fill(null);
+      const macdLine =
+        new Array(values.length).fill(null);
 
       for (let i = 0; i < values.length; i++) {
         if (
           ema12[i] !== null &&
           ema26[i] !== null
         ) {
-          macdLine[i] = ema12[i] - ema26[i];
+          macdLine[i] =
+            ema12[i] - ema26[i];
         }
       }
 
@@ -232,9 +253,9 @@ export default async function handler(req, res) {
       };
     }
 
-    /* =========================
+    /* =========================================================
        CANDLESTICK ANALYSIS
-    ========================= */
+    ========================================================= */
 
     function candleAnalysis(candles) {
       const n = candles.length;
@@ -244,7 +265,8 @@ export default async function handler(req, res) {
           pattern: "NEUTRAL",
           signal: "NEUTRAL",
           strength: 0,
-          description: "Not enough candle data."
+          description:
+            "Not enough candle data."
         };
       }
 
@@ -252,17 +274,25 @@ export default async function handler(req, res) {
       const p = candles[n - 2];
       const p2 = candles[n - 3];
 
-      const body = Math.abs(c.close - c.open);
-      const range = c.high - c.low;
+      const body =
+        Math.abs(c.close - c.open);
+
+      const range =
+        c.high - c.low;
 
       const upperWick =
-        c.high - Math.max(c.open, c.close);
+        c.high -
+        Math.max(c.open, c.close);
 
       const lowerWick =
-        Math.min(c.open, c.close) - c.low;
+        Math.min(c.open, c.close) -
+        c.low;
 
-      const bullish = c.close > c.open;
-      const bearish = c.close < c.open;
+      const bullish =
+        c.close > c.open;
+
+      const bearish =
+        c.close < c.open;
 
       const previousBullish =
         p.close > p.open;
@@ -279,47 +309,50 @@ export default async function handler(req, res) {
       let pattern = "NEUTRAL";
       let signal = "NEUTRAL";
       let strength = 0;
+
       let description =
         "No significant candlestick pattern.";
 
       /* Bullish engulfing */
-
       if (
         bullish &&
         previousBearish &&
         c.open <= p.close &&
         c.close >= p.open &&
-        body > Math.abs(p.close - p.open)
+        body >
+          Math.abs(p.close - p.open)
       ) {
         pattern = "BULLISH ENGULFING";
         signal = "BULLISH";
         strength = 3;
+
         description =
           "Bullish candle completely engulfs the previous bearish candle.";
       }
 
       /* Bearish engulfing */
-
       else if (
         bearish &&
         previousBullish &&
         c.open >= p.close &&
         c.close <= p.open &&
-        body > Math.abs(p.close - p.open)
+        body >
+          Math.abs(p.close - p.open)
       ) {
         pattern = "BEARISH ENGULFING";
         signal = "BEARISH";
         strength = 3;
+
         description =
           "Bearish candle completely engulfs the previous bullish candle.";
       }
 
       /* Morning star */
-
       else if (
         p2Bearish &&
         Math.abs(p.close - p.open) <
-          Math.abs(p2.close - p2.open) * 0.45 &&
+          Math.abs(p2.close - p2.open) *
+            0.45 &&
         bullish &&
         c.close >
           (p2.open + p2.close) / 2
@@ -327,16 +360,17 @@ export default async function handler(req, res) {
         pattern = "MORNING STAR";
         signal = "BULLISH";
         strength = 3;
+
         description =
           "Three-candle bullish reversal structure detected.";
       }
 
       /* Evening star */
-
       else if (
         p2Bullish &&
         Math.abs(p.close - p.open) <
-          Math.abs(p2.close - p2.open) * 0.45 &&
+          Math.abs(p2.close - p2.open) *
+            0.45 &&
         bearish &&
         c.close <
           (p2.open + p2.close) / 2
@@ -344,42 +378,44 @@ export default async function handler(req, res) {
         pattern = "EVENING STAR";
         signal = "BEARISH";
         strength = 3;
+
         description =
           "Three-candle bearish reversal structure detected.";
       }
 
       /* Hammer */
-
       else if (
         range > 0 &&
         lowerWick >= body * 2 &&
         upperWick <= body &&
-        c.close > c.low + range * 0.6
+        c.close >
+          c.low + range * 0.6
       ) {
         pattern = "HAMMER";
         signal = "BULLISH";
         strength = 2;
+
         description =
           "Long lower wick shows rejection of lower prices.";
       }
 
       /* Shooting star */
-
       else if (
         range > 0 &&
         upperWick >= body * 2 &&
         lowerWick <= body &&
-        c.close < c.low + range * 0.4
+        c.close <
+          c.low + range * 0.4
       ) {
         pattern = "SHOOTING STAR";
         signal = "BEARISH";
         strength = 2;
+
         description =
           "Long upper wick shows rejection of higher prices.";
       }
 
       /* Doji */
-
       else if (
         range > 0 &&
         body <= range * 0.15
@@ -387,34 +423,39 @@ export default async function handler(req, res) {
         pattern = "DOJI";
         signal = "NEUTRAL";
         strength = 1;
+
         description =
           "Indecision candle detected.";
       }
 
-      /* Strong bullish */
-
+      /* Strong bullish candle */
       else if (
         range > 0 &&
         bullish &&
         body >= range * 0.70
       ) {
-        pattern = "STRONG BULLISH CANDLE";
+        pattern =
+          "STRONG BULLISH CANDLE";
+
         signal = "BULLISH";
         strength = 1;
+
         description =
           "Strong buying pressure in the latest session.";
       }
 
-      /* Strong bearish */
-
+      /* Strong bearish candle */
       else if (
         range > 0 &&
         bearish &&
         body >= range * 0.70
       ) {
-        pattern = "STRONG BEARISH CANDLE";
+        pattern =
+          "STRONG BEARISH CANDLE";
+
         signal = "BEARISH";
         strength = 1;
+
         description =
           "Strong selling pressure in the latest session.";
       }
@@ -427,9 +468,9 @@ export default async function handler(req, res) {
       };
     }
 
-    /* =========================
+    /* =========================================================
        MARKET STRUCTURE
-    ========================= */
+    ========================================================= */
 
     function findPivots(candles) {
       const highs = [];
@@ -442,20 +483,27 @@ export default async function handler(req, res) {
         candles.length - 2;
 
       for (let i = start; i < end; i++) {
-
         const c = candles[i];
 
         const isHigh =
-          c.high > candles[i - 1].high &&
-          c.high > candles[i - 2].high &&
-          c.high >= candles[i + 1].high &&
-          c.high >= candles[i + 2].high;
+          c.high >
+            candles[i - 1].high &&
+          c.high >
+            candles[i - 2].high &&
+          c.high >=
+            candles[i + 1].high &&
+          c.high >=
+            candles[i + 2].high;
 
         const isLow =
-          c.low < candles[i - 1].low &&
-          c.low < candles[i - 2].low &&
-          c.low <= candles[i + 1].low &&
-          c.low <= candles[i + 2].low;
+          c.low <
+            candles[i - 1].low &&
+          c.low <
+            candles[i - 2].low &&
+          c.low <=
+            candles[i + 1].low &&
+          c.low <=
+            candles[i + 2].low;
 
         if (isHigh) {
           highs.push({
@@ -479,7 +527,8 @@ export default async function handler(req, res) {
     }
 
     function analyzeStructure(candles) {
-      const pivots = findPivots(candles);
+      const pivots =
+        findPivots(candles);
 
       const highs = pivots.highs;
       const lows = pivots.lows;
@@ -490,7 +539,8 @@ export default async function handler(req, res) {
       ) {
         return {
           direction: "SIDEWAYS",
-          structure: "INSUFFICIENT STRUCTURE",
+          structure:
+            "INSUFFICIENT STRUCTURE",
           score: 0,
           lastHigh: null,
           previousHigh: null,
@@ -587,15 +637,16 @@ export default async function handler(req, res) {
       };
     }
 
-    /* =========================
+    /* =========================================================
        BREAKOUT / BREAKDOWN
-    ========================= */
+    ========================================================= */
 
     function analyzeBreakout(candles) {
       if (candles.length < 25) {
         return {
           type: "NONE",
-          strength: 0
+          strength: 0,
+          level: null
         };
       }
 
@@ -624,7 +675,7 @@ export default async function handler(req, res) {
       ) {
         return {
           type: "BREAKOUT",
-          strength: 3,
+          strength: 4,
           level: resistance
         };
       }
@@ -635,7 +686,7 @@ export default async function handler(req, res) {
       ) {
         return {
           type: "BREAKDOWN",
-          strength: -3,
+          strength: -4,
           level: support
         };
       }
@@ -647,9 +698,9 @@ export default async function handler(req, res) {
       };
     }
 
-    /* =========================
+    /* =========================================================
        INDICATORS
-    ========================= */
+    ========================================================= */
 
     const sma20 = sma(closes, 20);
     const sma50 = sma(closes, 50);
@@ -691,14 +742,18 @@ export default async function handler(req, res) {
       macdSignal[macdSignal.length - 1];
 
     const currentHistogram =
-      macdHistogram[macdHistogram.length - 1];
+      macdHistogram[
+        macdHistogram.length - 1
+      ];
 
     const previousHistogram =
-      macdHistogram[macdHistogram.length - 2];
+      macdHistogram[
+        macdHistogram.length - 2
+      ];
 
-    /* =========================
-       STRUCTURE + CANDLE
-    ========================= */
+    /* =========================================================
+       ANALYSIS
+    ========================================================= */
 
     const structure =
       analyzeStructure(history);
@@ -709,82 +764,46 @@ export default async function handler(req, res) {
     const breakout =
       analyzeBreakout(history);
 
-    /* =========================
-       TREND SCORING
-    ========================= */
+    /* =========================================================
+       TREND SCORE
+    ========================================================= */
 
     let trendScore = 0;
 
-    /* Price vs SMA20 */
-
-    if (
-      currentSMA20 !== null
-    ) {
-      if (price > currentSMA20) {
-        trendScore += 2;
-      } else {
-        trendScore -= 2;
-      }
+    if (currentSMA20 !== null) {
+      trendScore +=
+        price > currentSMA20 ? 2 : -2;
     }
 
-    /* Price vs SMA50 */
-
-    if (
-      currentSMA50 !== null
-    ) {
-      if (price > currentSMA50) {
-        trendScore += 2;
-      } else {
-        trendScore -= 2;
-      }
+    if (currentSMA50 !== null) {
+      trendScore +=
+        price > currentSMA50 ? 2 : -2;
     }
-
-    /* SMA alignment */
 
     if (
       currentSMA20 !== null &&
       currentSMA50 !== null
     ) {
-      if (
-        currentSMA20 >
-        currentSMA50
-      ) {
-        trendScore += 2;
-      } else {
-        trendScore -= 2;
-      }
+      trendScore +=
+        currentSMA20 > currentSMA50
+          ? 2
+          : -2;
     }
-
-    /* MACD */
 
     if (
       currentMACD !== null &&
       currentMACDSignal !== null
     ) {
-      if (
-        currentMACD >
-        currentMACDSignal
-      ) {
-        trendScore += 2;
-      } else {
-        trendScore -= 2;
-      }
+      trendScore +=
+        currentMACD > currentMACDSignal
+          ? 2
+          : -2;
     }
 
-    /* Market structure */
-
     trendScore += structure.score;
-
-    /* Breakout */
-
     trendScore += breakout.strength;
 
-    /* =========================
-       TREND CLASSIFICATION
-    ========================= */
-
-    let trend =
-      "SIDEWAYS";
+    let trend = "SIDEWAYS";
 
     if (trendScore >= 6) {
       trend = "BULLISH";
@@ -792,43 +811,35 @@ export default async function handler(req, res) {
       trend = "BEARISH";
     }
 
-    /* =========================
-       SHORT-TERM MOMENTUM
-    ========================= */
+    /* =========================================================
+       SHORT-TERM TREND
+    ========================================================= */
 
-    let shortTermTrend =
-      "NEUTRAL";
+    let shortTermTrend = "NEUTRAL";
 
     if (
       currentSMA20 !== null &&
-      price > currentSMA20 &&
       currentMACD !== null &&
       currentMACDSignal !== null &&
+      price > currentSMA20 &&
       currentMACD > currentMACDSignal
     ) {
-      shortTermTrend =
-        "BULLISH";
+      shortTermTrend = "BULLISH";
     }
 
     if (
       currentSMA20 !== null &&
-      price < currentSMA20 &&
       currentMACD !== null &&
       currentMACDSignal !== null &&
+      price < currentSMA20 &&
       currentMACD < currentMACDSignal
     ) {
-      shortTermTrend =
-        "BEARISH";
+      shortTermTrend = "BEARISH";
     }
 
-    /* =========================
-       REVERSAL DETECTION
-    ========================= */
-
-    let reversal =
-      "NONE";
-
-    let reversalConfidence = 0;
+    /* =========================================================
+       MOMENTUM DIRECTION
+    ========================================================= */
 
     const histogramTurningBullish =
       previousHistogram !== null &&
@@ -842,6 +853,23 @@ export default async function handler(req, res) {
       currentHistogram <
         previousHistogram;
 
+    const macdBullish =
+      currentMACD !== null &&
+      currentMACDSignal !== null &&
+      currentMACD > currentMACDSignal;
+
+    const macdBearish =
+      currentMACD !== null &&
+      currentMACDSignal !== null &&
+      currentMACD < currentMACDSignal;
+
+    /* =========================================================
+       REVERSAL DETECTION
+    ========================================================= */
+
+    let reversal = "NONE";
+    let reversalConfidence = 0;
+
     if (
       trend === "BEARISH" &&
       (
@@ -849,20 +877,18 @@ export default async function handler(req, res) {
         histogramTurningBullish ||
         (
           currentRSI !== null &&
-          currentRSI < 40 &&
-          currentRSI > 30
+          currentRSI >= 30 &&
+          currentRSI <= 42
         )
       )
     ) {
       reversal =
         "BULLISH REVERSAL WATCH";
 
-      reversalConfidence = 65;
+      reversalConfidence = 60;
 
-      if (
-        candle.signal === "BULLISH"
-      ) {
-        reversalConfidence += 10;
+      if (candle.signal === "BULLISH") {
+        reversalConfidence += 12;
       }
 
       if (histogramTurningBullish) {
@@ -871,16 +897,13 @@ export default async function handler(req, res) {
 
       if (
         currentRSI !== null &&
-        currentRSI > 40
+        currentRSI < 40
       ) {
         reversalConfidence += 5;
       }
 
       reversalConfidence =
-        Math.min(
-          90,
-          reversalConfidence
-        );
+        Math.min(90, reversalConfidence);
     }
 
     if (
@@ -890,55 +913,44 @@ export default async function handler(req, res) {
         histogramTurningBearish ||
         (
           currentRSI !== null &&
-          currentRSI > 60 &&
-          currentRSI < 70
+          currentRSI >= 58 &&
+          currentRSI <= 72
         )
       )
     ) {
       reversal =
         "BEARISH REVERSAL WATCH";
 
-      reversalConfidence = 65;
+      reversalConfidence = 60;
 
-      if (
-        candle.signal === "BEARISH"
-      ) {
-        reversalConfidence += 10;
+      if (candle.signal === "BEARISH") {
+        reversalConfidence += 12;
       }
 
       if (histogramTurningBearish) {
         reversalConfidence += 10;
       }
 
+      if (
+        currentRSI !== null &&
+        currentRSI > 65
+      ) {
+        reversalConfidence += 5;
+      }
+
       reversalConfidence =
-        Math.min(
-          90,
-          reversalConfidence
-        );
+        Math.min(90, reversalConfidence);
     }
 
-    /* =========================
+    /* =========================================================
        CANDLE CONTEXT
-    ========================= */
+    ========================================================= */
 
     let candleContext =
       "NO STRONG CONTEXT";
 
     if (
       candle.signal === "BULLISH" &&
-      price <=
-        (currentSMA20 || price) &&
-      currentRSI !== null &&
-      currentRSI < 50
-    ) {
-      candleContext =
-        "BULLISH REVERSAL CANDIDATE";
-    }
-
-    if (
-      candle.signal === "BULLISH" &&
-      price >
-        (currentSMA20 || price) &&
       structure.direction === "BULLISH"
     ) {
       candleContext =
@@ -946,35 +958,238 @@ export default async function handler(req, res) {
     }
 
     if (
-      candle.signal === "BEARISH" &&
-      price >=
-        (currentSMA20 || price) &&
-      currentRSI !== null &&
-      currentRSI > 50
+      candle.signal === "BULLISH" &&
+      structure.direction !== "BULLISH"
     ) {
       candleContext =
-        "BEARISH REVERSAL CANDIDATE";
+        "BULLISH REVERSAL CANDIDATE";
     }
 
     if (
       candle.signal === "BEARISH" &&
-      price <
-        (currentSMA20 || price) &&
       structure.direction === "BEARISH"
     ) {
       candleContext =
         "BEARISH TREND CONFIRMATION";
     }
 
-    /* =========================
-       CONFIDENCE
-    ========================= */
+    if (
+      candle.signal === "BEARISH" &&
+      structure.direction !== "BEARISH"
+    ) {
+      candleContext =
+        "BEARISH REVERSAL CANDIDATE";
+    }
+
+    if (candle.pattern === "DOJI") {
+      candleContext =
+        "INDECISION / WAIT FOR CONFIRMATION";
+    }
+
+    /* =========================================================
+       SUPPORT / RESISTANCE
+    ========================================================= */
+
+    const recent20 =
+      history.slice(-20);
+
+    const support =
+      Math.min(
+        ...recent20.map(x => x.low)
+      );
+
+    const resistance =
+      Math.max(
+        ...recent20.map(x => x.high)
+      );
+
+    const distanceToResistance =
+      resistance !== 0
+        ? ((resistance - price) /
+            resistance) *
+          100
+        : 0;
+
+    const distanceFromSupport =
+      support !== 0
+        ? ((price - support) /
+            support) *
+          100
+        : 0;
+
+    /* =========================================================
+       SETUP QUALITY
+    ========================================================= */
+
+    let bullishConfirmations = 0;
+    let bearishConfirmations = 0;
+
+    if (structure.direction === "BULLISH") {
+      bullishConfirmations++;
+    }
+
+    if (shortTermTrend === "BULLISH") {
+      bullishConfirmations++;
+    }
+
+    if (macdBullish) {
+      bullishConfirmations++;
+    }
+
+    if (
+      currentRSI !== null &&
+      currentRSI >= 45 &&
+      currentRSI <= 68
+    ) {
+      bullishConfirmations++;
+    }
+
+    if (candle.signal === "BULLISH") {
+      bullishConfirmations++;
+    }
+
+    if (breakout.type === "BREAKOUT") {
+      bullishConfirmations += 2;
+    }
+
+    if (structure.direction === "BEARISH") {
+      bearishConfirmations++;
+    }
+
+    if (shortTermTrend === "BEARISH") {
+      bearishConfirmations++;
+    }
+
+    if (macdBearish) {
+      bearishConfirmations++;
+    }
+
+    if (
+      currentRSI !== null &&
+      currentRSI >= 32 &&
+      currentRSI <= 55
+    ) {
+      bearishConfirmations++;
+    }
+
+    if (candle.signal === "BEARISH") {
+      bearishConfirmations++;
+    }
+
+    if (breakout.type === "BREAKDOWN") {
+      bearishConfirmations += 2;
+    }
+
+    /* =========================================================
+       SETUP CLASSIFICATION
+    ========================================================= */
+
+    let setup = "RANGE / WAIT";
+
+    if (
+      breakout.type === "BREAKOUT" &&
+      structure.direction === "BULLISH" &&
+      bullishConfirmations >= 4
+    ) {
+      setup =
+        "BREAKOUT CONFIRMATION";
+    }
+
+    else if (
+      breakout.type === "BREAKDOWN" &&
+      structure.direction === "BEARISH" &&
+      bearishConfirmations >= 4
+    ) {
+      setup =
+        "BEARISH BREAKDOWN";
+    }
+
+    else if (
+      reversal ===
+      "BULLISH REVERSAL WATCH"
+    ) {
+      setup =
+        "REVERSAL WATCH";
+    }
+
+    else if (
+      reversal ===
+      "BEARISH REVERSAL WATCH"
+    ) {
+      setup =
+        "REVERSAL RISK";
+    }
+
+    else if (
+      structure.direction === "BULLISH" &&
+      shortTermTrend === "BEARISH"
+    ) {
+      setup =
+        "BUY ON PULLBACK";
+    }
+
+    else if (
+      structure.direction === "BULLISH" &&
+      shortTermTrend === "BULLISH" &&
+      bullishConfirmations >= 5 &&
+      candle.signal === "BULLISH"
+    ) {
+      setup =
+        "CONFIRMED BUY";
+    }
+
+    else if (
+      (
+        trend === "BULLISH" ||
+        structure.direction === "BULLISH"
+      ) &&
+      shortTermTrend === "BULLISH"
+    ) {
+      setup =
+        "BULLISH SETUP — WAIT FOR CONFIRMATION";
+    }
+
+    else if (
+      structure.direction === "BEARISH" &&
+      shortTermTrend === "BEARISH" &&
+      bearishConfirmations >= 5 &&
+      candle.signal === "BEARISH"
+    ) {
+      setup =
+        "CONFIRMED SELL";
+    }
+
+    else if (
+      trend === "BEARISH" ||
+      structure.direction === "BEARISH"
+    ) {
+      setup =
+        "BEARISH SETUP — WAIT FOR CONFIRMATION";
+    }
+
+    /* =========================================================
+       TREND CONFIDENCE
+    ========================================================= */
 
     let trendConfidence =
       50 + Math.abs(trendScore) * 4;
 
     if (
       structure.direction === trend
+    ) {
+      trendConfidence += 5;
+    }
+
+    if (
+      trend === "BULLISH" &&
+      bullishConfirmations >= 4
+    ) {
+      trendConfidence += 5;
+    }
+
+    if (
+      trend === "BEARISH" &&
+      bearishConfirmations >= 4
     ) {
       trendConfidence += 5;
     }
@@ -994,15 +1209,13 @@ export default async function handler(req, res) {
     }
 
     if (
-      breakout.type === "BREAKOUT" &&
-      trend === "BULLISH"
+      breakout.type === "BREAKOUT"
     ) {
       trendConfidence += 6;
     }
 
     if (
-      breakout.type === "BREAKDOWN" &&
-      trend === "BEARISH"
+      breakout.type === "BREAKDOWN"
     ) {
       trendConfidence += 6;
     }
@@ -1016,82 +1229,26 @@ export default async function handler(req, res) {
         )
       );
 
-    /* =========================
-       SETUP CLASSIFICATION
-    ========================= */
-
-    let setup =
-      "WAIT";
-
-    if (
-      breakout.type === "BREAKOUT" &&
-      trend === "BULLISH"
-    ) {
-      setup =
-        "BREAKOUT CONFIRMATION";
-    } else if (
-      breakout.type === "BREAKDOWN" &&
-      trend === "BEARISH"
-    ) {
-      setup =
-        "BEARISH BREAKDOWN";
-    } else if (
-      reversal === "BULLISH REVERSAL WATCH"
-    ) {
-      setup =
-        "REVERSAL WATCH";
-    } else if (
-      reversal === "BEARISH REVERSAL WATCH"
-    ) {
-      setup =
-        "REVERSAL RISK";
-    } else if (
-      trend === "BULLISH" &&
-      shortTermTrend === "BULLISH" &&
-      currentRSI !== null &&
-      currentRSI < 65
-    ) {
-      setup =
-        "BULLISH CONTINUATION";
-    } else if (
-      trend === "BULLISH" &&
-      shortTermTrend === "BEARISH"
-    ) {
-      setup =
-        "BUY ON PULLBACK";
-    } else if (
-      trend === "BEARISH" &&
-      shortTermTrend === "BEARISH"
-    ) {
-      setup =
-        "BEARISH CONTINUATION";
-    } else if (
-      trend === "SIDEWAYS"
-    ) {
-      setup =
-        "RANGE / WAIT";
-    }
-
-    /* =========================
+    /* =========================================================
        INVESTMENT SCORE
-    ========================= */
+    ========================================================= */
 
     let score = 50;
 
     const reasons = [];
     const risks = [];
 
-    if (
-      currentSMA20 !== null
-    ) {
+    /* Price vs SMA20 */
+
+    if (currentSMA20 !== null) {
       if (price > currentSMA20) {
-        score += 10;
+        score += 8;
 
         reasons.push(
           "Price is above the 20-day moving average."
         );
       } else {
-        score -= 10;
+        score -= 8;
 
         risks.push(
           "Price is below the 20-day moving average."
@@ -1099,23 +1256,25 @@ export default async function handler(req, res) {
       }
     }
 
-    if (
-      currentSMA50 !== null
-    ) {
+    /* Price vs SMA50 */
+
+    if (currentSMA50 !== null) {
       if (price > currentSMA50) {
-        score += 15;
+        score += 12;
 
         reasons.push(
           "Price is above the 50-day moving average."
         );
       } else {
-        score -= 15;
+        score -= 12;
 
         risks.push(
           "Price is below the 50-day moving average."
         );
       }
     }
+
+    /* SMA alignment */
 
     if (
       currentSMA20 !== null &&
@@ -1125,13 +1284,13 @@ export default async function handler(req, res) {
         currentSMA20 >
         currentSMA50
       ) {
-        score += 10;
+        score += 8;
 
         reasons.push(
           "20-day trend is above the 50-day trend."
         );
       } else {
-        score -= 10;
+        score -= 8;
 
         risks.push(
           "20-day trend is below the 50-day trend."
@@ -1139,67 +1298,86 @@ export default async function handler(req, res) {
       }
     }
 
-    if (
-      currentRSI !== null
-    ) {
+    /* RSI */
+
+    if (currentRSI !== null) {
       if (
         currentRSI >= 50 &&
-        currentRSI <= 70
+        currentRSI <= 68
       ) {
-        score += 10;
+        score += 8;
 
         reasons.push(
-          "RSI shows healthy positive momentum."
+          "RSI supports healthy positive momentum."
         );
-      } else if (
-        currentRSI > 70
-      ) {
+      }
+
+      else if (currentRSI > 70) {
         score -= 5;
 
         risks.push(
           "RSI indicates potentially overbought conditions."
         );
-      } else if (
-        currentRSI < 30
-      ) {
-        score += 5;
+      }
+
+      else if (currentRSI < 30) {
+        score += 4;
 
         reasons.push(
           "RSI indicates potentially oversold conditions."
         );
-      } else {
+      }
+
+      else {
         risks.push(
           "RSI does not currently show strong momentum."
         );
       }
     }
 
+    /* MACD */
+
     if (
       currentMACD !== null &&
       currentMACDSignal !== null
     ) {
-      if (
-        currentMACD >
-        currentMACDSignal
-      ) {
-        score += 5;
+      if (macdBullish) {
+        score += 7;
 
         reasons.push(
           "MACD is above its signal line."
         );
       } else {
-        score -= 5;
+        score -= 7;
 
         risks.push(
           "MACD is below its signal line."
         );
       }
+
+      if (histogramTurningBullish) {
+        score += 3;
+
+        reasons.push(
+          "MACD histogram is improving."
+        );
+      }
+
+      if (histogramTurningBearish) {
+        score -= 3;
+
+        risks.push(
+          "MACD histogram is weakening."
+        );
+      }
     }
+
+    /* Structure */
 
     if (
       structure.direction === "BULLISH"
     ) {
-      score += 5;
+      score += 7;
 
       reasons.push(
         "Market structure shows higher highs and higher lows."
@@ -1209,17 +1387,19 @@ export default async function handler(req, res) {
     if (
       structure.direction === "BEARISH"
     ) {
-      score -= 5;
+      score -= 7;
 
       risks.push(
         "Market structure shows lower highs and lower lows."
       );
     }
 
+    /* Breakout */
+
     if (
       breakout.type === "BREAKOUT"
     ) {
-      score += 8;
+      score += 10;
 
       reasons.push(
         "Price has broken above recent resistance."
@@ -1229,26 +1409,40 @@ export default async function handler(req, res) {
     if (
       breakout.type === "BREAKDOWN"
     ) {
-      score -= 8;
+      score -= 10;
 
       risks.push(
         "Price has broken below recent support."
       );
     }
 
+    /* Candle */
+
     if (
       candle.signal === "BULLISH"
     ) {
+      score += candle.strength * 2;
+
       reasons.push(
-        `${candle.pattern} detected: ${candle.description}`
+        `${candle.pattern}: ${candle.description}`
       );
     }
 
     if (
       candle.signal === "BEARISH"
     ) {
+      score -= candle.strength * 2;
+
       risks.push(
-        `${candle.pattern} detected: ${candle.description}`
+        `${candle.pattern}: ${candle.description}`
+      );
+    }
+
+    /* Doji */
+
+    if (candle.pattern === "DOJI") {
+      risks.push(
+        "Latest candle shows indecision and requires confirmation."
       );
     }
 
@@ -1261,32 +1455,120 @@ export default async function handler(req, res) {
         )
       );
 
+    /* =========================================================
+       FINAL INVESTMENT SIGNAL
+       
+       Important:
+       A high technical score alone does NOT create a BUY.
+       Confirmation is required.
+    ========================================================= */
+
     let signal = "WATCH";
 
-    if (score >= 75) {
-      signal = "STRONG BUY";
-    } else if (score >= 60) {
-      signal = "BUY";
-    } else if (score < 40) {
-      signal = "SELL";
+    if (
+      setup === "CONFIRMED BUY" ||
+      setup === "BREAKOUT CONFIRMATION"
+    ) {
+      if (score >= 75) {
+        signal = "STRONG BUY";
+      } else if (score >= 60) {
+        signal = "BUY";
+      }
     }
 
-    /* =========================
-       LEVELS
-    ========================= */
+    else if (
+      setup === "CONFIRMED SELL" ||
+      setup === "BEARISH BREAKDOWN"
+    ) {
+      if (score < 40) {
+        signal = "SELL";
+      }
+    }
 
-    const recent20 =
-      history.slice(-20);
+    /* =========================================================
+       DIAGNOSIS
+    ========================================================= */
 
-    const support =
-      Math.min(
-        ...recent20.map(x => x.low)
-      );
+    let diagnosis =
+      "The market is currently neutral. Wait for stronger directional evidence.";
 
-    const resistance =
-      Math.max(
-        ...recent20.map(x => x.high)
-      );
+    if (
+      setup ===
+      "BULLISH SETUP — WAIT FOR CONFIRMATION"
+    ) {
+      diagnosis =
+        `The underlying structure is bullish and short-term momentum is improving, but confirmation is incomplete. ` +
+        `Wait for a stronger bullish candle, a breakout above resistance, or stronger momentum before taking a directional position.`;
+    }
+
+    else if (
+      setup === "CONFIRMED BUY"
+    ) {
+      diagnosis =
+        `Bullish structure, short-term momentum and confirmation signals are aligned. ` +
+        `The setup qualifies as a confirmed bullish opportunity, although resistance and risk levels should still be respected.`;
+    }
+
+    else if (
+      setup === "BREAKOUT CONFIRMATION"
+    ) {
+      diagnosis =
+        `Price has broken above recent resistance with supporting technical evidence. ` +
+        `This is a breakout setup, but follow-through and volume should be monitored for confirmation.`;
+    }
+
+    else if (
+      setup === "BUY ON PULLBACK"
+    ) {
+      diagnosis =
+        `The broader structure remains bullish, but short-term momentum has weakened. ` +
+        `A controlled pullback toward support or the moving averages may offer a better entry than chasing price.`;
+    }
+
+    else if (
+      setup === "REVERSAL WATCH"
+    ) {
+      diagnosis =
+        `The existing trend is bearish, but momentum and/or candle structure suggests a possible bullish reversal. ` +
+        `A reversal should not be treated as confirmed until price structure improves.`;
+    }
+
+    else if (
+      setup === "REVERSAL RISK"
+    ) {
+      diagnosis =
+        `The broader trend is bullish, but momentum or candle behaviour is warning of a possible reversal. ` +
+        `Monitor support and momentum before adding directional exposure.`;
+    }
+
+    else if (
+      setup ===
+      "BEARISH SETUP — WAIT FOR CONFIRMATION"
+    ) {
+      diagnosis =
+        `The market structure is weakening and bearish evidence is building, but confirmation is incomplete. ` +
+        `Wait for a breakdown, stronger bearish candle or continued momentum weakness before taking a bearish position.`;
+    }
+
+    else if (
+      setup === "BEARISH BREAKDOWN"
+    ) {
+      diagnosis =
+        `Price has broken below recent support with supporting bearish evidence. ` +
+        `This is a confirmed breakdown setup, although false breaks remain possible.`;
+    }
+
+    else if (
+      setup === "CONFIRMED SELL"
+    ) {
+      diagnosis =
+        `Bearish structure, momentum and confirmation signals are aligned. ` +
+        `The setup qualifies as a confirmed bearish opportunity.`;
+    }
+
+    /* =========================================================
+       TRADING LEVELS
+    ========================================================= */
 
     const entryLow =
       support;
@@ -1312,29 +1594,25 @@ export default async function handler(req, res) {
           100
         : 0;
 
-    /* =========================
+    /* =========================================================
        CHART DATA
-    ========================= */
+    ========================================================= */
 
     const chartHistory =
       history.map((item, i) => ({
         date: item.date,
 
-        open: Number(
-          item.open.toFixed(2)
-        ),
+        open:
+          Number(item.open.toFixed(2)),
 
-        high: Number(
-          item.high.toFixed(2)
-        ),
+        high:
+          Number(item.high.toFixed(2)),
 
-        low: Number(
-          item.low.toFixed(2)
-        ),
+        low:
+          Number(item.low.toFixed(2)),
 
-        close: Number(
-          item.close.toFixed(2)
-        ),
+        close:
+          Number(item.close.toFixed(2)),
 
         volume: item.volume,
 
@@ -1381,29 +1659,31 @@ export default async function handler(req, res) {
             : null
       }));
 
-    /* =========================
+    /* =========================================================
        RESPONSE
-    ========================= */
+    ========================================================= */
 
     return res.status(200).json({
-
       symbol: ticker,
       name: ticker,
 
-      price: Number(
-        price.toFixed(2)
-      ),
+      price:
+        Number(price.toFixed(2)),
 
-      change_pct: Number(
-        change_pct.toFixed(2)
-      ),
+      change_pct:
+        Number(change_pct.toFixed(2)),
 
       /* Investment signal */
 
       score,
       signal,
 
-      /* Trend intelligence */
+      /* Decision engine */
+
+      setup,
+      diagnosis,
+
+      /* Trend */
 
       trend,
       trend_score: trendScore,
@@ -1418,13 +1698,14 @@ export default async function handler(req, res) {
       structure_direction:
         structure.direction,
 
+      /* Reversal */
+
       reversal,
+
       reversal_confidence:
         reversalConfidence,
 
-      setup,
-
-      /* Candlestick intelligence */
+      /* Candle */
 
       candle_pattern:
         candle.pattern,
@@ -1441,7 +1722,7 @@ export default async function handler(req, res) {
       candle_description:
         candle.description,
 
-      /* Breakout intelligence */
+      /* Breakout */
 
       breakout:
         breakout.type,
@@ -1484,10 +1765,9 @@ export default async function handler(req, res) {
       reasons,
       risks,
 
-      /* Technical fundamentals */
+      /* Technical data */
 
       fundamentals: {
-
         sma20:
           currentSMA20 !== null
             ? Number(
@@ -1531,7 +1811,17 @@ export default async function handler(req, res) {
             ? Number(
                 currentHistogram.toFixed(4)
               )
-            : null
+            : null,
+
+        distance_to_resistance_pct:
+          Number(
+            distanceToResistance.toFixed(2)
+          ),
+
+        distance_from_support_pct:
+          Number(
+            distanceFromSupport.toFixed(2)
+          )
       },
 
       /* Chart */
@@ -1540,6 +1830,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
+    console.error(error);
 
     return res.status(500).json({
       error:
