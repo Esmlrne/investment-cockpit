@@ -1,49 +1,72 @@
 const https = require("https");
 
+/* =========================================================
+   HELPERS
+========================================================= */
+
 function fetchJSON(url) {
   return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
-      let data = "";
+    https
+      .get(url, (res) => {
+        let data = "";
 
-      res.on("data", chunk => {
-        data += chunk;
-      });
+        res.on("data", (chunk) => {
+          data += chunk;
+        });
 
-      res.on("end", () => {
-        try {
-          resolve(JSON.parse(data));
-        } catch (e) {
-          reject(new Error("Invalid API response"));
-        }
-      });
-    }).on("error", reject);
+        res.on("end", () => {
+          try {
+            resolve(JSON.parse(data));
+          } catch (error) {
+            reject(new Error("Invalid API response"));
+          }
+        });
+      })
+      .on("error", reject);
   });
 }
 
-function round(v, d = 2) {
-  if (v === null || v === undefined || !Number.isFinite(v)) {
+function round(value, decimals = 2) {
+  if (
+    value === null ||
+    value === undefined ||
+    !Number.isFinite(Number(value))
+  ) {
     return null;
   }
-  return Number(v.toFixed(d));
+
+  return Number(Number(value).toFixed(decimals));
 }
 
+/* =========================================================
+   MOVING AVERAGES
+========================================================= */
+
 function sma(values, period) {
-  if (values.length < period) return null;
+  if (values.length < period) {
+    return null;
+  }
 
-  const arr = values.slice(-period);
+  const slice = values.slice(-period);
 
-  return arr.reduce((a, b) => a + b, 0) / period;
+  return (
+    slice.reduce((sum, value) => sum + value, 0) /
+    period
+  );
 }
 
 function ema(values, period) {
-  if (values.length < period) return null;
+  if (values.length < period) {
+    return null;
+  }
 
   const multiplier = 2 / (period + 1);
 
   let result =
     values
       .slice(0, period)
-      .reduce((a, b) => a + b, 0) / period;
+      .reduce((sum, value) => sum + value, 0) /
+    period;
 
   for (let i = period; i < values.length; i++) {
     result =
@@ -54,8 +77,14 @@ function ema(values, period) {
   return result;
 }
 
-function rsi(values, period = 14) {
-  if (values.length < period + 1) return null;
+/* =========================================================
+   RSI
+========================================================= */
+
+function calculateRSI(values, period = 14) {
+  if (values.length < period + 1) {
+    return null;
+  }
 
   let gains = 0;
   let losses = 0;
@@ -68,18 +97,27 @@ function rsi(values, period = 14) {
     const change =
       values[i] - values[i - 1];
 
-    if (change > 0) gains += change;
-    else losses += Math.abs(change);
+    if (change > 0) {
+      gains += change;
+    } else {
+      losses += Math.abs(change);
+    }
   }
 
-  if (losses === 0) return 100;
+  if (losses === 0) {
+    return 100;
+  }
 
   const rs = gains / losses;
 
   return 100 - 100 / (1 + rs);
 }
 
-function macd(values) {
+/* =========================================================
+   MACD
+========================================================= */
+
+function calculateMACD(values) {
   if (values.length < 35) {
     return {
       macd: null,
@@ -88,10 +126,13 @@ function macd(values) {
     };
   }
 
-  const e12 = ema(values, 12);
-  const e26 = ema(values, 26);
+  const ema12 = ema(values, 12);
+  const ema26 = ema(values, 26);
 
-  if (e12 === null || e26 === null) {
+  if (
+    ema12 === null ||
+    ema26 === null
+  ) {
     return {
       macd: null,
       signal: null,
@@ -99,22 +140,37 @@ function macd(values) {
     };
   }
 
-  const currentMACD = e12 - e26;
+  const currentMACD =
+    ema12 - ema26;
 
   const macdSeries = [];
 
-  for (let i = 26; i <= values.length; i++) {
-    const slice = values.slice(0, i);
+  for (
+    let i = 26;
+    i <= values.length;
+    i++
+  ) {
+    const slice =
+      values.slice(0, i);
 
-    const a = ema(slice, 12);
-    const b = ema(slice, 26);
+    const e12 =
+      ema(slice, 12);
 
-    if (a !== null && b !== null) {
-      macdSeries.push(a - b);
+    const e26 =
+      ema(slice, 26);
+
+    if (
+      e12 !== null &&
+      e26 !== null
+    ) {
+      macdSeries.push(
+        e12 - e26
+      );
     }
   }
 
-  const signal = ema(macdSeries, 9);
+  const signal =
+    ema(macdSeries, 9);
 
   return {
     macd: currentMACD,
@@ -126,7 +182,14 @@ function macd(values) {
   };
 }
 
-function findPivotHighs(bars, distance = 3) {
+/* =========================================================
+   PIVOTS
+========================================================= */
+
+function findPivotHighs(
+  bars,
+  distance = 3
+) {
   const result = [];
 
   for (
@@ -136,23 +199,34 @@ function findPivotHighs(bars, distance = 3) {
   ) {
     let valid = true;
 
-    for (let j = 1; j <= distance; j++) {
+    for (
+      let j = 1;
+      j <= distance;
+      j++
+    ) {
       if (
-        bars[i].high <= bars[i - j].high ||
-        bars[i].high <= bars[i + j].high
+        bars[i].high <=
+          bars[i - j].high ||
+        bars[i].high <=
+          bars[i + j].high
       ) {
         valid = false;
         break;
       }
     }
 
-    if (valid) result.push(i);
+    if (valid) {
+      result.push(i);
+    }
   }
 
   return result;
 }
 
-function findPivotLows(bars, distance = 3) {
+function findPivotLows(
+  bars,
+  distance = 3
+) {
   const result = [];
 
   for (
@@ -162,21 +236,33 @@ function findPivotLows(bars, distance = 3) {
   ) {
     let valid = true;
 
-    for (let j = 1; j <= distance; j++) {
+    for (
+      let j = 1;
+      j <= distance;
+      j++
+    ) {
       if (
-        bars[i].low >= bars[i - j].low ||
-        bars[i].low >= bars[i + j].low
+        bars[i].low >=
+          bars[i - j].low ||
+        bars[i].low >=
+          bars[i + j].low
       ) {
         valid = false;
         break;
       }
     }
 
-    if (valid) result.push(i);
+    if (valid) {
+      result.push(i);
+    }
   }
 
   return result;
 }
+
+/* =========================================================
+   CANDLE ANALYSIS
+========================================================= */
 
 function candleAnalysis(bars) {
   if (bars.length < 3) {
@@ -184,35 +270,56 @@ function candleAnalysis(bars) {
       pattern: "NONE",
       signal: "NEUTRAL",
       strength: "LOW",
-      description: "Insufficient candle data."
+      description:
+        "Insufficient candle data."
     };
   }
 
-  const a = bars[bars.length - 2];
-  const b = bars[bars.length - 1];
+  const previous =
+    bars[bars.length - 2];
+
+  const current =
+    bars[bars.length - 1];
 
   const body =
-    Math.abs(b.close - b.open);
+    Math.abs(
+      current.close -
+      current.open
+    );
 
   const range =
-    b.high - b.low;
+    current.high -
+    current.low;
 
-  const upper =
-    b.high -
-    Math.max(b.open, b.close);
+  const upperWick =
+    current.high -
+    Math.max(
+      current.open,
+      current.close
+    );
 
-  const lower =
-    Math.min(b.open, b.close) -
-    b.low;
+  const lowerWick =
+    Math.min(
+      current.open,
+      current.close
+    ) -
+    current.low;
+
+  /* BULLISH ENGULFING */
 
   if (
-    a.close < a.open &&
-    b.close > b.open &&
-    b.open <= a.close &&
-    b.close >= a.open
+    previous.close <
+      previous.open &&
+    current.close >
+      current.open &&
+    current.open <=
+      previous.close &&
+    current.close >=
+      previous.open
   ) {
     return {
-      pattern: "BULLISH ENGULFING",
+      pattern:
+        "BULLISH ENGULFING",
       signal: "BULLISH",
       strength: "HIGH",
       description:
@@ -220,14 +327,21 @@ function candleAnalysis(bars) {
     };
   }
 
+  /* BEARISH ENGULFING */
+
   if (
-    a.close > a.open &&
-    b.close < b.open &&
-    b.open >= a.close &&
-    b.close <= a.open
+    previous.close >
+      previous.open &&
+    current.close <
+      current.open &&
+    current.open >=
+      previous.close &&
+    current.close <=
+      previous.open
   ) {
     return {
-      pattern: "BEARISH ENGULFING",
+      pattern:
+        "BEARISH ENGULFING",
       signal: "BEARISH",
       strength: "HIGH",
       description:
@@ -235,9 +349,13 @@ function candleAnalysis(bars) {
     };
   }
 
+  /* HAMMER */
+
   if (
-    lower > body * 2 &&
-    upper < body
+    lowerWick >
+      body * 2 &&
+    upperWick <
+      body
   ) {
     return {
       pattern: "HAMMER",
@@ -248,18 +366,25 @@ function candleAnalysis(bars) {
     };
   }
 
+  /* SHOOTING STAR */
+
   if (
-    upper > body * 2 &&
-    lower < body
+    upperWick >
+      body * 2 &&
+    lowerWick <
+      body
   ) {
     return {
-      pattern: "SHOOTING STAR",
+      pattern:
+        "SHOOTING STAR",
       signal: "BEARISH",
       strength: "MEDIUM",
       description:
         "Higher-price rejection suggests selling pressure."
     };
   }
+
+  /* DOJI */
 
   if (
     range > 0 &&
@@ -274,13 +399,17 @@ function candleAnalysis(bars) {
     };
   }
 
+  /* STRONG BULLISH */
+
   if (
     range > 0 &&
     body / range > 0.75 &&
-    b.close > b.open
+    current.close >
+      current.open
   ) {
     return {
-      pattern: "STRONG BULLISH CANDLE",
+      pattern:
+        "STRONG BULLISH CANDLE",
       signal: "BULLISH",
       strength: "MEDIUM",
       description:
@@ -288,13 +417,17 @@ function candleAnalysis(bars) {
     };
   }
 
+  /* STRONG BEARISH */
+
   if (
     range > 0 &&
     body / range > 0.75 &&
-    b.close < b.open
+    current.close <
+      current.open
   ) {
     return {
-      pattern: "STRONG BEARISH CANDLE",
+      pattern:
+        "STRONG BEARISH CANDLE",
       signal: "BEARISH",
       strength: "MEDIUM",
       description:
@@ -313,7 +446,7 @@ function candleAnalysis(bars) {
 
 /* =========================================================
    CHART FORMATIONS
-   ========================================================= */
+========================================================= */
 
 function detectChartPatterns(bars) {
   const patterns = [];
@@ -322,33 +455,49 @@ function detectChartPatterns(bars) {
     return patterns;
   }
 
-  const highs = findPivotHighs(bars);
-  const lows = findPivotLows(bars);
+  const highs =
+    findPivotHighs(bars);
+
+  const lows =
+    findPivotLows(bars);
 
   const price =
     bars[bars.length - 1].close;
 
-  /* DOUBLE BOTTOM */
+  /* =======================================================
+     DOUBLE BOTTOM
+  ======================================================= */
 
   if (lows.length >= 2) {
-    const i1 = lows[lows.length - 2];
-    const i2 = lows[lows.length - 1];
+    const first =
+      lows[lows.length - 2];
+
+    const second =
+      lows[lows.length - 1];
 
     if (
-      i2 - i1 >= 8 &&
-      i2 - i1 <= 60
+      second - first >= 8 &&
+      second - first <= 60
     ) {
-      const low1 = bars[i1].low;
-      const low2 = bars[i2].low;
+      const low1 =
+        bars[first].low;
+
+      const low2 =
+        bars[second].low;
 
       const similarity =
         Math.abs(low1 - low2) /
         ((low1 + low2) / 2);
 
       if (similarity <= 0.06) {
-        let neckline = -Infinity;
+        let neckline =
+          -Infinity;
 
-        for (let i = i1; i <= i2; i++) {
+        for (
+          let i = first;
+          i <= second;
+          i++
+        ) {
           neckline =
             Math.max(
               neckline,
@@ -357,51 +506,81 @@ function detectChartPatterns(bars) {
         }
 
         patterns.push({
-          name: "DOUBLE BOTTOM",
-          type: "BULLISH",
-          confidence: Math.round(
-            85 - similarity * 100
-          ),
+          name:
+            "DOUBLE BOTTOM",
+
+          type:
+            "BULLISH",
+
+          confidence:
+            Math.round(
+              85 -
+              similarity * 100
+            ),
+
           status:
             price > neckline
               ? "CONFIRMED"
               : "FORMING",
-          trigger: round(neckline),
-          target: round(
-            neckline +
-            (
-              neckline -
-              Math.min(low1, low2)
-            )
-          ),
+
+          trigger:
+            round(neckline),
+
+          target:
+            round(
+              neckline +
+              (
+                neckline -
+                Math.min(
+                  low1,
+                  low2
+                )
+              )
+            ),
+
           description:
-            "Two similar lows followed by a recovery. A breakout above the neckline confirms the pattern."
+            "Two similar lows followed by a recovery. Breakout above the neckline confirms the pattern."
         });
       }
     }
   }
 
-  /* DOUBLE TOP */
+  /* =======================================================
+     DOUBLE TOP
+  ======================================================= */
 
   if (highs.length >= 2) {
-    const i1 = highs[highs.length - 2];
-    const i2 = highs[highs.length - 1];
+    const first =
+      highs[highs.length - 2];
+
+    const second =
+      highs[highs.length - 1];
 
     if (
-      i2 - i1 >= 8 &&
-      i2 - i1 <= 60
+      second - first >= 8 &&
+      second - first <= 60
     ) {
-      const high1 = bars[i1].high;
-      const high2 = bars[i2].high;
+      const high1 =
+        bars[first].high;
+
+      const high2 =
+        bars[second].high;
 
       const similarity =
-        Math.abs(high1 - high2) /
+        Math.abs(
+          high1 - high2
+        ) /
         ((high1 + high2) / 2);
 
       if (similarity <= 0.06) {
-        let neckline = Infinity;
+        let neckline =
+          Infinity;
 
-        for (let i = i1; i <= i2; i++) {
+        for (
+          let i = first;
+          i <= second;
+          i++
+        ) {
           neckline =
             Math.min(
               neckline,
@@ -410,23 +589,38 @@ function detectChartPatterns(bars) {
         }
 
         patterns.push({
-          name: "DOUBLE TOP",
-          type: "BEARISH",
-          confidence: Math.round(
-            85 - similarity * 100
-          ),
+          name:
+            "DOUBLE TOP",
+
+          type:
+            "BEARISH",
+
+          confidence:
+            Math.round(
+              85 -
+              similarity * 100
+            ),
+
           status:
             price < neckline
               ? "CONFIRMED"
               : "FORMING",
-          trigger: round(neckline),
-          target: round(
-            neckline -
-            (
-              Math.max(high1, high2) -
-              neckline
-            )
-          ),
+
+          trigger:
+            round(neckline),
+
+          target:
+            round(
+              neckline -
+              (
+                Math.max(
+                  high1,
+                  high2
+                ) -
+                neckline
+              )
+            ),
+
           description:
             "Two similar highs. A break below the neckline confirms the bearish formation."
         });
@@ -434,115 +628,179 @@ function detectChartPatterns(bars) {
     }
   }
 
-  /* ASCENDING TRIANGLE */
+  /* =======================================================
+     ASCENDING TRIANGLE
+  ======================================================= */
 
   if (
     highs.length >= 3 &&
     lows.length >= 3
   ) {
-    const hs = highs.slice(-3);
-    const ls = lows.slice(-3);
+    const recentHighs =
+      highs.slice(-3);
+
+    const recentLows =
+      lows.slice(-3);
 
     const highValues =
-      hs.map(i => bars[i].high);
+      recentHighs.map(
+        i => bars[i].high
+      );
 
     const lowValues =
-      ls.map(i => bars[i].low);
+      recentLows.map(
+        i => bars[i].low
+      );
 
     const highRange =
       (
-        Math.max(...highValues) -
-        Math.min(...highValues)
+        Math.max(
+          ...highValues
+        ) -
+        Math.min(
+          ...highValues
+        )
       ) /
-      Math.max(...highValues);
+      Math.max(
+        ...highValues
+      );
 
     const risingLows =
-      lowValues[2] > lowValues[0];
+      lowValues[2] >
+      lowValues[0];
 
     if (
       highRange < 0.04 &&
       risingLows
     ) {
       const trigger =
-        Math.max(...highValues);
+        Math.max(
+          ...highValues
+        );
 
       patterns.push({
-        name: "ASCENDING TRIANGLE",
-        type: "BULLISH",
-        confidence: 76,
+        name:
+          "ASCENDING TRIANGLE",
+
+        type:
+          "BULLISH",
+
+        confidence:
+          76,
+
         status:
           price > trigger
             ? "CONFIRMED"
             : "FORMING",
-        trigger: round(trigger),
-        target: round(
-          trigger +
-          (
-            trigger -
-            Math.min(...lowValues)
-          )
-        ),
+
+        trigger:
+          round(trigger),
+
+        target:
+          round(
+            trigger +
+            (
+              trigger -
+              Math.min(
+                ...lowValues
+              )
+            )
+          ),
+
         description:
           "Flat resistance with rising lows. Bullish bias if resistance breaks."
       });
     }
   }
 
-  /* DESCENDING TRIANGLE */
+  /* =======================================================
+     DESCENDING TRIANGLE
+  ======================================================= */
 
   if (
     highs.length >= 3 &&
     lows.length >= 3
   ) {
-    const hs = highs.slice(-3);
-    const ls = lows.slice(-3);
+    const recentHighs =
+      highs.slice(-3);
+
+    const recentLows =
+      lows.slice(-3);
 
     const highValues =
-      hs.map(i => bars[i].high);
+      recentHighs.map(
+        i => bars[i].high
+      );
 
     const lowValues =
-      ls.map(i => bars[i].low);
+      recentLows.map(
+        i => bars[i].low
+      );
 
     const lowRange =
       (
-        Math.max(...lowValues) -
-        Math.min(...lowValues)
+        Math.max(
+          ...lowValues
+        ) -
+        Math.min(
+          ...lowValues
+        )
       ) /
-      Math.max(...lowValues);
+      Math.max(
+        ...lowValues
+      );
 
     const fallingHighs =
-      highValues[2] < highValues[0];
+      highValues[2] <
+      highValues[0];
 
     if (
       lowRange < 0.04 &&
       fallingHighs
     ) {
       const trigger =
-        Math.min(...lowValues);
+        Math.min(
+          ...lowValues
+        );
 
       patterns.push({
-        name: "DESCENDING TRIANGLE",
-        type: "BEARISH",
-        confidence: 76,
+        name:
+          "DESCENDING TRIANGLE",
+
+        type:
+          "BEARISH",
+
+        confidence:
+          76,
+
         status:
           price < trigger
             ? "CONFIRMED"
             : "FORMING",
-        trigger: round(trigger),
-        target: round(
-          trigger -
-          (
-            Math.max(...highValues) -
-            trigger
-          )
-        ),
+
+        trigger:
+          round(trigger),
+
+        target:
+          round(
+            trigger -
+            (
+              Math.max(
+                ...highValues
+              ) -
+              trigger
+            )
+          ),
+
         description:
           "Flat support with falling highs. Bearish bias if support breaks."
       });
     }
   }
 
-  /* CUP & HANDLE */
+  /* =======================================================
+     CUP & HANDLE
+  ======================================================= */
 
   if (bars.length >= 90) {
     const window =
@@ -571,14 +829,18 @@ function detectChartPatterns(bars) {
         Math.max(
           ...window
             .slice(0, bottom)
-            .map(x => x.high)
+            .map(
+              x => x.high
+            )
         );
 
       const rightHigh =
         Math.max(
           ...window
             .slice(bottom + 1)
-            .map(x => x.high)
+            .map(
+              x => x.high
+            )
         );
 
       const rim =
@@ -591,7 +853,9 @@ function detectChartPatterns(bars) {
         Math.min(
           ...window
             .slice(-15)
-            .map(x => x.low)
+            .map(
+              x => x.low
+            )
         );
 
       const handleDepth =
@@ -600,10 +864,13 @@ function detectChartPatterns(bars) {
 
       const rimDifference =
         Math.abs(
-          leftHigh - rightHigh
+          leftHigh -
+          rightHigh
         ) /
         (
-          (leftHigh + rightHigh) / 2
+          (leftHigh +
+            rightHigh) /
+          2
         );
 
       if (
@@ -612,21 +879,32 @@ function detectChartPatterns(bars) {
         handleDepth < 0.18
       ) {
         patterns.push({
-          name: "CUP & HANDLE",
-          type: "BULLISH",
-          confidence: 70,
+          name:
+            "CUP & HANDLE",
+
+          type:
+            "BULLISH",
+
+          confidence:
+            70,
+
           status:
             price > rim
               ? "CONFIRMED"
               : "FORMING",
-          trigger: round(rim),
-          target: round(
-            rim +
-            (
-              rim -
-              window[bottom].low
-            )
-          ),
+
+          trigger:
+            round(rim),
+
+          target:
+            round(
+              rim +
+              (
+                rim -
+                window[bottom].low
+              )
+            ),
+
           description:
             "Rounded base followed by a smaller pullback. Breakout above the rim confirms the setup."
         });
@@ -638,10 +916,10 @@ function detectChartPatterns(bars) {
 }
 
 /* =========================================================
-   STRUCTURE
-   ========================================================= */
+   MARKET STRUCTURE
+========================================================= */
 
-function structureAnalysis(bars) {
+function analyzeStructure(bars) {
   const highs =
     findPivotHighs(bars);
 
@@ -653,8 +931,11 @@ function structureAnalysis(bars) {
     lows.length < 2
   ) {
     return {
-      structure: "UNDEFINED",
-      direction: "NEUTRAL"
+      structure:
+        "UNDEFINED",
+
+      direction:
+        "NEUTRAL"
     };
   }
 
@@ -679,39 +960,49 @@ function structureAnalysis(bars) {
     ].low;
 
   if (
-    latestHigh > previousHigh &&
-    latestLow > previousLow
+    latestHigh >
+      previousHigh &&
+    latestLow >
+      previousLow
   ) {
     return {
       structure:
         "HIGHER HIGH + HIGHER LOW",
-      direction: "BULLISH"
+
+      direction:
+        "BULLISH"
     };
   }
 
   if (
-    latestHigh < previousHigh &&
-    latestLow < previousLow
+    latestHigh <
+      previousHigh &&
+    latestLow <
+      previousLow
   ) {
     return {
       structure:
         "LOWER HIGH + LOWER LOW",
-      direction: "BEARISH"
+
+      direction:
+        "BEARISH"
     };
   }
 
   return {
     structure:
       "MIXED / SIDEWAYS",
-    direction: "NEUTRAL"
+
+    direction:
+      "NEUTRAL"
   };
 }
 
 /* =========================================================
    TREND
-   ========================================================= */
+========================================================= */
 
-function trendAnalysis(
+function analyzeTrend(
   price,
   sma20,
   sma50
@@ -721,9 +1012,14 @@ function trendAnalysis(
     sma50 === null
   ) {
     return {
-      trend: "SIDEWAYS",
-      score: 50,
-      confidence: 50
+      trend:
+        "SIDEWAYS",
+
+      score:
+        50,
+
+      confidence:
+        50
     };
   }
 
@@ -739,13 +1035,18 @@ function trendAnalysis(
           (
             (price - sma50) /
             sma50
-          ) * 250
+          ) *
+          250
         )
       );
 
     return {
-      trend: "BULLISH",
-      score: confidence,
+      trend:
+        "BULLISH",
+
+      score:
+        confidence,
+
       confidence
     };
   }
@@ -762,45 +1063,60 @@ function trendAnalysis(
           (
             (sma50 - price) /
             sma50
-          ) * 250
+          ) *
+          250
         )
       );
 
     return {
-      trend: "BEARISH",
-      score: 100 - confidence,
+      trend:
+        "BEARISH",
+
+      score:
+        100 - confidence,
+
       confidence
     };
   }
 
   return {
-    trend: "SIDEWAYS",
-    score: 50,
-    confidence: 60
+    trend:
+      "SIDEWAYS",
+
+    score:
+      50,
+
+    confidence:
+      60
   };
 }
 
 /* =========================================================
    VOLUME
-   ========================================================= */
+========================================================= */
 
-function volumeAnalysis(bars) {
+function analyzeVolume(bars) {
   if (bars.length < 21) {
     return {
-      relativeVolume: null,
-      confirmation: false
+      relativeVolume:
+        null,
+
+      confirmation:
+        false
     };
   }
 
   const current =
-    bars[bars.length - 1].volume;
+    bars[
+      bars.length - 1
+    ].volume;
 
   const average =
     bars
       .slice(-21, -1)
       .reduce(
-        (sum, x) =>
-          sum + x.volume,
+        (sum, bar) =>
+          sum + bar.volume,
         0
       ) / 20;
 
@@ -809,21 +1125,23 @@ function volumeAnalysis(bars) {
 
   return {
     relativeVolume,
+
     confirmation:
-      relativeVolume >= 1.15
+      relativeVolume >=
+      1.15
   };
 }
 
 /* =========================================================
    SCORE
-   ========================================================= */
+========================================================= */
 
 function calculateScore({
   price,
   sma20,
   sma50,
-  rsiValue,
-  macdValue,
+  rsi,
+  macd,
   structure,
   candle,
   volume
@@ -854,30 +1172,30 @@ function calculateScore({
         : -8;
   }
 
-  if (rsiValue !== null) {
+  if (rsi !== null) {
     if (
-      rsiValue >= 52 &&
-      rsiValue <= 70
+      rsi >= 52 &&
+      rsi <= 70
     ) {
       score += 8;
     } else if (
-      rsiValue > 70
+      rsi > 70
     ) {
       score += 2;
     } else if (
-      rsiValue < 40
+      rsi < 40
     ) {
       score -= 8;
     }
   }
 
   if (
-    macdValue.macd !== null &&
-    macdValue.signal !== null
+    macd.macd !== null &&
+    macd.signal !== null
   ) {
     score +=
-      macdValue.macd >
-      macdValue.signal
+      macd.macd >
+      macd.signal
         ? 8
         : -8;
   }
@@ -927,29 +1245,36 @@ function calculateScore({
 
 /* =========================================================
    DECISION ENGINE
-   ========================================================= */
+========================================================= */
 
 function decisionEngine({
   price,
   support,
   resistance,
   sma20,
-  rsiValue,
-  macdValue,
+  rsi,
+  macd,
   structure,
   candle,
   volume,
   score
 }) {
 
+  /*
+   * BREAKOUT
+   */
+
   const breakoutTrigger =
     resistance * 1.002;
 
   /*
-   * Pullback zone
+   * PULLBACK
    */
 
-  const pullbackHigh =
+  const pullbackZoneLow =
+    support;
+
+  const pullbackZoneHigh =
     Math.max(
       support,
       sma20 || support
@@ -957,26 +1282,26 @@ function decisionEngine({
 
   const pullbackEntry =
     (
-      support +
-      pullbackHigh
+      pullbackZoneLow +
+      pullbackZoneHigh
     ) / 2;
 
   /*
-   * Risk
+   * INVALIDATION
    */
 
   const invalidation =
     support;
+
+  /*
+   * TARGETS
+   */
 
   const range =
     Math.max(
       resistance - support,
       price * 0.05
     );
-
-  /*
-   * Targets
-   */
 
   const target1 =
     resistance +
@@ -987,20 +1312,13 @@ function decisionEngine({
     range;
 
   /*
-   * R/R
+   * BREAKOUT R/R
    */
 
   const breakoutRisk =
     Math.max(
       0.01,
       breakoutTrigger -
-      invalidation
-    );
-
-  const pullbackRisk =
-    Math.max(
-      0.01,
-      pullbackEntry -
       invalidation
     );
 
@@ -1018,6 +1336,17 @@ function decisionEngine({
     ) /
     breakoutRisk;
 
+  /*
+   * PULLBACK R/R
+   */
+
+  const pullbackRisk =
+    Math.max(
+      0.01,
+      pullbackEntry -
+      invalidation
+    );
+
   const pullbackRR1 =
     (
       target1 -
@@ -1033,7 +1362,7 @@ function decisionEngine({
     pullbackRisk;
 
   /*
-   * Conditions
+   * BULLISH CONDITIONS
    */
 
   const bullishStructure =
@@ -1041,15 +1370,15 @@ function decisionEngine({
     "BULLISH";
 
   const bullishMACD =
-    macdValue.macd !== null &&
-    macdValue.signal !== null &&
-    macdValue.macd >
-    macdValue.signal;
+    macd.macd !== null &&
+    macd.signal !== null &&
+    macd.macd >
+      macd.signal;
 
-  const positiveRSI =
-    rsiValue !== null &&
-    rsiValue >= 50 &&
-    rsiValue < 75;
+  const healthyRSI =
+    rsi !== null &&
+    rsi >= 50 &&
+    rsi < 75;
 
   const aboveSMA20 =
     sma20 !== null &&
@@ -1064,80 +1393,100 @@ function decisionEngine({
 
   const conditions = [
     {
-      name: "Bullish structure",
-      met: bullishStructure
+      name:
+        "Bullish structure",
+
+      met:
+        bullishStructure
     },
+
     {
-      name: "Bullish momentum",
-      met: bullishMACD
+      name:
+        "Bullish momentum",
+
+      met:
+        bullishMACD
     },
+
     {
-      name: "RSI healthy",
-      met: positiveRSI
+      name:
+        "RSI healthy",
+
+      met:
+        healthyRSI
     },
+
     {
-      name: "Price above SMA20",
-      met: aboveSMA20
+      name:
+        "Price above SMA20",
+
+      met:
+        aboveSMA20
     },
+
     {
-      name: "Bullish candle",
-      met: bullishCandle
+      name:
+        "Bullish candle",
+
+      met:
+        bullishCandle
     },
+
     {
-      name: "Volume confirmation",
-      met: volumeConfirmation
+      name:
+        "Volume confirmation",
+
+      met:
+        volumeConfirmation
     }
   ];
 
   const conditionsMet =
     conditions.filter(
-      x => x.met
+      condition =>
+        condition.met
     ).length;
 
   /*
-   * ---------------------------------------------------------
-   * SETUP QUALITY
-   * ---------------------------------------------------------
+   * SETUP
    *
-   * This is deliberately independent from breakout confirmation.
+   * Important:
+   * setup is NOT the same as trigger.
    */
 
-  let setup = "NEUTRAL";
+  let setup =
+    "NEUTRAL";
 
   if (
-    score >= 70 &&
+    score >= 68 &&
     (
       bullishStructure ||
       bullishMACD
     )
   ) {
-    setup = "BULLISH";
-  } else if (
-    score >= 60 &&
-    (
-      bullishStructure &&
-      bullishMACD
-    )
-  ) {
-    setup = "BULLISH";
-  } else if (
+    setup =
+      "BULLISH";
+  }
+
+  if (
     score <= 35 &&
     structure.direction ===
-    "BEARISH"
+      "BEARISH"
   ) {
-    setup = "BEARISH";
+    setup =
+      "BEARISH";
   }
 
   /*
-   * ---------------------------------------------------------
    * PULLBACK
-   * ---------------------------------------------------------
    */
 
   const inPullbackZone =
-    price >= support &&
+    price >=
+      pullbackZoneLow &&
     price <=
-      pullbackHigh * 1.02;
+      pullbackZoneHigh *
+        1.02;
 
   const pullbackSetup =
     setup === "BULLISH" &&
@@ -1152,31 +1501,31 @@ function decisionEngine({
     );
 
   /*
-   * ---------------------------------------------------------
    * BREAKOUT
-   * ---------------------------------------------------------
    */
 
   const breakoutConfirmed =
-    price >= breakoutTrigger &&
+    price >=
+      breakoutTrigger &&
     bullishStructure &&
     bullishMACD &&
-    positiveRSI;
+    healthyRSI;
 
   /*
-   * ---------------------------------------------------------
    * SIGNAL
-   * ---------------------------------------------------------
    */
 
-  let signal = "WATCH";
-  let signalReason = "";
-  let strategy = "WAIT";
+  let signal =
+    "WATCH";
+
+  let signalReason =
+    "No sufficiently strong directional setup.";
+
+  let strategy =
+    "WAIT";
 
   /*
    * STRONG BUY
-   *
-   * We need a genuinely strong setup.
    */
 
   if (
@@ -1188,44 +1537,42 @@ function decisionEngine({
       pullbackRR1 >= 1.5
     )
   ) {
-
-    signal = "STRONG BUY";
+    signal =
+      "STRONG BUY";
 
     signalReason =
       "Strong bullish setup with breakout, momentum and acceptable risk/reward.";
 
     strategy =
       "BREAKOUT";
-
   }
 
   /*
-   * BUY FROM PULLBACK
+   * BUY — PULLBACK
    */
 
   else if (
+    setup === "BULLISH" &&
     pullbackConfirmed &&
     pullbackRR1 >= 1.8 &&
     score >= 60
   ) {
-
-    signal = "BUY";
+    signal =
+      "BUY";
 
     signalReason =
       "Bullish setup has reached an attractive pullback zone with supportive momentum and risk/reward.";
 
     strategy =
       "PULLBACK";
-
   }
 
   /*
    * BUY — QUALITY SETUP
    *
-   * This is the major change.
+   * This is the important change.
    *
-   * No breakout required.
-   * No 4/6 requirement.
+   * Breakout is NOT mandatory.
    */
 
   else if (
@@ -1240,17 +1587,16 @@ function decisionEngine({
       bullishMACD
     )
   ) {
-
-    signal = "BUY";
+    signal =
+      "BUY";
 
     signalReason =
-      "Bullish setup with attractive risk/reward. Entry should be executed using the preferred pullback or breakout strategy.";
+      "Bullish setup with attractive risk/reward. Use the preferred pullback or breakout strategy for execution.";
 
     strategy =
       pullbackRR1 >= 2
         ? "PULLBACK"
         : "BREAKOUT";
-
   }
 
   /*
@@ -1261,21 +1607,20 @@ function decisionEngine({
     setup === "BULLISH" &&
     score >= 58
   ) {
-
-    signal = "WATCH";
+    signal =
+      "WATCH";
 
     signalReason =
-      `Bullish setup developing. Preferred trigger is ${round(
+      `Bullish setup developing. Monitor ${
         pullbackRR1 >= 2
-          ? pullbackEntry
-          : breakoutTrigger
-      )}.`;
+          ? "the pullback zone"
+          : "the breakout level"
+      } for a better entry.`;
 
     strategy =
       pullbackRR1 >= 2
         ? "PULLBACK"
         : "BREAKOUT";
-
   }
 
   /*
@@ -1286,54 +1631,48 @@ function decisionEngine({
     setup === "BEARISH" &&
     score <= 35
   ) {
-
-    signal = "SELL";
+    signal =
+      "SELL";
 
     signalReason =
       "Bearish structure and weak technical conditions.";
 
     strategy =
       "WAIT";
-
-  }
-
-  else {
-
-    signal = "WATCH";
-
-    signalReason =
-      "No sufficiently strong directional setup.";
-
-    strategy =
-      "WAIT";
   }
 
   /*
-   * Risk/reward quality
+   * R/R QUALITY
    */
 
   const activeRR =
-    strategy === "PULLBACK"
+    strategy ===
+      "PULLBACK"
       ? pullbackRR1
       : breakoutRR1;
 
   let riskRewardQuality =
     "NOT ATTRACTIVE";
 
-  if (activeRR >= 2) {
+  if (
+    activeRR >= 2
+  ) {
     riskRewardQuality =
       "ATTRACTIVE";
-  } else if (activeRR >= 1.5) {
+  } else if (
+    activeRR >= 1.5
+  ) {
     riskRewardQuality =
       "ACCEPTABLE";
   }
 
   /*
-   * Active entry
+   * ACTIVE ENTRY
    */
 
   const activeEntry =
-    strategy === "PULLBACK"
+    strategy ===
+      "PULLBACK"
       ? pullbackEntry
       : breakoutTrigger;
 
@@ -1355,7 +1694,8 @@ function decisionEngine({
     strategy,
 
     buyTrigger:
-      strategy === "PULLBACK"
+      strategy ===
+        "PULLBACK"
         ? "PULLBACK ENTRY"
         : "BREAKOUT ABOVE RESISTANCE",
 
@@ -1372,11 +1712,9 @@ function decisionEngine({
 
     pullbackConfirmed,
 
-    pullbackZoneLow:
-      support,
+    pullbackZoneLow,
 
-    pullbackZoneHigh:
-      pullbackHigh,
+    pullbackZoneHigh,
 
     pullbackEntry,
 
@@ -1393,12 +1731,11 @@ function decisionEngine({
     target2,
 
     riskRewardTarget1:
-      strategy === "PULLBACK"
-        ? pullbackRR1
-        : breakoutRR1,
+      activeRR,
 
     riskRewardTarget2:
-      strategy === "PULLBACK"
+      strategy ===
+        "PULLBACK"
         ? pullbackRR2
         : breakoutRR2,
 
@@ -1415,651 +1752,805 @@ function decisionEngine({
 
 /* =========================================================
    MAIN API
-   ========================================================= */
+========================================================= */
 
-module.exports = async function handler(req, res) {
+module.exports =
+  async function handler(
+    req,
+    res
+  ) {
 
-  try {
+    try {
 
-    const ticker =
-      String(
-        req.query.ticker ||
-        req.query.symbol ||
-        ""
-      )
-        .trim()
-        .toUpperCase();
-
-    if (!ticker) {
-      return res.status(400).json({
-        error: "Missing ticker"
-      });
-    }
-
-    const apiKey =
-      process.env.ALPHA_VANTAGE_API_KEY;
-
-    if (!apiKey) {
-      return res.status(500).json({
-        error:
-          "Missing Alpha Vantage API key"
-      });
-    }
-
-    const url =
-      "https://www.alphavantage.co/query" +
-      "?function=TIME_SERIES_DAILY" +
-      "&symbol=" +
-      encodeURIComponent(ticker) +
-      "&outputsize=compact" +
-      "&apikey=" +
-      encodeURIComponent(apiKey);
-
-    const data =
-      await fetchJSON(url);
-
-    if (data.Note) {
-      return res.status(429).json({
-        error:
-          "Alpha Vantage API limit reached"
-      });
-    }
-
-    if (data["Error Message"]) {
-      return res.status(400).json({
-        error:
-          "Invalid ticker"
-      });
-    }
-
-    const series =
-      data["Time Series (Daily)"];
-
-    if (!series) {
-      return res.status(500).json({
-        error:
-          "No daily price data returned"
-      });
-    }
-
-    const dates =
-      Object.keys(series)
-        .sort();
-
-    const bars =
-      dates
-        .map(date => ({
-          date,
-
-          open:
-            Number(
-              series[date]["1. open"]
-            ),
-
-          high:
-            Number(
-              series[date]["2. high"]
-            ),
-
-          low:
-            Number(
-              series[date]["3. low"]
-            ),
-
-          close:
-            Number(
-              series[date]["4. close"]
-            ),
-
-          volume:
-            Number(
-              series[date]["5. volume"]
-            )
-        }))
-        .filter(
-          x =>
-            Number.isFinite(x.close)
-        );
-
-    if (bars.length < 30) {
-      return res.status(500).json({
-        error:
-          "Not enough historical data"
-      });
-    }
-
-    const closes =
-      bars.map(
-        x => x.close
-      );
-
-    /*
-     * Indicators
-     */
-
-    for (
-      let i = 0;
-      i < bars.length;
-      i++
-    ) {
-
-      const history =
-        closes.slice(
-          0,
-          i + 1
-        );
-
-      bars[i].sma20 =
-        sma(history, 20);
-
-      bars[i].sma50 =
-        sma(history, 50);
-
-      bars[i].rsi14 =
-        rsi(history, 14);
-
-      const m =
-        macd(history);
-
-      bars[i].macd =
-        m.macd;
-
-      bars[i].macdSignal =
-        m.signal;
-
-      bars[i].macdHistogram =
-        m.histogram;
-    }
-
-    const latest =
-      bars[bars.length - 1];
-
-    const price =
-      latest.close;
-
-    const sma20 =
-      latest.sma20;
-
-    const sma50 =
-      latest.sma50;
-
-    const rsiValue =
-      latest.rsi14;
-
-    const macdValue = {
-      macd:
-        latest.macd,
-
-      signal:
-        latest.macdSignal,
-
-      histogram:
-        latest.macdHistogram
-    };
-
-    /*
-     * Support / resistance
-     */
-
-    const recent20 =
-      bars.slice(-20);
-
-    const support =
-      Math.min(
-        ...recent20.map(
-          x => x.low
+      const ticker =
+        String(
+          req.query.ticker ||
+          req.query.symbol ||
+          ""
         )
-      );
-
-    const resistance =
-      Math.max(
-        ...recent20.map(
-          x => x.high
-        )
-      );
-
-    /*
-     * Analysis
-     */
-
-    const structure =
-      structureAnalysis(bars);
-
-    const trend =
-      trendAnalysis(
-        price,
-        sma20,
-        sma50
-      );
-
-    const candle =
-      candleAnalysis(bars);
-
-    const volume =
-      volumeAnalysis(bars);
-
-    const chartPatterns =
-      detectChartPatterns(bars);
-
-    const score =
-      calculateScore({
-        price,
-        sma20,
-        sma50,
-        rsiValue,
-        macdValue,
-        structure,
-        candle,
-        volume
-      });
-
-    const decision =
-      decisionEngine({
-        price,
-        support,
-        resistance,
-        sma20,
-        rsiValue,
-        macdValue,
-        structure,
-        candle,
-        volume,
-        score
-      });
-
-    /*
-     * Reasons
-     */
-
-    const reasons = [];
-
-    if (
-      sma20 !== null &&
-      price > sma20
-    ) {
-      reasons.push(
-        "Price above SMA20"
-      );
-    }
-
-    if (
-      sma20 !== null &&
-      sma50 !== null &&
-      sma20 > sma50
-    ) {
-      reasons.push(
-        "SMA20 above SMA50"
-      );
-    }
-
-    if (
-      structure.direction ===
-      "BULLISH"
-    ) {
-      reasons.push(
-        "Higher highs and higher lows"
-      );
-    }
-
-    if (
-      macdValue.macd !== null &&
-      macdValue.signal !== null &&
-      macdValue.macd >
-      macdValue.signal
-    ) {
-      reasons.push(
-        "MACD bullish"
-      );
-    }
-
-    if (
-      rsiValue !== null &&
-      rsiValue >= 50
-    ) {
-      reasons.push(
-        "RSI supports bullish momentum"
-      );
-    }
-
-    if (
-      candle.signal ===
-      "BULLISH"
-    ) {
-      reasons.push(
-        candle.pattern
-      );
-    }
-
-    if (
-      volume.confirmation
-    ) {
-      reasons.push(
-        "Volume confirmation"
-      );
-    }
-
-    /*
-     * Risks
-     */
-
-    const risks = [];
-
-    if (
-      sma20 !== null &&
-      price < sma20
-    ) {
-      risks.push(
-        "Price below SMA20"
-      );
-    }
-
-    if (
-      sma20 !== null &&
-      sma50 !== null &&
-      sma20 < sma50
-    ) {
-      risks.push(
-        "SMA20 below SMA50"
-      );
-    }
-
-    if (
-      structure.direction ===
-      "BEARISH"
-    ) {
-      risks.push(
-        "Bearish market structure"
-      );
-    }
-
-    if (
-      rsiValue !== null &&
-      rsiValue > 75
-    ) {
-      risks.push(
-        "RSI elevated"
-      );
-    }
-
-    if (
-      candle.signal ===
-      "BEARISH"
-    ) {
-      risks.push(
-        candle.pattern
-      );
-    }
-
-    if (
-      decision.riskRewardQuality ===
-      "NOT ATTRACTIVE"
-    ) {
-      risks.push(
-        "Risk/reward not attractive"
-      );
-    }
-
-    /*
-     * RESPONSE
-     */
-
-    return res.status(200).json({
-
-      ticker,
-
-      price:
-        round(price),
-
-      score,
-
-      signal:
-        decision.signal,
-
-      signalReason:
-        decision.signalReason,
-
-      trend:
-        trend.trend,
-
-      trendScore:
-        trend.score,
-
-      trendConfidence:
-        trend.confidence,
-
-      shortTermTrend:
-        price >
-        (sma20 || price)
-          ? "BULLISH"
-          : price <
-            (sma20 || price)
-          ? "BEARISH"
-          : "SIDEWAYS",
-
-      structure:
-        structure.structure,
-
-      structureDirection:
-        structure.direction,
-
-      sma20:
-        round(sma20),
-
-      sma50:
-        round(sma50),
-
-      rsi14:
-        round(rsiValue),
-
-      macd:
-        round(
-          macdValue.macd,
-          4
-        ),
-
-      macdSignal:
-        round(
-          macdValue.signal,
-          4
-        ),
-
-      macdHistogram:
-        round(
-          macdValue.histogram,
-          4
-        ),
-
-      support:
-        round(support),
-
-      resistance:
-        round(resistance),
-
-      candlePattern:
-        candle.pattern,
-
-      candleSignal:
-        candle.signal,
-
-      candleStrength:
-        candle.strength,
-
-      candleDescription:
-        candle.description,
-
-      volume:
-        latest.volume,
-
-      relativeVolume:
-        round(
-          volume.relativeVolume,
-          2
-        ),
-
-      volumeConfirmation:
-        volume.confirmation,
-
-      chartPatterns,
-
-      primaryChartPattern:
-        chartPatterns.length
-          ? chartPatterns[0]
-          : null,
-
-      setup:
-        decision.setup,
-
-      strategy:
-        decision.strategy,
-
-      buyTrigger:
-        decision.buyTrigger,
-
-      buyTriggerPrice:
-        round(
-          decision.buyTriggerPrice
-        ),
-
-      triggerConfirmed:
-        decision.triggerConfirmed,
-
-      breakoutTrigger:
-        round(
-          decision.breakoutTrigger
-        ),
-
-      breakoutConfirmed:
-        decision.breakoutConfirmed,
-
-      pullbackConfirmed:
-        decision.pullbackConfirmed,
-
-      pullbackZoneLow:
-        round(
-          decision.pullbackZoneLow
-        ),
-
-      pullbackZoneHigh:
-        round(
-          decision.pullbackZoneHigh
-        ),
-
-      pullbackEntry:
-        round(
-          decision.pullbackEntry
-        ),
-
-      invalidation:
-        round(
-          decision.invalidation
-        ),
-
-      invalidationReason:
-        decision.invalidationReason,
-
-      riskPerShare:
-        round(
-          decision.riskPerShare
-        ),
-
-      target1:
-        round(
-          decision.target1
-        ),
-
-      target2:
-        round(
-          decision.target2
-        ),
-
-      riskRewardTarget1:
-        round(
-          decision.riskRewardTarget1,
-          2
-        ),
-
-      riskRewardTarget2:
-        round(
-          decision.riskRewardTarget2,
-          2
-        ),
-
-      riskRewardQuality:
-        decision.riskRewardQuality,
-
-      conditions:
-        decision.conditions,
-
-      conditionsMet:
-        decision.conditionsMet,
-
-      conditionsTotal:
-        decision.conditionsTotal,
-
-      reasons,
-
-      risks,
-
-      history:
-        bars
-          .slice(-100)
-          .map(x => ({
-            date:
-              x.date,
-
-            open:
-              round(x.open),
-
-            high:
-              round(x.high),
-
-            low:
-              round(x.low),
-
-            close:
-              round(x.close),
-
-            volume:
-              x.volume,
-
-            sma20:
-              round(x.sma20),
-
-            sma50:
-              round(x.sma50),
-
-            rsi:
-              round(x.rsi14),
-
-            macd:
-              round(
-                x.macd,
-                4
-              ),
-
-            macdSignal:
-              round(
-                x.macdSignal,
-                4
-              ),
-
-            macdHistogram:
-              round(
-                x.macdHistogram,
-                4
+          .trim()
+          .toUpperCase();
+
+      if (!ticker) {
+        return res.status(400).json({
+          error:
+            "Missing ticker"
+        });
+      }
+
+      const apiKey =
+        process.env
+          .ALPHA_VANTAGE_API_KEY;
+
+      if (!apiKey) {
+        return res.status(500).json({
+          error:
+            "Missing Alpha Vantage API key"
+        });
+      }
+
+      /*
+       * ALPHA VANTAGE
+       */
+
+      const url =
+        "https://www.alphavantage.co/query" +
+        "?function=TIME_SERIES_DAILY" +
+        "&symbol=" +
+        encodeURIComponent(ticker) +
+        "&outputsize=compact" +
+        "&apikey=" +
+        encodeURIComponent(apiKey);
+
+      const data =
+        await fetchJSON(url);
+
+      /*
+       * IMPORTANT:
+       * Alpha Vantage may return
+       * Note OR Information when
+       * the API limit is reached.
+       */
+
+      if (data.Note) {
+
+        return res.status(429).json({
+
+          error:
+            "Alpha Vantage API limit reached",
+
+          details:
+            data.Note
+        });
+      }
+
+      if (data.Information) {
+
+        return res.status(429).json({
+
+          error:
+            "Alpha Vantage API limit reached",
+
+          details:
+            data.Information
+        });
+      }
+
+      if (
+        data["Error Message"]
+      ) {
+
+        return res.status(400).json({
+
+          error:
+            "Invalid ticker",
+
+          details:
+            data["Error Message"]
+        });
+      }
+
+      /*
+       * DAILY SERIES
+       */
+
+      const series =
+        data[
+          "Time Series (Daily)"
+        ];
+
+      if (!series) {
+
+        return res.status(500).json({
+
+          error:
+            "No daily market data returned.",
+
+          details:
+            JSON.stringify(data)
+        });
+      }
+
+      /*
+       * BUILD BARS
+       */
+
+      const dates =
+        Object.keys(series)
+          .sort();
+
+      const bars =
+        dates
+          .map(
+            date => ({
+
+              date,
+
+              open:
+                Number(
+                  series[date][
+                    "1. open"
+                  ]
+                ),
+
+              high:
+                Number(
+                  series[date][
+                    "2. high"
+                  ]
+                ),
+
+              low:
+                Number(
+                  series[date][
+                    "3. low"
+                  ]
+                ),
+
+              close:
+                Number(
+                  series[date][
+                    "4. close"
+                  ]
+                ),
+
+              volume:
+                Number(
+                  series[date][
+                    "5. volume"
+                  ]
+                )
+            })
+          )
+          .filter(
+            bar =>
+              Number.isFinite(
+                bar.close
               )
-          }))
-    });
+          );
 
-  } catch (error) {
+      if (bars.length < 30) {
 
-    console.error(error);
+        return res.status(500).json({
 
-    return res.status(500).json({
-      error:
-        "Server error",
-      details:
-        error.message
-    });
-  }
-};
+          error:
+            "Not enough historical market data.",
+
+          details:
+            `Only ${bars.length} daily bars returned.`
+        });
+      }
+
+      /*
+       * INDICATORS
+       */
+
+      const closes =
+        bars.map(
+          bar => bar.close
+        );
+
+      for (
+        let i = 0;
+        i < bars.length;
+        i++
+      ) {
+
+        const history =
+          closes.slice(
+            0,
+            i + 1
+          );
+
+        bars[i].sma20 =
+          sma(
+            history,
+            20
+          );
+
+        bars[i].sma50 =
+          sma(
+            history,
+            50
+          );
+
+        bars[i].rsi14 =
+          calculateRSI(
+            history,
+            14
+          );
+
+        const m =
+          calculateMACD(
+            history
+          );
+
+        bars[i].macd =
+          m.macd;
+
+        bars[i].macdSignal =
+          m.signal;
+
+        bars[i].macdHistogram =
+          m.histogram;
+      }
+
+      /*
+       * CURRENT DATA
+       */
+
+      const latest =
+        bars[
+          bars.length - 1
+        ];
+
+      const price =
+        latest.close;
+
+      const sma20 =
+        latest.sma20;
+
+      const sma50 =
+        latest.sma50;
+
+      const rsiValue =
+        latest.rsi14;
+
+      const macdValue = {
+
+        macd:
+          latest.macd,
+
+        signal:
+          latest.macdSignal,
+
+        histogram:
+          latest.macdHistogram
+      };
+
+      /*
+       * SUPPORT / RESISTANCE
+       */
+
+      const recent20 =
+        bars.slice(-20);
+
+      const support =
+        Math.min(
+          ...recent20.map(
+            bar => bar.low
+          )
+        );
+
+      const resistance =
+        Math.max(
+          ...recent20.map(
+            bar => bar.high
+          )
+        );
+
+      /*
+       * ANALYSIS
+       */
+
+      const structure =
+        analyzeStructure(
+          bars
+        );
+
+      const trend =
+        analyzeTrend(
+          price,
+          sma20,
+          sma50
+        );
+
+      const candle =
+        candleAnalysis(
+          bars
+        );
+
+      const volume =
+        analyzeVolume(
+          bars
+        );
+
+      const chartPatterns =
+        detectChartPatterns(
+          bars
+        );
+
+      /*
+       * SCORE
+       */
+
+      const score =
+        calculateScore({
+
+          price,
+
+          sma20,
+
+          sma50,
+
+          rsi:
+            rsiValue,
+
+          macd:
+            macdValue,
+
+          structure,
+
+          candle,
+
+          volume
+        });
+
+      /*
+       * DECISION
+       */
+
+      const decision =
+        decisionEngine({
+
+          price,
+
+          support,
+
+          resistance,
+
+          sma20,
+
+          rsi:
+            rsiValue,
+
+          macd:
+            macdValue,
+
+          structure,
+
+          candle,
+
+          volume,
+
+          score
+        });
+
+      /*
+       * REASONS
+       */
+
+      const reasons = [];
+
+      if (
+        sma20 !== null &&
+        price > sma20
+      ) {
+        reasons.push(
+          "Price above SMA20"
+        );
+      }
+
+      if (
+        sma20 !== null &&
+        sma50 !== null &&
+        sma20 > sma50
+      ) {
+        reasons.push(
+          "SMA20 above SMA50"
+        );
+      }
+
+      if (
+        structure.direction ===
+        "BULLISH"
+      ) {
+        reasons.push(
+          "Higher highs and higher lows"
+        );
+      }
+
+      if (
+        macdValue.macd !== null &&
+        macdValue.signal !== null &&
+        macdValue.macd >
+          macdValue.signal
+      ) {
+        reasons.push(
+          "MACD bullish"
+        );
+      }
+
+      if (
+        rsiValue !== null &&
+        rsiValue >= 50
+      ) {
+        reasons.push(
+          "RSI supports bullish momentum"
+        );
+      }
+
+      if (
+        candle.signal ===
+        "BULLISH"
+      ) {
+        reasons.push(
+          candle.pattern
+        );
+      }
+
+      if (
+        volume.confirmation
+      ) {
+        reasons.push(
+          "Volume confirmation"
+        );
+      }
+
+      /*
+       * RISKS
+       */
+
+      const risks = [];
+
+      if (
+        sma20 !== null &&
+        price < sma20
+      ) {
+        risks.push(
+          "Price below SMA20"
+        );
+      }
+
+      if (
+        sma20 !== null &&
+        sma50 !== null &&
+        sma20 < sma50
+      ) {
+        risks.push(
+          "SMA20 below SMA50"
+        );
+      }
+
+      if (
+        structure.direction ===
+        "BEARISH"
+      ) {
+        risks.push(
+          "Bearish market structure"
+        );
+      }
+
+      if (
+        rsiValue !== null &&
+        rsiValue > 75
+      ) {
+        risks.push(
+          "RSI elevated"
+        );
+      }
+
+      if (
+        candle.signal ===
+        "BEARISH"
+      ) {
+        risks.push(
+          candle.pattern
+        );
+      }
+
+      if (
+        decision.riskRewardQuality ===
+        "NOT ATTRACTIVE"
+      ) {
+        risks.push(
+          "Risk/reward not attractive"
+        );
+      }
+
+      /*
+       * RESPONSE
+       */
+
+      return res.status(200).json({
+
+        ticker,
+
+        price:
+          round(price),
+
+        score,
+
+        signal:
+          decision.signal,
+
+        signalReason:
+          decision.signalReason,
+
+        trend:
+          trend.trend,
+
+        trendScore:
+          trend.score,
+
+        trendConfidence:
+          trend.confidence,
+
+        shortTermTrend:
+          price >
+          (sma20 || price)
+            ? "BULLISH"
+            : price <
+              (sma20 || price)
+            ? "BEARISH"
+            : "SIDEWAYS",
+
+        structure:
+          structure.structure,
+
+        structureDirection:
+          structure.direction,
+
+        sma20:
+          round(sma20),
+
+        sma50:
+          round(sma50),
+
+        rsi14:
+          round(rsiValue),
+
+        macd:
+          round(
+            macdValue.macd,
+            4
+          ),
+
+        macdSignal:
+          round(
+            macdValue.signal,
+            4
+          ),
+
+        macdHistogram:
+          round(
+            macdValue.histogram,
+            4
+          ),
+
+        support:
+          round(support),
+
+        resistance:
+          round(resistance),
+
+        candlePattern:
+          candle.pattern,
+
+        candleSignal:
+          candle.signal,
+
+        candleStrength:
+          candle.strength,
+
+        candleDescription:
+          candle.description,
+
+        volume:
+          latest.volume,
+
+        relativeVolume:
+          round(
+            volume.relativeVolume,
+            2
+          ),
+
+        volumeConfirmation:
+          volume.confirmation,
+
+        chartPatterns,
+
+        primaryChartPattern:
+          chartPatterns.length
+            ? chartPatterns[0]
+            : null,
+
+        setup:
+          decision.setup,
+
+        strategy:
+          decision.strategy,
+
+        buyTrigger:
+          decision.buyTrigger,
+
+        buyTriggerPrice:
+          round(
+            decision.buyTriggerPrice
+          ),
+
+        triggerConfirmed:
+          decision.triggerConfirmed,
+
+        breakoutTrigger:
+          round(
+            decision.breakoutTrigger
+          ),
+
+        breakoutConfirmed:
+          decision.breakoutConfirmed,
+
+        pullbackConfirmed:
+          decision.pullbackConfirmed,
+
+        pullbackZoneLow:
+          round(
+            decision.pullbackZoneLow
+          ),
+
+        pullbackZoneHigh:
+          round(
+            decision.pullbackZoneHigh
+          ),
+
+        pullbackEntry:
+          round(
+            decision.pullbackEntry
+          ),
+
+        invalidation:
+          round(
+            decision.invalidation
+          ),
+
+        invalidationReason:
+          decision.invalidationReason,
+
+        riskPerShare:
+          round(
+            decision.riskPerShare
+          ),
+
+        target1:
+          round(
+            decision.target1
+          ),
+
+        target2:
+          round(
+            decision.target2
+          ),
+
+        riskRewardTarget1:
+          round(
+            decision.riskRewardTarget1,
+            2
+          ),
+
+        riskRewardTarget2:
+          round(
+            decision.riskRewardTarget2,
+            2
+          ),
+
+        riskRewardQuality:
+          decision.riskRewardQuality,
+
+        conditions:
+          decision.conditions,
+
+        conditionsMet:
+          decision.conditionsMet,
+
+        conditionsTotal:
+          decision.conditionsTotal,
+
+        reasons,
+
+        risks,
+
+        history:
+          bars
+            .slice(-100)
+            .map(
+              bar => ({
+
+                date:
+                  bar.date,
+
+                open:
+                  round(
+                    bar.open
+                  ),
+
+                high:
+                  round(
+                    bar.high
+                  ),
+
+                low:
+                  round(
+                    bar.low
+                  ),
+
+                close:
+                  round(
+                    bar.close
+                  ),
+
+                volume:
+                  bar.volume,
+
+                sma20:
+                  round(
+                    bar.sma20
+                  ),
+
+                sma50:
+                  round(
+                    bar.sma50
+                  ),
+
+                rsi:
+                  round(
+                    bar.rsi14
+                  ),
+
+                macd:
+                  round(
+                    bar.macd,
+                    4
+                  ),
+
+                macdSignal:
+                  round(
+                    bar.macdSignal,
+                    4
+                  ),
+
+                macdHistogram:
+                  round(
+                    bar.macdHistogram,
+                    4
+                  )
+              })
+            )
+      });
+
+    } catch (error) {
+
+      console.error(
+        "Investment Cockpit error:",
+        error
+      );
+
+      return res.status(500).json({
+
+        error:
+          "Server error",
+
+        details:
+          error.message
+      });
+    }
+  };
