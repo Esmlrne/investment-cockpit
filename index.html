@@ -1,12 +1,15 @@
 <!doctype html>
 <html lang="en">
+
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0b0d12">
+
 <title>Investment Cockpit</title>
 
 <style>
+
 :root{
   --bg:#0b0d12;
   --card:#141821;
@@ -21,7 +24,9 @@
   --purple:#a88cff;
 }
 
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+}
 
 body{
   margin:0;
@@ -37,13 +42,13 @@ main{
 }
 
 h1{
-  margin:4px 0 4px;
+  margin:4px 0;
   font-size:26px;
 }
 
 h2{
   margin:0;
-  font-size:18px;
+  font-size:19px;
 }
 
 .small{
@@ -78,7 +83,9 @@ button{
   font-weight:600;
 }
 
-button:active{transform:scale(.98)}
+button:active{
+  transform:scale(.98);
+}
 
 .card{
   background:var(--card);
@@ -107,7 +114,7 @@ button:active{transform:scale(.98)}
 }
 
 .badge{
-  padding:7px 10px;
+  padding:8px 11px;
   border-radius:9px;
   font-size:12px;
   font-weight:800;
@@ -151,6 +158,26 @@ button:active{transform:scale(.98)}
 .stat .value{
   font-size:15px;
   font-weight:650;
+  line-height:1.35;
+}
+
+.watchlist{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+
+.tickerBtn{
+  padding:9px 12px;
+  font-size:13px;
+}
+
+.chartTitle{
+  margin:4px 0 10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
 .chartWrap{
@@ -164,13 +191,6 @@ canvas{
   height:auto;
   background:#0e1117;
   border-radius:10px;
-}
-
-.chartTitle{
-  margin:4px 0 10px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
 }
 
 .analysis{
@@ -196,6 +216,20 @@ canvas{
   font-size:16px;
 }
 
+.diagnosis{
+  background:var(--card2);
+  border-radius:10px;
+  padding:14px;
+  margin-top:12px;
+  line-height:1.5;
+}
+
+.diagnosisTitle{
+  font-size:13px;
+  font-weight:800;
+  margin-bottom:6px;
+}
+
 .list{
   margin:8px 0 0;
   padding-left:18px;
@@ -207,24 +241,13 @@ canvas{
   line-height:1.35;
 }
 
-.watchlist{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:10px;
-}
-
-.tickerBtn{
-  padding:9px 12px;
-  font-size:13px;
-}
-
 .footer{
   text-align:center;
   margin-top:22px;
 }
 
 @media(max-width:520px){
+
   .analysis{
     grid-template-columns:1fr;
   }
@@ -232,7 +255,9 @@ canvas{
   .stats{
     grid-template-columns:repeat(2,1fr);
   }
+
 }
+
 </style>
 </head>
 
@@ -242,26 +267,34 @@ canvas{
 
 <header>
   <h1>Investment Cockpit</h1>
-  <div class="small">Technical trend &amp; candlestick analysis</div>
+  <div class="small">
+    Technical trend &amp; candlestick intelligence
+  </div>
 </header>
 
 <div class="search">
+
   <input
     id="ticker"
     placeholder="Enter ticker e.g. NVDA"
     autocomplete="off"
     autocapitalize="characters"
   >
+
   <button onclick="addTicker()">Add</button>
+
 </div>
 
 <div id="status" class="small"></div>
 
 <div class="card">
+
   <div class="chartTitle">
     <h2>My watchlist</h2>
   </div>
+
   <div id="watchlist" class="watchlist"></div>
+
 </div>
 
 <div id="dashboard"></div>
@@ -273,18 +306,21 @@ canvas{
 </main>
 
 <script>
-const STORAGE_KEY = "ic_watchlist";
-const SELECTED_KEY = "ic_selected";
 
-let list = JSON.parse(
+const STORAGE_KEY="ic_watchlist";
+const SELECTED_KEY="ic_selected";
+
+let list=JSON.parse(
   localStorage.getItem(STORAGE_KEY) ||
   '["NVDA","MSFT","GOOGL","AAPL","AMZN","TSLA"]'
 );
 
-let selected =
-  localStorage.getItem(SELECTED_KEY) || list[0];
+let selected=
+  localStorage.getItem(SELECTED_KEY) ||
+  list[0];
 
 function save(){
+
   localStorage.setItem(
     STORAGE_KEY,
     JSON.stringify(list)
@@ -294,199 +330,302 @@ function save(){
     SELECTED_KEY,
     selected
   );
+
 }
 
 function esc(value){
+
   return String(value ?? "")
     .replace(/&/g,"&amp;")
     .replace(/</g,"&lt;")
     .replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;");
+
 }
 
 function money(value){
-  if(value == null || !Number.isFinite(Number(value)))
-    return "—";
 
-  return "$" + Number(value).toLocaleString(
-    "en-US",
-    {
-      minimumFractionDigits:2,
-      maximumFractionDigits:2
-    }
-  );
+  if(
+    value==null ||
+    !Number.isFinite(Number(value))
+  ){
+    return "—";
+  }
+
+  return "$"+
+    Number(value).toLocaleString(
+      "en-US",
+      {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }
+    );
+
 }
 
 function pct(value){
-  const n = Number(value);
 
-  if(!Number.isFinite(n)) return "—";
+  const n=Number(value);
 
-  return (n >= 0 ? "+" : "") +
-    n.toFixed(2) + "%";
+  if(!Number.isFinite(n)){
+    return "—";
+  }
+
+  return(
+    n>=0?"+":""
+  )+
+  n.toFixed(2)+"%";
+
 }
 
 function trendClass(trend){
-  if(trend === "BULLISH") return "bullish";
-  if(trend === "BEARISH") return "bearish";
+
+  if(trend==="BULLISH"){
+    return "bullish";
+  }
+
+  if(trend==="BEARISH"){
+    return "bearish";
+  }
+
   return "sideways";
+
 }
 
 function renderWatchlist(){
-  const box = document.getElementById("watchlist");
 
-  box.innerHTML = list.map(t => `
+  const box=
+    document.getElementById("watchlist");
+
+  box.innerHTML=list.map(t=>`
+
     <button
       class="tickerBtn"
       onclick="selectTicker('${esc(t)}')"
     >
       ${esc(t)}
     </button>
+
   `).join("");
+
 }
 
 function addTicker(){
-  const input =
+
+  const input=
     document.getElementById("ticker");
 
-  const ticker =
+  const ticker=
     input.value.trim().toUpperCase();
 
   if(!/^[A-Z.]{1,8}$/.test(ticker)){
-    setStatus("Enter a valid US ticker.");
+
+    setStatus(
+      "Enter a valid US ticker."
+    );
+
     return;
+
   }
 
   if(!list.includes(ticker)){
+
     list.unshift(ticker);
-    list = list.slice(0,12);
+
+    list=list.slice(0,12);
+
   }
 
-  selected = ticker;
+  selected=ticker;
+
   save();
-  input.value = "";
+
+  input.value="";
 
   renderWatchlist();
+
   load();
+
 }
 
 function selectTicker(ticker){
-  selected = ticker;
+
+  selected=ticker;
+
   save();
+
   load();
+
 }
 
 function setStatus(text){
-  document.getElementById("status").textContent = text;
+
+  document.getElementById(
+    "status"
+  ).textContent=text;
+
 }
 
 async function api(ticker){
-  const response =
+
+  const response=
     await fetch(
-      "/api/stock?ticker=" +
+      "/api/stock?ticker="+
       encodeURIComponent(ticker)
     );
 
-  const data = await response.json();
+  const data=
+    await response.json();
 
   if(!response.ok){
+
     throw new Error(
-      data.error || "Unable to load stock"
+      data.error ||
+      "Unable to load stock"
     );
+
   }
 
   return data;
+
 }
 
-function line(ctx,x1,y1,x2,y2){
+function line(
+  ctx,
+  x1,
+  y1,
+  x2,
+  y2
+){
+
   ctx.beginPath();
+
   ctx.moveTo(x1,y1);
+
   ctx.lineTo(x2,y2);
+
   ctx.stroke();
+
 }
 
-function drawPriceChart(canvas,data){
+/* =========================
+   PRICE CHART
+========================= */
 
-  const history =
-    (data.history || []).slice(-100);
+function drawPriceChart(
+  canvas,
+  data
+){
 
-  if(!history.length) return;
+  const history=
+    (data.history||[])
+    .slice(-100);
 
-  const dpr =
-    window.devicePixelRatio || 1;
+  if(!history.length){
+    return;
+  }
 
-  const width =
-    canvas.clientWidth || 700;
+  const dpr=
+    window.devicePixelRatio||1;
 
-  const height = 330;
+  const width=
+    canvas.clientWidth||700;
 
-  canvas.width = width * dpr;
-  canvas.height = height * dpr;
+  const height=340;
 
-  const ctx = canvas.getContext("2d");
+  canvas.width=
+    width*dpr;
+
+  canvas.height=
+    height*dpr;
+
+  const ctx=
+    canvas.getContext("2d");
 
   ctx.scale(dpr,dpr);
 
-  ctx.clearRect(0,0,width,height);
+  ctx.clearRect(
+    0,
+    0,
+    width,
+    height
+  );
 
-  const pad = {
+  const pad={
     left:48,
     right:12,
     top:18,
     bottom:28
   };
 
-  const chartW =
-    width - pad.left - pad.right;
+  const chartW=
+    width-pad.left-pad.right;
 
-  const chartH =
-    height - pad.top - pad.bottom;
+  const chartH=
+    height-pad.top-pad.bottom;
 
-  const values = [];
+  const values=[];
 
   history.forEach(x=>{
+
     values.push(x.high);
     values.push(x.low);
 
-    if(x.sma20) values.push(x.sma20);
-    if(x.sma50) values.push(x.sma50);
+    if(x.sma20!=null){
+      values.push(x.sma20);
+    }
+
+    if(x.sma50!=null){
+      values.push(x.sma50);
+    }
+
   });
 
-  values.push(data.target1);
-  values.push(data.target2);
-  values.push(data.stop);
+  [
+    data.target1,
+    data.target2,
+    data.stop
+  ].forEach(v=>{
 
-  const min =
-    Math.min(...values);
+    if(v!=null){
+      values.push(v);
+    }
 
-  const max =
-    Math.max(...values);
+  });
 
-  const range =
-    max - min || 1;
+  const min=Math.min(...values);
+  const max=Math.max(...values);
+  const range=max-min||1;
 
   function x(i){
-    return pad.left +
-      i/(history.length-1) *
+
+    return pad.left+
+      i/(history.length-1)*
       chartW;
+
   }
 
   function y(v){
-    return pad.top +
-      (max-v)/range *
+
+    return pad.top+
+      (max-v)/range*
       chartH;
+
   }
 
-  ctx.font = "11px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif";
+  ctx.font=
+    "11px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif";
 
-  /* grid */
+  /* Grid */
 
-  ctx.strokeStyle = "#252b36";
-  ctx.lineWidth = 1;
+  ctx.strokeStyle="#252b36";
+  ctx.lineWidth=1;
 
   for(let i=0;i<5;i++){
-    const yy =
-      pad.top + i/4 * chartH;
+
+    const yy=
+      pad.top+
+      i/4*chartH;
 
     line(
       ctx,
@@ -496,78 +635,99 @@ function drawPriceChart(canvas,data){
       yy
     );
 
-    const value =
-      max - i/4 * range;
+    const value=
+      max-i/4*range;
 
-    ctx.fillStyle = "#8992a3";
+    ctx.fillStyle="#8992a3";
+
     ctx.fillText(
       money(value),
       4,
       yy+4
     );
+
   }
 
-  /* SMA lines */
+  /* Moving averages */
 
-  function drawSMA(key,dash){
+  function drawSMA(
+    key,
+    color,
+    dash
+  ){
 
     ctx.beginPath();
 
-    ctx.strokeStyle =
-      key === "sma20"
-        ? "#55a7ff"
-        : "#a88cff";
+    ctx.strokeStyle=color;
 
-    ctx.lineWidth = 1.7;
+    ctx.lineWidth=1.8;
 
-    if(dash){
-      ctx.setLineDash([5,4]);
-    }else{
-      ctx.setLineDash([]);
-    }
+    ctx.setLineDash(
+      dash?[5,4]:[]
+    );
 
     let started=false;
 
-    history.forEach((item,i)=>{
+    history.forEach(
+      (item,i)=>{
 
-      if(item[key] == null) return;
+        if(item[key]==null){
+          return;
+        }
 
-      const xx=x(i);
-      const yy=y(item[key]);
+        const xx=x(i);
+        const yy=y(item[key]);
 
-      if(!started){
-        ctx.moveTo(xx,yy);
-        started=true;
-      }else{
-        ctx.lineTo(xx,yy);
+        if(!started){
+
+          ctx.moveTo(xx,yy);
+
+          started=true;
+
+        }else{
+
+          ctx.lineTo(xx,yy);
+
+        }
+
       }
-    });
+    );
 
     ctx.stroke();
+
     ctx.setLineDash([]);
+
   }
 
-  drawSMA("sma20",false);
-  drawSMA("sma50",true);
+  drawSMA(
+    "sma20",
+    "#55a7ff",
+    false
+  );
 
-  /* support */
+  drawSMA(
+    "sma50",
+    "#a88cff",
+    true
+  );
 
-  function horizontal(value,label,dash){
+  /* Horizontal levels */
 
-    if(value == null) return;
+  function horizontal(
+    value,
+    label,
+    color
+  ){
+
+    if(value==null){
+      return;
+    }
 
     const yy=y(value);
 
-    ctx.strokeStyle =
-      label === "Support"
-        ? "rgba(53,208,127,.65)"
-        : label === "Resistance"
-        ? "rgba(255,92,103,.65)"
-        : "rgba(245,196,81,.55)";
+    ctx.strokeStyle=color;
 
-    ctx.setLineDash(
-      dash ? [5,5] : [3,3]
-    );
+    ctx.setLineDash([5,5]);
 
     line(
       ctx,
@@ -579,107 +739,109 @@ function drawPriceChart(canvas,data){
 
     ctx.setLineDash([]);
 
-    ctx.fillStyle =
-      ctx.strokeStyle;
+    ctx.fillStyle=color;
 
     ctx.fillText(
       label,
       pad.left+5,
       yy-5
     );
+
   }
 
   horizontal(
     data.fundamentals?.support,
     "Support",
-    true
+    "rgba(53,208,127,.75)"
   );
 
   horizontal(
     data.fundamentals?.resistance,
     "Resistance",
-    true
+    "rgba(255,92,103,.75)"
   );
 
   horizontal(
     data.target1,
     "Target 1",
-    true
+    "rgba(245,196,81,.8)"
   );
 
   horizontal(
     data.stop,
     "Invalidation",
-    true
+    "rgba(245,196,81,.65)"
   );
 
-  /* candlesticks */
+  /* Candles */
 
-  const candleWidth =
+  const candleWidth=
     Math.max(
       2,
       Math.min(
-        9,
-        chartW / history.length * .62
+        8,
+        chartW/history.length*.65
       )
     );
 
-  history.forEach((item,i)=>{
+  history.forEach(
+    (item,i)=>{
 
-    const xx=x(i);
+      const xx=x(i);
 
-    const openY=y(item.open);
-    const closeY=y(item.close);
-    const highY=y(item.high);
-    const lowY=y(item.low);
+      const openY=y(item.open);
+      const closeY=y(item.close);
+      const highY=y(item.high);
+      const lowY=y(item.low);
 
-    const bullish =
-      item.close >= item.open;
+      const bullish=
+        item.close>=item.open;
 
-    ctx.strokeStyle =
-      bullish
-        ? "#35d07f"
-        : "#ff5c67";
+      const color=
+        bullish
+          ?"#35d07f"
+          :"#ff5c67";
 
-    ctx.fillStyle =
-      bullish
-        ? "#35d07f"
-        : "#ff5c67";
+      ctx.strokeStyle=color;
+      ctx.fillStyle=color;
+      ctx.lineWidth=1;
 
-    ctx.lineWidth = 1;
-
-    /* wick */
-
-    line(
-      ctx,
-      xx,
-      highY,
-      xx,
-      lowY
-    );
-
-    /* body */
-
-    const top =
-      Math.min(openY,closeY);
-
-    const bodyH =
-      Math.max(
-        1,
-        Math.abs(closeY-openY)
+      line(
+        ctx,
+        xx,
+        highY,
+        xx,
+        lowY
       );
 
-    ctx.fillRect(
-      xx-candleWidth/2,
-      top,
-      candleWidth,
-      bodyH
-    );
-  });
+      const top=
+        Math.min(
+          openY,
+          closeY
+        );
 
-  /* latest price */
+      const bodyH=
+        Math.max(
+          1,
+          Math.abs(
+            closeY-closeY+openY-closeY
+          )
+        );
 
-  const currentY=y(data.price);
+      ctx.fillRect(
+        xx-candleWidth/2,
+        top,
+        candleWidth,
+        bodyH
+      );
+
+    }
+  );
+
+  /* Current price */
+
+  const currentY=
+    y(data.price);
 
   ctx.strokeStyle="#f2f4f7";
   ctx.setLineDash([2,3]);
@@ -702,69 +864,93 @@ function drawPriceChart(canvas,data){
     currentY-5
   );
 
-  /* dates */
+  /* Dates */
 
   ctx.fillStyle="#8992a3";
 
-  const first=history[0];
-  const last=history[history.length-1];
-
   ctx.fillText(
-    first.date.slice(5),
+    history[0].date.slice(5),
     pad.left,
     height-8
   );
 
   ctx.fillText(
-    last.date.slice(5),
+    history[history.length-1].date.slice(5),
     width-40,
     height-8
   );
+
 }
 
-function drawRSI(canvas,data){
+/* =========================
+   RSI
+========================= */
 
-  const history =
-    (data.history || []).slice(-100);
+function drawRSI(
+  canvas,
+  data
+){
 
-  const dpr =
-    window.devicePixelRatio || 1;
+  const history=
+    (data.history||[])
+    .slice(-100);
 
-  const width =
-    canvas.clientWidth || 700;
+  const dpr=
+    window.devicePixelRatio||1;
+
+  const width=
+    canvas.clientWidth||700;
 
   const height=150;
 
-  canvas.width=width*dpr;
-  canvas.height=height*dpr;
+  canvas.width=
+    width*dpr;
 
-  const ctx=canvas.getContext("2d");
+  canvas.height=
+    height*dpr;
+
+  const ctx=
+    canvas.getContext("2d");
 
   ctx.scale(dpr,dpr);
 
-  ctx.clearRect(0,0,width,height);
+  ctx.clearRect(
+    0,
+    0,
+    width,
+    height
+  );
 
   const left=35;
   const right=10;
   const top=12;
   const bottom=22;
 
-  const w=width-left-right;
-  const h=height-top-bottom;
+  const w=
+    width-left-right;
+
+  const h=
+    height-top-bottom;
 
   function x(i){
+
     return left+
       i/(history.length-1)*w;
+
   }
 
   function y(v){
-    return top+(100-v)/100*h;
+
+    return top+
+      (100-v)/100*h;
+
   }
 
   ctx.strokeStyle="#252b36";
   ctx.lineWidth=1;
 
   [30,50,70].forEach(v=>{
+
     const yy=y(v);
 
     line(
@@ -776,91 +962,157 @@ function drawRSI(canvas,data){
     );
 
     ctx.fillStyle="#8992a3";
+
     ctx.font="10px sans-serif";
-    ctx.fillText(v,left-25,yy+3);
+
+    ctx.fillText(
+      v,
+      left-25,
+      yy+3
+    );
+
   });
 
   ctx.beginPath();
+
   ctx.strokeStyle="#55a7ff";
+
   ctx.lineWidth=2;
 
   let started=false;
 
-  history.forEach((item,i)=>{
+  history.forEach(
+    (item,i)=>{
 
-    if(item.rsi==null) return;
+      if(item.rsi==null){
+        return;
+      }
 
-    if(!started){
-      ctx.moveTo(x(i),y(item.rsi));
-      started=true;
-    }else{
-      ctx.lineTo(x(i),y(item.rsi));
+      if(!started){
+
+        ctx.moveTo(
+          x(i),
+          y(item.rsi)
+        );
+
+        started=true;
+
+      }else{
+
+        ctx.lineTo(
+          x(i),
+          y(item.rsi)
+        );
+
+      }
+
     }
-  });
+  );
 
   ctx.stroke();
 
   ctx.fillStyle="#8992a3";
-  ctx.font="10px sans-serif";
 
   ctx.fillText(
     "RSI 14",
     left,
     height-6
   );
+
 }
 
-function drawMACD(canvas,data){
+/* =========================
+   MACD
+========================= */
 
-  const history =
-    (data.history || []).slice(-100);
+function drawMACD(
+  canvas,
+  data
+){
 
-  const dpr =
-    window.devicePixelRatio || 1;
+  const history=
+    (data.history||[])
+    .slice(-100);
 
-  const width =
-    canvas.clientWidth || 700;
+  const dpr=
+    window.devicePixelRatio||1;
+
+  const width=
+    canvas.clientWidth||700;
 
   const height=150;
 
-  canvas.width=width*dpr;
-  canvas.height=height*dpr;
+  canvas.width=
+    width*dpr;
 
-  const ctx=canvas.getContext("2d");
+  canvas.height=
+    height*dpr;
+
+  const ctx=
+    canvas.getContext("2d");
 
   ctx.scale(dpr,dpr);
 
-  ctx.clearRect(0,0,width,height);
+  ctx.clearRect(
+    0,
+    0,
+    width,
+    height
+  );
 
   const left=40;
   const right=10;
   const top=12;
   const bottom=22;
 
-  const w=width-left-right;
-  const h=height-top-bottom;
+  const w=
+    width-left-right;
+
+  const h=
+    height-top-bottom;
 
   const vals=[];
 
   history.forEach(x=>{
-    if(x.macd!=null) vals.push(x.macd);
-    if(x.macdSignal!=null) vals.push(x.macdSignal);
-    if(x.macdHistogram!=null) vals.push(x.macdHistogram);
+
+    if(x.macd!=null){
+      vals.push(x.macd);
+    }
+
+    if(x.macdSignal!=null){
+      vals.push(x.macdSignal);
+    }
+
+    if(x.macdHistogram!=null){
+      vals.push(x.macdHistogram);
+    }
+
   });
 
-  if(!vals.length) return;
+  if(!vals.length){
+    return;
+  }
 
-  const maxAbs =
-    Math.max(...vals.map(v=>Math.abs(v))) || 1;
+  const maxAbs=
+    Math.max(
+      ...vals.map(
+        v=>Math.abs(v)
+      )
+    )||1;
 
   function x(i){
+
     return left+
       i/(history.length-1)*w;
+
   }
 
   function y(v){
+
     return top+
-      (maxAbs-v)/(maxAbs*2)*h;
+      (maxAbs-v)/
+      (maxAbs*2)*h;
+
   }
 
   const zero=y(0);
@@ -875,70 +1127,103 @@ function drawMACD(canvas,data){
     zero
   );
 
-  /* histogram */
-
-  const barW =
+  const barW=
     Math.max(
       1,
       w/history.length*.65
     );
 
-  history.forEach((item,i)=>{
+  history.forEach(
+    (item,i)=>{
 
-    if(item.macdHistogram==null) return;
+      if(item.macdHistogram==null){
+        return;
+      }
 
-    const yy=y(item.macdHistogram);
+      const yy=
+        y(item.macdHistogram);
 
-    ctx.fillStyle =
-      item.macdHistogram >= 0
-        ? "rgba(53,208,127,.65)"
-        : "rgba(255,92,103,.65)";
+      ctx.fillStyle=
+        item.macdHistogram>=0
+          ?"rgba(53,208,127,.65)"
+          :"rgba(255,92,103,.65)";
 
-    ctx.fillRect(
-      x(i)-barW/2,
-      Math.min(yy,zero),
-      barW,
-      Math.abs(zero-yy)
-    );
-  });
+      ctx.fillRect(
+        x(i)-barW/2,
+        Math.min(yy,zero),
+        barW,
+        Math.abs(zero-yy)
+      );
 
-  function draw(key,dash){
+    }
+  );
+
+  function draw(
+    key,
+    color,
+    dash
+  ){
 
     ctx.beginPath();
 
-    ctx.strokeStyle =
-      key==="macd"
-        ? "#a88cff"
-        : "#55a7ff";
+    ctx.strokeStyle=color;
 
     ctx.lineWidth=1.7;
 
     ctx.setLineDash(
-      dash ? [5,4] : []
+      dash?[5,4]:[]
     );
 
     let started=false;
 
-    history.forEach((item,i)=>{
+    history.forEach(
+      (item,i)=>{
 
-      if(item[key]==null) return;
+        if(item[key]==null){
+          return;
+        }
 
-      if(!started){
-        ctx.moveTo(x(i),y(item[key]));
-        started=true;
-      }else{
-        ctx.lineTo(x(i),y(item[key]));
+        if(!started){
+
+          ctx.moveTo(
+            x(i),
+            y(item[key])
+          );
+
+          started=true;
+
+        }else{
+
+          ctx.lineTo(
+            x(i),
+            y(item[key])
+          );
+
+        }
+
       }
-    });
+    );
 
     ctx.stroke();
+
     ctx.setLineDash([]);
+
   }
 
-  draw("macd",false);
-  draw("macdSignal",true);
+  draw(
+    "macd",
+    "#a88cff",
+    false
+  );
+
+  draw(
+    "macdSignal",
+    "#55a7ff",
+    true
+  );
 
   ctx.fillStyle="#8992a3";
+
   ctx.font="10px sans-serif";
 
   ctx.fillText(
@@ -946,40 +1231,181 @@ function drawMACD(canvas,data){
     left,
     height-6
   );
+
 }
+
+/* =========================
+   DIAGNOSIS
+========================= */
+
+function diagnosis(data){
+
+  const trend=
+    data.trend||"SIDEWAYS";
+
+  const structure=
+    data.structure||
+    "MIXED MARKET STRUCTURE";
+
+  const setup=
+    data.setup||"WAIT";
+
+  const candle=
+    data.candle_pattern||
+    "NEUTRAL";
+
+  const shortTerm=
+    data.short_term_trend||
+    "NEUTRAL";
+
+  const breakout=
+    data.breakout||
+    "NONE";
+
+  const reversal=
+    data.reversal||
+    "NONE";
+
+  if(reversal!=="NONE"){
+
+    return(
+      "The market is showing a potential "+
+      reversal.toLowerCase()+
+      ". Current structure is "+
+      structure.toLowerCase()+
+      ", while the latest candle is "+
+      candle.toLowerCase()+
+      ". Confirmation from price and momentum is still important before treating the reversal as established."
+    );
+
+  }
+
+  if(breakout==="BREAKOUT"){
+
+    return(
+      "Price has broken above recent resistance. "+
+      "The current market structure is "+
+      structure.toLowerCase()+
+      " and the setup is "+
+      setup.toLowerCase()+
+      ". A sustained move above the breakout level would strengthen the bullish case."
+    );
+
+  }
+
+  if(breakout==="BREAKDOWN"){
+
+    return(
+      "Price has broken below recent support. "+
+      "The current structure is "+
+      structure.toLowerCase()+
+      ". The setup indicates elevated downside risk and confirmation is required before considering a reversal."
+    );
+
+  }
+
+  if(trend==="BULLISH"){
+
+    if(shortTerm==="BEARISH"){
+
+      return(
+        "The primary trend remains bullish, but short-term momentum is moving against it. "+
+        "This looks more like a potential pullback than a confirmed trend reversal. "+
+        "Watch support and momentum for confirmation."
+      );
+
+    }
+
+    return(
+      "The trend is bullish with supporting market structure. "+
+      "Price action, moving averages and momentum should continue to confirm the trend. "+
+      "The current setup is "+
+      setup.toLowerCase()+
+      "."
+    );
+
+  }
+
+  if(trend==="BEARISH"){
+
+    if(shortTerm==="BULLISH"){
+
+      return(
+        "The primary trend remains bearish, but short-term momentum is improving. "+
+        "This could represent an early reversal attempt. "+
+        "A break above resistance with continued momentum would provide stronger confirmation."
+      );
+
+    }
+
+    return(
+      "The trend remains bearish with downside market structure. "+
+      "The current setup is "+
+      setup.toLowerCase()+
+      ". "+
+      "A sustained break above resistance would be needed to challenge the bearish view."
+    );
+
+  }
+
+  return(
+    "The market is currently sideways or transitioning. "+
+    "The structure is "+
+    structure.toLowerCase()+
+    " and the latest candle is "+
+    candle.toLowerCase()+
+    ". "+
+    "Wait for a breakout, breakdown or stronger momentum confirmation before taking a directional position."
+  );
+
+}
+
+/* =========================
+   RENDER
+========================= */
 
 function render(data){
 
-  const trend =
-    data.trend || "SIDEWAYS";
+  const trend=
+    data.trend||"SIDEWAYS";
 
-  const changeClass =
-    Number(data.change_pct) >= 0
-      ? "bullish"
-      : "bearish";
+  const candle=
+    data.candle_pattern||
+    "NEUTRAL";
 
-  const candle =
-    data.candle_pattern || "NEUTRAL";
+  const dashboard=
+    document.getElementById(
+      "dashboard"
+    );
 
-  const dashboard =
-    document.getElementById("dashboard");
+  dashboard.innerHTML=`
 
-  dashboard.innerHTML = `
+    <!-- HERO -->
 
     <div class="card">
 
       <div class="hero">
 
         <div>
-          <h2>${esc(data.symbol)}</h2>
+
+          <h2>
+            ${esc(data.symbol)}
+          </h2>
 
           <div class="price">
             ${money(data.price)}
           </div>
 
-          <div class="change ${changeClass}">
+          <div class="change ${
+            Number(data.change_pct)>=0
+              ?"bullish"
+              :"bearish"
+          }">
+
             ${pct(data.change_pct)}
+
           </div>
+
         </div>
 
         <div class="badge ${trendClass(trend)}">
@@ -991,51 +1417,226 @@ function render(data){
       <div class="stats">
 
         <div class="stat">
-          <div class="label">Investment signal</div>
-          <div class="value">${esc(data.signal)}</div>
+          <div class="label">
+            Investment signal
+          </div>
+
+          <div class="value">
+            ${esc(data.signal)}
+          </div>
         </div>
 
         <div class="stat">
-          <div class="label">Score</div>
-          <div class="value">${esc(data.score)}/100</div>
+          <div class="label">
+            Score
+          </div>
+
+          <div class="value">
+            ${esc(data.score)}/100
+          </div>
         </div>
 
         <div class="stat">
-          <div class="label">Trend confidence</div>
-          <div class="value">${esc(data.trend_confidence)}%</div>
+          <div class="label">
+            Trend confidence
+          </div>
+
+          <div class="value">
+            ${esc(data.trend_confidence)}%
+          </div>
         </div>
 
         <div class="stat">
-          <div class="label">Market structure</div>
-          <div class="value">${esc(data.structure)}</div>
+          <div class="label">
+            Short-term trend
+          </div>
+
+          <div class="value">
+            ${esc(data.short_term_trend||"—")}
+          </div>
         </div>
 
         <div class="stat">
-          <div class="label">Latest candle</div>
-          <div class="value">${esc(candle)}</div>
+          <div class="label">
+            Market structure
+          </div>
+
+          <div class="value">
+            ${esc(data.structure||"—")}
+          </div>
         </div>
 
         <div class="stat">
-          <div class="label">RSI 14</div>
-          <div class="value">${data.rsi ?? "—"}</div>
+          <div class="label">
+            Latest candle
+          </div>
+
+          <div class="value">
+            ${esc(candle)}
+          </div>
         </div>
 
       </div>
 
     </div>
+
+
+    <!-- TECHNICAL DIAGNOSIS -->
 
     <div class="card">
 
       <div class="chartTitle">
-        <h2>Price &amp; trend analysis</h2>
-        <span class="small">100 trading days</span>
+        <h2>🧠 Technical diagnosis</h2>
+      </div>
+
+      <div class="analysis">
+
+        <div class="analysisBox">
+
+          <h3>Trend</h3>
+
+          <strong class="${trendClass(trend)}">
+            ${esc(trend)}
+          </strong>
+
+          <div class="small">
+            ${esc(data.trend_confidence||"—")}% confidence
+          </div>
+
+        </div>
+
+        <div class="analysisBox">
+
+          <h3>Market structure</h3>
+
+          <strong>
+            ${esc(data.structure||"—")}
+          </strong>
+
+        </div>
+
+        <div class="analysisBox">
+
+          <h3>Short-term</h3>
+
+          <strong>
+            ${esc(data.short_term_trend||"—")}
+          </strong>
+
+        </div>
+
+        <div class="analysisBox">
+
+          <h3>Candle</h3>
+
+          <strong>
+            ${esc(candle)}
+          </strong>
+
+          <div class="small">
+            ${esc(data.candle_signal||"NEUTRAL")}
+          </div>
+
+        </div>
+
+        <div class="analysisBox">
+
+          <h3>Breakout</h3>
+
+          <strong>
+            ${esc(data.breakout||"NONE")}
+          </strong>
+
+          <div class="small">
+            ${
+              data.breakout_level!=null
+                ?"Level "+money(data.breakout_level)
+                :"No confirmed breakout"
+            }
+          </div>
+
+        </div>
+
+        <div class="analysisBox">
+
+          <h3>Setup</h3>
+
+          <strong>
+            ${esc(data.setup||"WAIT")}
+          </strong>
+
+        </div>
+
+      </div>
+
+      <div class="diagnosis">
+
+        <div class="diagnosisTitle">
+          MODEL INTERPRETATION
+        </div>
+
+        ${esc(diagnosis(data))}
+
+      </div>
+
+      ${
+        data.reversal &&
+        data.reversal!=="NONE"
+        ?`
+
+          <div class="diagnosis">
+
+            <div class="diagnosisTitle">
+              ⚠️ REVERSAL WATCH
+            </div>
+
+            ${esc(data.reversal)}
+
+            ${
+              data.reversal_confidence
+                ?` — ${
+                    esc(data.reversal_confidence)
+                  }% confidence`
+                :""
+            }
+
+          </div>
+
+        `
+        :""
+      }
+
+    </div>
+
+
+    <!-- PRICE CHART -->
+
+    <div class="card">
+
+      <div class="chartTitle">
+
+        <h2>
+          Price &amp; trend analysis
+        </h2>
+
+        <span class="small">
+          100 trading days
+        </span>
+
       </div>
 
       <div class="chartWrap">
-        <canvas id="priceChart"></canvas>
+
+        <canvas
+          id="priceChart"
+        ></canvas>
+
       </div>
 
     </div>
+
+
+    <!-- RSI -->
 
     <div class="card">
 
@@ -1043,9 +1644,14 @@ function render(data){
         <h2>RSI momentum</h2>
       </div>
 
-      <canvas id="rsiChart"></canvas>
+      <canvas
+        id="rsiChart"
+      ></canvas>
 
     </div>
+
+
+    <!-- MACD -->
 
     <div class="card">
 
@@ -1053,9 +1659,14 @@ function render(data){
         <h2>MACD momentum</h2>
       </div>
 
-      <canvas id="macdChart"></canvas>
+      <canvas
+        id="macdChart"
+      ></canvas>
 
     </div>
+
+
+    <!-- TRADE LEVELS -->
 
     <div class="card">
 
@@ -1066,98 +1677,74 @@ function render(data){
       <div class="stats">
 
         <div class="stat">
-          <div class="label">Buy zone low</div>
-          <div class="value">${money(data.entry_low)}</div>
-        </div>
-
-        <div class="stat">
-          <div class="label">Buy zone high</div>
-          <div class="value">${money(data.entry_high)}</div>
-        </div>
-
-        <div class="stat">
-          <div class="label">Support</div>
-          <div class="value">${money(data.fundamentals?.support)}</div>
-        </div>
-
-        <div class="stat">
-          <div class="label">Resistance</div>
-          <div class="value">${money(data.fundamentals?.resistance)}</div>
-        </div>
-
-        <div class="stat">
-          <div class="label">Invalidation</div>
-          <div class="value">${money(data.stop)}</div>
-        </div>
-
-        <div class="stat">
-          <div class="label">Target 1</div>
-          <div class="value">${money(data.target1)}</div>
-        </div>
-
-        <div class="stat">
-          <div class="label">Target 2</div>
-          <div class="value">${money(data.target2)}</div>
-        </div>
-
-      </div>
-
-    </div>
-
-    <div class="card">
-
-      <div class="chartTitle">
-        <h2>Technical interpretation</h2>
-      </div>
-
-      <div class="analysis">
-
-        <div class="analysisBox">
-          <h3>Trend</h3>
-          <strong class="${trendClass(trend)}">
-            ${esc(trend)}
-          </strong>
-          <div class="small">
-            Confidence ${esc(data.trend_confidence)}%
+          <div class="label">
+            Buy zone low
+          </div>
+          <div class="value">
+            ${money(data.entry_low)}
           </div>
         </div>
 
-        <div class="analysisBox">
-          <h3>Structure</h3>
-          <strong>
-            ${esc(data.structure)}
-          </strong>
-        </div>
-
-        <div class="analysisBox">
-          <h3>Candle signal</h3>
-          <strong>
-            ${esc(candle)}
-          </strong>
-          <div class="small">
-            ${esc(data.candle_signal || "NEUTRAL")}
+        <div class="stat">
+          <div class="label">
+            Buy zone high
+          </div>
+          <div class="value">
+            ${money(data.entry_high)}
           </div>
         </div>
 
-        <div class="analysisBox">
-          <h3>Momentum</h3>
-          <strong>
-            ${data.rsi != null
-              ? "RSI " + data.rsi
-              : "RSI unavailable"}
-          </strong>
-          <div class="small">
-            MACD ${
-              data.fundamentals?.macd != null
-                ? Number(data.fundamentals.macd).toFixed(2)
-                : "—"
-            }
+        <div class="stat">
+          <div class="label">
+            Support
+          </div>
+          <div class="value">
+            ${money(data.fundamentals?.support)}
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="label">
+            Resistance
+          </div>
+          <div class="value">
+            ${money(data.fundamentals?.resistance)}
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="label">
+            Invalidation
+          </div>
+          <div class="value">
+            ${money(data.stop)}
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="label">
+            Target 1
+          </div>
+          <div class="value">
+            ${money(data.target1)}
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="label">
+            Target 2
+          </div>
+          <div class="value">
+            ${money(data.target2)}
           </div>
         </div>
 
       </div>
 
     </div>
+
+
+    <!-- WHY -->
 
     <div class="card">
 
@@ -1166,16 +1753,23 @@ function render(data){
       </div>
 
       <ul class="list">
+
         ${
-          (data.reasons || []).length
-          ? data.reasons.map(x =>
-              `<li>${esc(x)}</li>`
-            ).join("")
-          : "<li>No bullish confirmations.</li>"
+          (data.reasons||[]).length
+
+          ?data.reasons.map(
+            x=>`<li>${esc(x)}</li>`
+          ).join("")
+
+          :"<li>No bullish confirmations.</li>"
         }
+
       </ul>
 
     </div>
+
+
+    <!-- RISKS -->
 
     <div class="card">
 
@@ -1184,80 +1778,119 @@ function render(data){
       </div>
 
       <ul class="list">
+
         ${
-          (data.risks || []).length
-          ? data.risks.map(x =>
-              `<li>${esc(x)}</li>`
-            ).join("")
-          : "<li>No major technical risks detected.</li>"
+          (data.risks||[]).length
+
+          ?data.risks.map(
+            x=>`<li>${esc(x)}</li>`
+          ).join("")
+
+          :"<li>No major technical risks detected.</li>"
         }
+
       </ul>
 
     </div>
+
   `;
 
   requestAnimationFrame(()=>{
+
     drawPriceChart(
-      document.getElementById("priceChart"),
+      document.getElementById(
+        "priceChart"
+      ),
       data
     );
 
     drawRSI(
-      document.getElementById("rsiChart"),
+      document.getElementById(
+        "rsiChart"
+      ),
       data
     );
 
     drawMACD(
-      document.getElementById("macdChart"),
+      document.getElementById(
+        "macdChart"
+      ),
       data
     );
+
   });
+
 }
+
+/* =========================
+   LOAD
+========================= */
 
 async function load(){
 
   setStatus(
-    "Analyzing " + selected + "..."
+    "Analyzing "+selected+"..."
   );
 
   try{
 
-    const data =
+    const data=
       await api(selected);
 
     render(data);
 
     setStatus(
-      "Analysis updated for " + selected
+      "Analysis updated for "+
+      selected
     );
 
   }catch(error){
 
     document.getElementById(
       "dashboard"
-    ).innerHTML = `
+    ).innerHTML=`
+
       <div class="card">
-        <strong>Unable to load ${esc(selected)}</strong>
+
+        <strong>
+          Unable to load ${esc(selected)}
+        </strong>
+
         <div class="small">
           ${esc(error.message)}
         </div>
+
       </div>
+
     `;
 
-    setStatus("Data request failed.");
+    setStatus(
+      "Data request failed."
+    );
+
   }
+
 }
+
+/* Enter key */
 
 document
   .getElementById("ticker")
-  .addEventListener("keydown",e=>{
-    if(e.key==="Enter"){
-      addTicker();
+  .addEventListener(
+    "keydown",
+    e=>{
+
+      if(e.key==="Enter"){
+        addTicker();
+      }
+
     }
-  });
+  );
 
 renderWatchlist();
+
 load();
+
 </script>
 
 </body>
