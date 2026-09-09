@@ -16,307 +16,576 @@ export default async function handler(req, res) {
 
   if (!apiKey) {
     return res.status(500).json({
-      error: "Missing Alpha Vantage API key",
-      message: "ALPHA_VANTAGE_API_KEY is not configured in Vercel."
+      error: "Missing Alpha Vantage API key"
     });
   }
 
   try {
-    const url =
-      "https://www.alphavantage.co/query" +
-      `?function=TIME_SERIES_DAILY` +
-      `&symbol=${encodeURIComponent(symbol)}` +
-      `&outputsize=compact` +
-      `&apikey=${encodeURIComponent(apiKey)}`;
+    // ==========================================================
+    // HELPERS
+    // ==========================================================
 
-    const response = await fetch(url);
-    const data = await response.json();
-
-    // Alpha Vantage errors / rate limits
-    if (data["Error Message"]) {
-      return res.status(400).json({
-        error: "Alpha Vantage error",
-        message: data["Error Message"]
+    const av = async (params) => {
+      const query = new URLSearchParams({
+        ...params,
+        apikey: apiKey
       });
-    }
 
-    if (data.Note) {
-      return res.status(429).json({
-        error: "Alpha Vantage rate limit",
-        message: data.Note
-      });
-    }
-
-    if (data.Information) {
-      return res.status(429).json({
-        error: "Alpha Vantage information",
-        message: data.Information
-      });
-    }
-
-    const timeSeries = data["Time Series (Daily)"];
-
-    if (!timeSeries) {
-      return res.status(502).json({
-        error: "No daily market data returned",
-        details: JSON.stringify(data)
-      });
-    }
-
-    const dates = Object.keys(timeSeries).sort();
-
-    if (dates.length < 30) {
-      return res.status(502).json({
-        error: "Not enough market history",
-        message: `Only ${dates.length} daily observations were returned.`
-      });
-    }
-
-    // ---------------------------------------------------------
-    // Convert Alpha Vantage data
-    // ---------------------------------------------------------
-
-    const history = dates
-      .map((date) => ({
-        date,
-        open: Number(timeSeries[date]["1. open"]),
-        high: Number(timeSeries[date]["2. high"]),
-        low: Number(timeSeries[date]["3. low"]),
-        close: Number(timeSeries[date]["4. close"]),
-        volume: Number(timeSeries[date]["5. volume"])
-      }))
-      .filter(
-        (x) =>
-          Number.isFinite(x.open) &&
-          Number.isFinite(x.high) &&
-          Number.isFinite(x.low) &&
-          Number.isFinite(x.close)
+      const response = await fetch(
+        `https://www.alphavantage.co/query?${query.toString()}`
       );
 
-    const closes = history.map((x) => x.close);
+      if (!response.ok) {
+        throw new Error(
+          `Alpha Vantage HTTP ${response.status}`
+        );
+      }
 
-    // ---------------------------------------------------------
-    // Helpers
-    // ---------------------------------------------------------
+      const data = await response.json();
 
-    function round(value, decimals = 2) {
-      if (!Number.isFinite(value)) return null;
+      if (data.Note) {
+        throw new Error(
+          "Alpha Vantage daily request limit reached."
+        );
+      }
+
+      if (data.Information) {
+        throw new Error(
+          data.Information
+        );
+      }
+
+      if (data["Error Message"]) {
+        throw new Error(
+          data["Error Message"]
+        );
+      }
+
+      return data;
+    };
+
+    const round = (value, decimals = 2) => {
+      const n = Number(value);
+
+      if (!Number.isFinite(n)) {
+        return null;
+      }
+
       const factor = 10 ** decimals;
-      return Math.round(value * factor) / factor;
-    }
 
-    function average(values) {
-      const valid = values.filter(Number.isFinite);
-      if (!valid.length) return null;
-      return valid.reduce((a, b) => a + b, 0) / valid.length;
-    }
+      return Math.round(n * factor) / factor;
+    };
 
-    function sma(values, period) {
-      if (values.length < period) return null;
-      return average(values.slice(-period));
-    }
+    const average = (values) => {
+      const valid = values.filter(
+        Number.isFinite
+      );
 
-    function calculateRSI(values, period = 14) {
-      if (values.length <= period) return null;
-
-      let gains = 0;
-      let losses = 0;
-
-      for (let i = 1; i <= period; i++) {
-        const change = values[i] - values[i - 1];
-
-        if (change >= 0) gains += change;
-        else losses += Math.abs(change);
+      if (!valid.length) {
+        return null;
       }
 
-      let avgGain = gains / period;
-      let avgLoss = losses / period;
+      return (
+        valid.reduce(
+          (a, b) => a + b,
+          0
+        ) / valid.length
+      );
+    };
 
-      for (let i = period + 1; i < values.length; i++) {
-        const change = values[i] - values[i - 1];
+    const growth = (current, previous) => {
+      const c = Number(current);
+      const p = Number(previous);
 
-        const gain = Math.max(change, 0);
-        const loss = Math.max(-change, 0);
-
-        avgGain = (avgGain * (period - 1) + gain) / period;
-        avgLoss = (avgLoss * (period - 1) + loss) / period;
+      if (
+        !Number.isFinite(c) ||
+        !Number.isFinite(p) ||
+        p === 0
+      ) {
+        return null;
       }
 
-      if (avgLoss === 0) return 100;
+      return ((c - p) / Math.abs(p)) * 100;
+    };
 
-      const rs = avgGain / avgLoss;
+    const firstNumber = (...values) => {
+      for (const value of values) {
+        const n = Number(value);
 
-      return 100 - 100 / (1 + rs);
-    }
-
-    function ema(values, period) {
-      if (values.length < period) return null;
-
-      const multiplier = 2 / (period + 1);
-
-      let result = average(values.slice(0, period));
-
-      for (let i = period; i < values.length; i++) {
-        result =
-          (values[i] - result) * multiplier + result;
-      }
-
-      return result;
-    }
-
-    function calculateMACD(values) {
-      if (values.length < 35) {
-        return {
-          macd: null,
-          signal: null,
-          histogram: null
-        };
-      }
-
-      const macdSeries = [];
-
-      for (let i = 26; i <= values.length; i++) {
-        const slice = values.slice(0, i);
-
-        const fast = ema(slice, 12);
-        const slow = ema(slice, 26);
-
-        if (fast !== null && slow !== null) {
-          macdSeries.push(fast - slow);
+        if (Number.isFinite(n)) {
+          return n;
         }
       }
 
-      const macd = macdSeries[macdSeries.length - 1];
+      return null;
+    };
 
-      const signal =
-        macdSeries.length >= 9
-          ? ema(macdSeries, 9)
-          : null;
+    // ==========================================================
+    // TECHNICAL DATA
+    // ==========================================================
 
-      const histogram =
-        macd !== null && signal !== null
-          ? macd - signal
-          : null;
+    const dailyPromise = av({
+      function: "TIME_SERIES_DAILY",
+      symbol,
+      outputsize: "compact"
+    });
 
-      return {
-        macd,
-        signal,
-        histogram
-      };
+    // ==========================================================
+    // FUNDAMENTAL DATA
+    // ==========================================================
+
+    const overviewPromise = av({
+      function: "OVERVIEW",
+      symbol
+    });
+
+    const incomePromise = av({
+      function: "INCOME_STATEMENT",
+      symbol
+    });
+
+    // ==========================================================
+    // NEWS
+    // ==========================================================
+
+    const newsPromise = av({
+      function: "NEWS_SENTIMENT",
+      tickers: symbol,
+      sort: "LATEST",
+      limit: "8"
+    });
+
+    const [
+      dailyData,
+      overviewData,
+      incomeData,
+      newsData
+    ] = await Promise.all([
+      dailyPromise,
+      overviewPromise,
+      incomePromise,
+      newsPromise
+    ]);
+
+    // ==========================================================
+    // DAILY PRICE DATA
+    // ==========================================================
+
+    const timeSeries =
+      dailyData["Time Series (Daily)"];
+
+    if (!timeSeries) {
+      throw new Error(
+        "No daily market data returned."
+      );
     }
 
-    // ---------------------------------------------------------
-    // Calculate indicators for every historical point
-    // ---------------------------------------------------------
+    const dates =
+      Object.keys(timeSeries)
+        .sort();
 
-    for (let i = 0; i < history.length; i++) {
-      const values = history
-        .slice(0, i + 1)
-        .map((x) => x.close);
-
-      history[i].sma20 = sma(values, 20);
-      history[i].sma50 = sma(values, 50);
-      history[i].rsi = calculateRSI(values, 14);
-
-      const macd = calculateMACD(values);
-
-      history[i].macd = macd.macd;
-      history[i].macdSignal = macd.signal;
-      history[i].macdHistogram = macd.histogram;
+    if (dates.length < 30) {
+      throw new Error(
+        "Not enough daily market history returned."
+      );
     }
 
-    const latest = history[history.length - 1];
-    const previous = history[history.length - 2];
+    const history =
+      dates
+        .map((date) => ({
+          date,
 
-    const price = latest.close;
+          open: Number(
+            timeSeries[date]["1. open"]
+          ),
 
-    const sma20 = sma(closes, 20);
-    const sma50 = sma(closes, 50);
-    const rsi = calculateRSI(closes, 14);
-    const macd = calculateMACD(closes);
+          high: Number(
+            timeSeries[date]["2. high"]
+          ),
 
-    // ---------------------------------------------------------
-    // Price change
-    // ---------------------------------------------------------
+          low: Number(
+            timeSeries[date]["3. low"]
+          ),
+
+          close: Number(
+            timeSeries[date]["4. close"]
+          ),
+
+          volume: Number(
+            timeSeries[date]["5. volume"]
+          )
+        }))
+        .filter(
+          (x) =>
+            Number.isFinite(x.close)
+        );
+
+    const closes =
+      history.map(
+        (x) => x.close
+      );
+
+    const latest =
+      history[history.length - 1];
+
+    const previous =
+      history[history.length - 2];
+
+    const price =
+      latest.close;
 
     const change =
-      previous && previous.close
+      previous
         ? price - previous.close
         : 0;
 
     const changePct =
       previous && previous.close
-        ? (change / previous.close) * 100
+        ? (
+            change /
+            previous.close
+          ) * 100
         : 0;
 
-    // ---------------------------------------------------------
-    // Support / Resistance
-    // ---------------------------------------------------------
+    // ==========================================================
+    // TECHNICAL INDICATORS
+    // ==========================================================
 
-    const recent20 = history.slice(-20);
+    const sma = (values, period) => {
+      if (values.length < period) {
+        return null;
+      }
 
-    const support = Math.min(
-      ...recent20.map((x) => x.low)
-    );
+      return average(
+        values.slice(-period)
+      );
+    };
 
-    const resistance = Math.max(
-      ...recent20.map((x) => x.high)
-    );
+    const calculateRSI = (
+      values,
+      period = 14
+    ) => {
+      if (values.length <= period) {
+        return null;
+      }
 
-    const recentLow = Math.min(
-      ...history.slice(-10).map((x) => x.low)
-    );
+      let gains = 0;
+      let losses = 0;
 
-    const recentHigh = Math.max(
-      ...history.slice(-10).map((x) => x.high)
-    );
+      for (
+        let i = 1;
+        i <= period;
+        i++
+      ) {
+        const change =
+          values[i] -
+          values[i - 1];
 
-    // ---------------------------------------------------------
-    // Market structure
-    // ---------------------------------------------------------
+        if (change >= 0) {
+          gains += change;
+        } else {
+          losses += Math.abs(change);
+        }
+      }
 
-    const firstHalf = history.slice(-20, -10);
-    const secondHalf = history.slice(-10);
+      let avgGain =
+        gains / period;
 
-    const firstHigh = Math.max(
-      ...firstHalf.map((x) => x.high)
-    );
+      let avgLoss =
+        losses / period;
 
-    const secondHigh = Math.max(
-      ...secondHalf.map((x) => x.high)
-    );
+      for (
+        let i = period + 1;
+        i < values.length;
+        i++
+      ) {
+        const change =
+          values[i] -
+          values[i - 1];
 
-    const firstLow = Math.min(
-      ...firstHalf.map((x) => x.low)
-    );
+        const gain =
+          Math.max(change, 0);
 
-    const secondLow = Math.min(
-      ...secondHalf.map((x) => x.low)
-    );
+        const loss =
+          Math.max(-change, 0);
 
-    const higherHigh = secondHigh > firstHigh;
-    const higherLow = secondLow > firstLow;
+        avgGain =
+          (
+            avgGain *
+            (period - 1) +
+            gain
+          ) / period;
 
-    const lowerHigh = secondHigh < firstHigh;
-    const lowerLow = secondLow < firstLow;
+        avgLoss =
+          (
+            avgLoss *
+            (period - 1) +
+            loss
+          ) / period;
+      }
 
-    let structure = "MIXED";
-    let structureDirection = "NEUTRAL";
+      if (avgLoss === 0) {
+        return 100;
+      }
 
-    if (higherHigh && higherLow) {
-      structure = "HIGHER HIGH + HIGHER LOW";
-      structureDirection = "BULLISH";
-    } else if (lowerHigh && lowerLow) {
-      structure = "LOWER HIGH + LOWER LOW";
-      structureDirection = "BEARISH";
+      const rs =
+        avgGain / avgLoss;
+
+      return (
+        100 -
+        100 / (1 + rs)
+      );
+    };
+
+    const ema = (
+      values,
+      period
+    ) => {
+      if (values.length < period) {
+        return null;
+      }
+
+      const multiplier =
+        2 / (period + 1);
+
+      let result =
+        average(
+          values.slice(0, period)
+        );
+
+      for (
+        let i = period;
+        i < values.length;
+        i++
+      ) {
+        result =
+          (
+            values[i] -
+            result
+          ) *
+          multiplier +
+          result;
+      }
+
+      return result;
+    };
+
+    const calculateMACD =
+      (values) => {
+        if (values.length < 35) {
+          return {
+            macd: null,
+            signal: null,
+            histogram: null
+          };
+        }
+
+        const macdValues = [];
+
+        for (
+          let i = 26;
+          i <= values.length;
+          i++
+        ) {
+          const slice =
+            values.slice(0, i);
+
+          const fast =
+            ema(slice, 12);
+
+          const slow =
+            ema(slice, 26);
+
+          if (
+            fast !== null &&
+            slow !== null
+          ) {
+            macdValues.push(
+              fast - slow
+            );
+          }
+        }
+
+        const macd =
+          macdValues[
+            macdValues.length - 1
+          ];
+
+        const signal =
+          macdValues.length >= 9
+            ? ema(macdValues, 9)
+            : null;
+
+        return {
+          macd,
+          signal,
+
+          histogram:
+            macd !== null &&
+            signal !== null
+              ? macd - signal
+              : null
+        };
+      };
+
+    const sma20 =
+      sma(closes, 20);
+
+    const sma50 =
+      sma(closes, 50);
+
+    const rsi =
+      calculateRSI(closes);
+
+    const macd =
+      calculateMACD(closes);
+
+    // ==========================================================
+    // INDICATORS PER HISTORY POINT
+    // ==========================================================
+
+    for (
+      let i = 0;
+      i < history.length;
+      i++
+    ) {
+      const values =
+        history
+          .slice(0, i + 1)
+          .map(
+            (x) => x.close
+          );
+
+      history[i].sma20 =
+        sma(values, 20);
+
+      history[i].sma50 =
+        sma(values, 50);
+
+      history[i].rsi =
+        calculateRSI(values);
+
+      const m =
+        calculateMACD(values);
+
+      history[i].macd =
+        m.macd;
+
+      history[i].macdSignal =
+        m.signal;
+
+      history[i].macdHistogram =
+        m.histogram;
     }
 
-    // ---------------------------------------------------------
-    // Trend
-    // ---------------------------------------------------------
+    // ==========================================================
+    // SUPPORT / RESISTANCE
+    // ==========================================================
 
-    let trend = "SIDEWAYS";
-    let trendScore = 50;
+    const recent20 =
+      history.slice(-20);
+
+    const support =
+      Math.min(
+        ...recent20.map(
+          (x) => x.low
+        )
+      );
+
+    const resistance =
+      Math.max(
+        ...recent20.map(
+          (x) => x.high
+        )
+      );
+
+    // ==========================================================
+    // MARKET STRUCTURE
+    // ==========================================================
+
+    const firstHalf =
+      history.slice(-20, -10);
+
+    const secondHalf =
+      history.slice(-10);
+
+    const firstHigh =
+      Math.max(
+        ...firstHalf.map(
+          (x) => x.high
+        )
+      );
+
+    const secondHigh =
+      Math.max(
+        ...secondHalf.map(
+          (x) => x.high
+        )
+      );
+
+    const firstLow =
+      Math.min(
+        ...firstHalf.map(
+          (x) => x.low
+        )
+      );
+
+    const secondLow =
+      Math.min(
+        ...secondHalf.map(
+          (x) => x.low
+        )
+      );
+
+    const higherHigh =
+      secondHigh > firstHigh;
+
+    const higherLow =
+      secondLow > firstLow;
+
+    const lowerHigh =
+      secondHigh < firstHigh;
+
+    const lowerLow =
+      secondLow < firstLow;
+
+    let structure =
+      "MIXED";
+
+    let structureDirection =
+      "NEUTRAL";
+
+    if (
+      higherHigh &&
+      higherLow
+    ) {
+      structure =
+        "HIGHER HIGH + HIGHER LOW";
+
+      structureDirection =
+        "BULLISH";
+    }
+
+    if (
+      lowerHigh &&
+      lowerLow
+    ) {
+      structure =
+        "LOWER HIGH + LOWER LOW";
+
+      structureDirection =
+        "BEARISH";
+    }
+
+    // ==========================================================
+    // TREND
+    // ==========================================================
+
+    let trend =
+      "SIDEWAYS";
+
+    let trendScore =
+      50;
 
     if (
       sma20 !== null &&
@@ -326,931 +595,1535 @@ export default async function handler(req, res) {
         price > sma20 &&
         sma20 > sma50
       ) {
-        trend = "BULLISH";
-        trendScore = 80;
+        trend =
+          "BULLISH";
+
+        trendScore =
+          80;
       } else if (
         price < sma20 &&
         sma20 < sma50
       ) {
-        trend = "BEARISH";
-        trendScore = 20;
-      } else {
-        trend = "SIDEWAYS";
-        trendScore = 50;
+        trend =
+          "BEARISH";
+
+        trendScore =
+          20;
       }
     }
 
-    let shortTermTrend = "SIDEWAYS";
-
-    if (
-      sma20 !== null &&
+    const shortTermTrend =
       price > sma20
-    ) {
-      shortTermTrend = "BULLISH";
-    } else if (
-      sma20 !== null &&
-      price < sma20
-    ) {
-      shortTermTrend = "BEARISH";
-    }
+        ? "BULLISH"
+        : price < sma20
+          ? "BEARISH"
+          : "SIDEWAYS";
 
-    // ---------------------------------------------------------
-    // Volume
-    // ---------------------------------------------------------
+    // ==========================================================
+    // VOLUME
+    // ==========================================================
 
-    const volumes = history.map((x) => x.volume);
+    const volumes =
+      history.map(
+        (x) => x.volume
+      );
 
-    const avgVolume20 = average(
-      volumes.slice(-21, -1)
-    );
+    const avgVolume20 =
+      average(
+        volumes.slice(-21, -1)
+      );
 
     const relativeVolume =
-      avgVolume20 && avgVolume20 > 0
-        ? latest.volume / avgVolume20
+      avgVolume20
+        ? latest.volume /
+          avgVolume20
         : null;
 
-    let volumeConfirmation = "NEUTRAL";
+    let volumeConfirmation =
+      "NEUTRAL";
 
-    if (relativeVolume !== null) {
-      if (relativeVolume >= 1.5) {
-        volumeConfirmation = "STRONG";
-      } else if (relativeVolume >= 1.1) {
-        volumeConfirmation = "POSITIVE";
-      } else if (relativeVolume < 0.8) {
-        volumeConfirmation = "WEAK";
-      }
+    if (
+      relativeVolume >= 1.5
+    ) {
+      volumeConfirmation =
+        "STRONG";
+    } else if (
+      relativeVolume >= 1.1
+    ) {
+      volumeConfirmation =
+        "POSITIVE";
+    } else if (
+      relativeVolume < 0.8
+    ) {
+      volumeConfirmation =
+        "WEAK";
     }
 
-    // ---------------------------------------------------------
-    // Candlestick analysis
-    // ---------------------------------------------------------
+    // ==========================================================
+    // CANDLE
+    // ==========================================================
 
-    const candleBody =
-      Math.abs(latest.close - latest.open);
+    const body =
+      Math.abs(
+        latest.close -
+        latest.open
+      );
 
-    const candleRange =
-      latest.high - latest.low;
+    const range =
+      latest.high -
+      latest.low;
 
     const upperWick =
       latest.high -
-      Math.max(latest.open, latest.close);
+      Math.max(
+        latest.open,
+        latest.close
+      );
 
     const lowerWick =
-      Math.min(latest.open, latest.close) -
+      Math.min(
+        latest.open,
+        latest.close
+      ) -
       latest.low;
 
-    const bullishCandle =
-      latest.close > latest.open;
+    let candlePattern =
+      "NORMAL";
 
-    const bearishCandle =
-      latest.close < latest.open;
+    let candleSignal =
+      "NEUTRAL";
 
-    let candlePattern = "NORMAL";
-    let candleSignal = "NEUTRAL";
-    let candleStrength = "NORMAL";
+    let candleStrength =
+      "NORMAL";
 
     if (
-      candleRange > 0 &&
-      candleBody / candleRange < 0.1
+      range > 0 &&
+      body / range < 0.1
     ) {
-      candlePattern = "DOJI";
-      candleSignal = "NEUTRAL";
-      candleStrength = "WEAK";
+      candlePattern =
+        "DOJI";
+
+      candleStrength =
+        "WEAK";
     }
 
     if (
-      candleRange > 0 &&
-      lowerWick > candleBody * 2 &&
-      upperWick < candleBody
+      range > 0 &&
+      lowerWick > body * 2 &&
+      upperWick < body
     ) {
-      candlePattern = "HAMMER";
-      candleSignal = "BULLISH";
-      candleStrength = "STRONG";
+      candlePattern =
+        "HAMMER";
+
+      candleSignal =
+        "BULLISH";
+
+      candleStrength =
+        "STRONG";
     }
 
     if (
-      candleRange > 0 &&
-      upperWick > candleBody * 2 &&
-      lowerWick < candleBody
+      range > 0 &&
+      upperWick > body * 2 &&
+      lowerWick < body
     ) {
-      candlePattern = "SHOOTING STAR";
-      candleSignal = "BEARISH";
-      candleStrength = "STRONG";
+      candlePattern =
+        "SHOOTING STAR";
+
+      candleSignal =
+        "BEARISH";
+
+      candleStrength =
+        "STRONG";
     }
 
     if (
-      bullishCandle &&
+      latest.close >
+        latest.open &&
       previous &&
-      previous.close < previous.open &&
-      latest.open <= previous.close &&
-      latest.close >= previous.open
+      previous.close <
+        previous.open &&
+      latest.open <=
+        previous.close &&
+      latest.close >=
+        previous.open
     ) {
-      candlePattern = "BULLISH ENGULFING";
-      candleSignal = "BULLISH";
-      candleStrength = "STRONG";
+      candlePattern =
+        "BULLISH ENGULFING";
+
+      candleSignal =
+        "BULLISH";
+
+      candleStrength =
+        "STRONG";
     }
 
     if (
-      bearishCandle &&
+      latest.close <
+        latest.open &&
       previous &&
-      previous.close > previous.open &&
-      latest.open >= previous.close &&
-      latest.close <= previous.open
+      previous.close >
+        previous.open &&
+      latest.open >=
+        previous.close &&
+      latest.close <=
+        previous.open
     ) {
-      candlePattern = "BEARISH ENGULFING";
-      candleSignal = "BEARISH";
-      candleStrength = "STRONG";
+      candlePattern =
+        "BEARISH ENGULFING";
+
+      candleSignal =
+        "BEARISH";
+
+      candleStrength =
+        "STRONG";
     }
 
-    if (
-      candleRange > 0 &&
-      candleBody / candleRange > 0.7
-    ) {
-      if (bullishCandle) {
-        candlePattern = "STRONG BULLISH CANDLE";
-        candleSignal = "BULLISH";
-        candleStrength = "STRONG";
-      } else if (bearishCandle) {
-        candlePattern = "STRONG BEARISH CANDLE";
-        candleSignal = "BEARISH";
-        candleStrength = "STRONG";
-      }
-    }
+    // ==========================================================
+    // BREAKOUT / ENTRY
+    // ==========================================================
 
-    // ---------------------------------------------------------
-    // Chart formations
-    // ---------------------------------------------------------
+    const breakoutLevel =
+      resistance;
 
-    const formations = [];
-
-    const lows = history.slice(-30).map((x) => x.low);
-    const highs = history.slice(-30).map((x) => x.high);
-
-    // Double Bottom
-    if (lows.length >= 20) {
-      const leftLow = Math.min(...lows.slice(0, 12));
-      const rightLow = Math.min(...lows.slice(12));
-
-      const lowDifference =
-        Math.abs(leftLow - rightLow) /
-        Math.max(leftLow, rightLow);
-
-      if (lowDifference < 0.03) {
-        formations.push({
-          name: "Double Bottom",
-          type: "BULLISH",
-          confidence: Math.round(
-            Math.max(0, 100 - lowDifference * 2000)
-          )
-        });
-      }
-    }
-
-    // Double Top
-    if (highs.length >= 20) {
-      const leftHigh = Math.max(...highs.slice(0, 12));
-      const rightHigh = Math.max(...highs.slice(12));
-
-      const highDifference =
-        Math.abs(leftHigh - rightHigh) /
-        Math.max(leftHigh, rightHigh);
-
-      if (highDifference < 0.03) {
-        formations.push({
-          name: "Double Top",
-          type: "BEARISH",
-          confidence: Math.round(
-            Math.max(0, 100 - highDifference * 2000)
-          )
-        });
-      }
-    }
-
-    // Ascending Triangle
-    if (
-      higherLow &&
-      Math.abs(secondHigh - firstHigh) /
-        firstHigh <
-        0.025
-    ) {
-      formations.push({
-        name: "Ascending Triangle",
-        type: "BULLISH",
-        confidence: 72
-      });
-    }
-
-    // Descending Triangle
-    if (
-      lowerHigh &&
-      Math.abs(secondLow - firstLow) /
-        firstLow <
-        0.025
-    ) {
-      formations.push({
-        name: "Descending Triangle",
-        type: "BEARISH",
-        confidence: 72
-      });
-    }
-
-    // Cup & Handle heuristic
-    if (history.length >= 60) {
-      const last60 = history.slice(-60);
-
-      const cupStart =
-        last60[0].close;
-
-      const cupMiddle =
-        Math.min(
-          ...last60
-            .slice(15, 45)
-            .map((x) => x.close)
-        );
-
-      const cupEnd =
-        last60[last60.length - 1].close;
-
-      if (
-        cupMiddle < cupStart * 0.92 &&
-        cupEnd > cupMiddle * 1.08 &&
-        Math.abs(cupEnd - cupStart) /
-          cupStart <
-          0.08
-      ) {
-        formations.push({
-          name: "Cup & Handle",
-          type: "BULLISH",
-          confidence: 68
-        });
-      }
-    }
-
-    // ---------------------------------------------------------
-    // Breakout
-    // ---------------------------------------------------------
-
-    const breakoutLevel = resistance;
-
-    const breakoutTrigger =
+    const buyTriggerPrice =
       breakoutLevel * 1.002;
 
     const breakoutConfirmed =
-      price > breakoutTrigger;
+      price >
+      buyTriggerPrice;
 
-    // ---------------------------------------------------------
-    // Pullback setup
-    // ---------------------------------------------------------
+    const entryLow =
+      support;
 
-    const pullbackLow = support;
-
-    const pullbackHigh =
-      sma20 !== null
-        ? Math.max(sma20, support)
-        : support;
+    const entryHigh =
+      Math.max(
+        support,
+        sma20 || support
+      );
 
     const preferredEntry =
-      (pullbackLow + pullbackHigh) / 2;
+      (
+        entryLow +
+        entryHigh
+      ) / 2;
 
     const inPullbackZone =
-      price >= pullbackLow &&
-      price <= pullbackHigh * 1.01;
+      price >= entryLow &&
+      price <= entryHigh * 1.01;
 
-    // ---------------------------------------------------------
-    // Targets and invalidation
-    // ---------------------------------------------------------
-
-    const range =
+    const riskRange =
       Math.max(
         resistance - support,
         price * 0.05
       );
 
     const target1 =
-      resistance + range * 0.5;
+      resistance +
+      riskRange * 0.5;
 
     const target2 =
-      resistance + range;
+      resistance +
+      riskRange;
 
-    const invalidation = support;
+    const invalidation =
+      support;
 
     const riskPerShare =
       Math.max(
-        price - invalidation,
+        price -
+        invalidation,
         0.01
       );
 
-    const rewardToTarget1 =
-      Math.max(target1 - price, 0);
-
-    const rewardToTarget2 =
-      Math.max(target2 - price, 0);
-
     const riskRewardTarget1 =
-      rewardToTarget1 / riskPerShare;
+      Math.max(
+        target1 - price,
+        0
+      ) /
+      riskPerShare;
 
     const riskRewardTarget2 =
-      rewardToTarget2 / riskPerShare;
+      Math.max(
+        target2 - price,
+        0
+      ) /
+      riskPerShare;
 
-    let riskRewardQuality = "POOR";
+    let riskRewardQuality =
+      "POOR";
 
     if (
-      riskRewardTarget1 >= 3 &&
-      riskRewardTarget2 >= 4
+      riskRewardTarget1 >= 3
     ) {
-      riskRewardQuality = "EXCELLENT";
+      riskRewardQuality =
+        "EXCELLENT";
     } else if (
-      riskRewardTarget1 >= 2 &&
-      riskRewardTarget2 >= 3
+      riskRewardTarget1 >= 2
     ) {
-      riskRewardQuality = "ATTRACTIVE";
+      riskRewardQuality =
+        "ATTRACTIVE";
     } else if (
       riskRewardTarget1 >= 1.5
     ) {
-      riskRewardQuality = "ACCEPTABLE";
+      riskRewardQuality =
+        "ACCEPTABLE";
     }
 
-    // ---------------------------------------------------------
-    // Score
-    // ---------------------------------------------------------
+    // ==========================================================
+    // FUNDAMENTAL DATA
+    // ==========================================================
 
-    let score = 50;
+    const companyName =
+      overviewData.Name ||
+      symbol;
 
-    if (trend === "BULLISH") score += 12;
-    if (trend === "BEARISH") score -= 12;
+    const sector =
+      overviewData.Sector ||
+      "—";
 
-    if (structureDirection === "BULLISH") {
-      score += 10;
-    }
+    const industry =
+      overviewData.Industry ||
+      "—";
 
-    if (structureDirection === "BEARISH") {
-      score -= 10;
-    }
+    const marketCap =
+      firstNumber(
+        overviewData.MarketCapitalization
+      );
 
-    if (
-      shortTermTrend === "BULLISH"
-    ) {
-      score += 6;
-    }
+    const pe =
+      firstNumber(
+        overviewData.PERatio
+      );
 
-    if (
-      shortTermTrend === "BEARISH"
-    ) {
-      score -= 6;
-    }
+    const peg =
+      firstNumber(
+        overviewData.PEGRatio
+      );
 
-    if (rsi !== null) {
-      if (rsi >= 50 && rsi <= 70) {
-        score += 8;
-      }
+    const eps =
+      firstNumber(
+        overviewData.EPS
+      );
 
-      if (rsi > 75) {
-        score -= 5;
-      }
+    const bookValue =
+      firstNumber(
+        overviewData.BookValue
+      );
 
-      if (rsi < 30) {
-        score += 3;
-      }
-    }
+    const profitMargin =
+      firstNumber(
+        overviewData.ProfitMargin
+      );
 
-    if (
-      macd.histogram !== null &&
-      macd.histogram > 0
-    ) {
-      score += 8;
-    }
+    const operatingMargin =
+      firstNumber(
+        overviewData.OperatingMarginTTM,
+        overviewData.OperatingMargin
+      );
 
-    if (
-      macd.histogram !== null &&
-      macd.histogram < 0
-    ) {
-      score -= 8;
-    }
+    const returnOnAssets =
+      firstNumber(
+        overviewData.ReturnOnAssetsTTM
+      );
 
-    if (
-      candleSignal === "BULLISH"
-    ) {
-      score += 5;
-    }
+    const returnOnEquity =
+      firstNumber(
+        overviewData.ReturnOnEquityTTM
+      );
 
-    if (
-      candleSignal === "BEARISH"
-    ) {
-      score -= 5;
-    }
+    const revenueTTM =
+      firstNumber(
+        overviewData.RevenueTTM
+      );
 
-    if (
-      relativeVolume !== null &&
-      relativeVolume >= 1.2
-    ) {
-      score += 4;
-    }
+    const quarterlyRevenueGrowth =
+      firstNumber(
+        overviewData.QuarterlyRevenueGrowthYOY
+      );
 
-    if (formations.some(
-      (x) => x.type === "BULLISH"
-    )) {
-      score += 5;
-    }
+    const quarterlyEarningsGrowth =
+      firstNumber(
+        overviewData.QuarterlyEarningsGrowthYOY
+      );
 
-    if (formations.some(
-      (x) => x.type === "BEARISH"
-    )) {
-      score -= 5;
-    }
+    const dividendYield =
+      firstNumber(
+        overviewData.DividendYield
+      );
 
-    score = Math.max(
-      0,
-      Math.min(100, Math.round(score))
-    );
+    // ==========================================================
+    // ANNUAL INCOME STATEMENTS
+    // ==========================================================
 
-    // ---------------------------------------------------------
-    // Bullish / bearish setup
-    // ---------------------------------------------------------
-
-    const bullishSetup =
-      score >= 58 &&
-      trend !== "BEARISH" &&
-      structureDirection !== "BEARISH";
-
-    const bearishSetup =
-      score <= 42 &&
-      trend !== "BULLISH" &&
-      structureDirection !== "BULLISH";
-
-    // ---------------------------------------------------------
-    // Buy conditions
-    // ---------------------------------------------------------
-
-    const conditions = {
-      bullishTrend:
-        trend === "BULLISH",
-
-      bullishStructure:
-        structureDirection === "BULLISH",
-
-      positiveMACD:
-        macd.histogram !== null &&
-        macd.histogram > 0,
-
-      healthyRSI:
-        rsi !== null &&
-        rsi >= 45 &&
-        rsi <= 72,
-
-      bullishCandle:
-        candleSignal === "BULLISH" ||
-        bullishCandle,
-
-      attractiveRiskReward:
-        riskRewardTarget1 >= 1.5
-    };
-
-    const conditionsMet =
-      Object.values(conditions)
-        .filter(Boolean)
-        .length;
-
-    const conditionsTotal =
-      Object.keys(conditions).length;
-
-    // ---------------------------------------------------------
-    // Decision engine
-    // ---------------------------------------------------------
-
-    let decision = "WATCH";
-    let decisionReason =
-      "Setup is developing; wait for confirmation.";
-
-    let activeStrategy = "WAIT";
-
-    if (
-      bearishSetup &&
-      score <= 35
-    ) {
-      decision = "SELL";
-      decisionReason =
-        "Bearish trend/structure is dominant.";
-      activeStrategy = "BEARISH";
-    } else if (
-      bullishSetup &&
-      breakoutConfirmed &&
-      score >= 75 &&
-      riskRewardTarget1 >= 1.5
-    ) {
-      decision = "STRONG BUY";
-      decisionReason =
-        "Bullish setup with confirmed breakout and attractive risk/reward.";
-      activeStrategy = "BREAKOUT";
-    } else if (
-      bullishSetup &&
-      inPullbackZone &&
-      riskRewardTarget1 >= 1.8 &&
-      score >= 60
-    ) {
-      decision = "BUY";
-      decisionReason =
-        "Bullish setup is inside the preferred pullback entry zone.";
-      activeStrategy = "PULLBACK";
-    } else if (
-      bullishSetup &&
-      score >= 68 &&
-      (
-        riskRewardTarget1 >= 2 ||
-        riskRewardTarget2 >= 3
+    const annualReports =
+      Array.isArray(
+        incomeData.annualReports
       )
+        ? incomeData.annualReports
+        : [];
+
+    const annualFinancials =
+      annualReports
+        .slice(0, 5)
+        .map((report) => ({
+          fiscalDateEnding:
+            report.fiscalDateEnding,
+
+          revenue:
+            firstNumber(
+              report.totalRevenue
+            ),
+
+          grossProfit:
+            firstNumber(
+              report.grossProfit
+            ),
+
+          operatingIncome:
+            firstNumber(
+              report.operatingIncome
+            ),
+
+          netIncome:
+            firstNumber(
+              report.netIncome,
+              report.netIncomeApplicableToCommonShares
+            ),
+
+          eps:
+            firstNumber(
+              report.reportedEPS,
+              report.eps
+            ),
+
+          ebitda:
+            firstNumber(
+              report.ebitda
+            )
+        }));
+
+    const latestAnnual =
+      annualFinancials[0];
+
+    const previousAnnual =
+      annualFinancials[1];
+
+    const revenueGrowth =
+      latestAnnual &&
+      previousAnnual
+        ? growth(
+            latestAnnual.revenue,
+            previousAnnual.revenue
+          )
+        : quarterlyRevenueGrowth;
+
+    const profitGrowth =
+      latestAnnual &&
+      previousAnnual
+        ? growth(
+            latestAnnual.netIncome,
+            previousAnnual.netIncome
+          )
+        : quarterlyEarningsGrowth;
+
+    const epsGrowth =
+      latestAnnual &&
+      previousAnnual &&
+      latestAnnual.eps !== null &&
+      previousAnnual.eps !== null
+        ? growth(
+            latestAnnual.eps,
+            previousAnnual.eps
+          )
+        : quarterlyEarningsGrowth;
+
+    const latestProfitMargin =
+      latestAnnual &&
+      latestAnnual.revenue &&
+      latestAnnual.netIncome !== null
+        ? (
+            latestAnnual.netIncome /
+            latestAnnual.revenue
+          ) * 100
+        : profitMargin !== null
+          ? profitMargin * 100
+          : null;
+
+    // ==========================================================
+    // GROWTH TREND
+    // ==========================================================
+
+    let growthScore =
+      50;
+
+    if (
+      revenueGrowth !== null
     ) {
-      decision = "BUY";
-      decisionReason =
-        "Strong bullish setup with attractive upside and risk/reward.";
-      activeStrategy = "PULLBACK / BREAKOUT";
-    } else if (
-      bullishSetup &&
-      score >= 58
-    ) {
-      decision = "WATCH";
-      decisionReason =
-        "Bullish setup is developing but entry confirmation is still needed.";
-      activeStrategy = "WAIT FOR ENTRY";
-    } else if (
-      bearishSetup
-    ) {
-      decision = "WATCH";
-      decisionReason =
-        "Bearish signals are present, but confirmation is incomplete.";
-      activeStrategy = "WAIT";
-    } else {
-      decision = "AVOID";
-      decisionReason =
-        "Signals are mixed and the setup lacks sufficient edge.";
-      activeStrategy = "WAIT";
-    }
-
-    // ---------------------------------------------------------
-    // Trigger information
-    // ---------------------------------------------------------
-
-    const buyTriggerPrice =
-      breakoutTrigger;
-
-    const buyTriggerConfirmed =
-      breakoutConfirmed;
-
-    const triggerReason =
-      breakoutConfirmed
-        ? "Price has broken above recent resistance."
-        : `Wait for price above ${round(
-            buyTriggerPrice
-          )} for breakout confirmation.`;
-
-    // ---------------------------------------------------------
-    // Reasons
-    // ---------------------------------------------------------
-
-    const reasons = [];
-
-    if (trend === "BULLISH") {
-      reasons.push(
-        "Price is in a bullish trend."
-      );
+      if (revenueGrowth >= 15) {
+        growthScore += 25;
+      } else if (
+        revenueGrowth >= 8
+      ) {
+        growthScore += 18;
+      } else if (
+        revenueGrowth > 0
+      ) {
+        growthScore += 8;
+      } else {
+        growthScore -= 15;
+      }
     }
 
     if (
-      structureDirection === "BULLISH"
+      profitGrowth !== null
     ) {
-      reasons.push(
-        "Market structure shows higher highs and higher lows."
+      if (profitGrowth >= 15) {
+        growthScore += 20;
+      } else if (
+        profitGrowth >= 5
+      ) {
+        growthScore += 12;
+      } else if (
+        profitGrowth < 0
+      ) {
+        growthScore -= 15;
+      }
+    }
+
+    growthScore =
+      Math.max(
+        0,
+        Math.min(
+          100,
+          Math.round(growthScore)
+        )
       );
+
+    let growthTrend =
+      "STABLE";
+
+    if (
+      growthScore >= 70
+    ) {
+      growthTrend =
+        "STRONG";
+    } else if (
+      growthScore >= 55
+    ) {
+      growthTrend =
+        "POSITIVE";
+    } else if (
+      growthScore < 40
+    ) {
+      growthTrend =
+        "WEAK";
+    }
+
+    // ==========================================================
+    // PROFITABILITY SCORE
+    // ==========================================================
+
+    let profitabilityScore =
+      50;
+
+    if (
+      profitMargin !== null
+    ) {
+      const margin =
+        profitMargin * 100;
+
+      if (margin >= 20) {
+        profitabilityScore += 20;
+      } else if (
+        margin >= 10
+      ) {
+        profitabilityScore += 10;
+      } else if (
+        margin < 0
+      ) {
+        profitabilityScore -= 25;
+      }
+    }
+
+    if (
+      operatingMargin !== null
+    ) {
+      const margin =
+        operatingMargin * 100;
+
+      if (margin >= 20) {
+        profitabilityScore += 15;
+      } else if (
+        margin >= 10
+      ) {
+        profitabilityScore += 8;
+      }
+    }
+
+    if (
+      returnOnEquity !== null
+    ) {
+      const roe =
+        returnOnEquity * 100;
+
+      if (roe >= 20) {
+        profitabilityScore += 15;
+      } else if (
+        roe >= 10
+      ) {
+        profitabilityScore += 8;
+      }
+    }
+
+    if (
+      profitGrowth !== null &&
+      profitGrowth > 0
+    ) {
+      profitabilityScore += 10;
+    }
+
+    profitabilityScore =
+      Math.max(
+        0,
+        Math.min(
+          100,
+          Math.round(
+            profitabilityScore
+          )
+        )
+      );
+
+    let profitabilityTrend =
+      "STABLE";
+
+    if (
+      profitabilityScore >= 75
+    ) {
+      profitabilityTrend =
+        "STRONG";
+    } else if (
+      profitabilityScore >= 55
+    ) {
+      profitabilityTrend =
+        "HEALTHY";
+    } else if (
+      profitabilityScore < 40
+    ) {
+      profitabilityTrend =
+        "WEAK";
+    }
+
+    // ==========================================================
+    // VALUATION
+    // ==========================================================
+
+    let valuationScore =
+      50;
+
+    if (
+      pe !== null
+    ) {
+      if (pe > 0 && pe < 20) {
+        valuationScore += 20;
+      } else if (
+        pe >= 20 &&
+        pe < 30
+      ) {
+        valuationScore += 10;
+      } else if (
+        pe >= 40
+      ) {
+        valuationScore -= 15;
+      }
+    }
+
+    if (
+      peg !== null
+    ) {
+      if (peg > 0 && peg < 1.5) {
+        valuationScore += 15;
+      } else if (
+        peg >= 2
+      ) {
+        valuationScore -= 10;
+      }
+    }
+
+    valuationScore =
+      Math.max(
+        0,
+        Math.min(
+          100,
+          Math.round(
+            valuationScore
+          )
+        )
+      );
+
+    let valuationView =
+      "FAIR";
+
+    if (
+      valuationScore >= 70
+    ) {
+      valuationView =
+        "ATTRACTIVE";
+    } else if (
+      valuationScore < 40
+    ) {
+      valuationView =
+        "EXPENSIVE";
+    }
+
+    // ==========================================================
+    // COMPANY HEALTH
+    // ==========================================================
+
+    const healthScore =
+      Math.round(
+        growthScore * 0.40 +
+        profitabilityScore * 0.40 +
+        valuationScore * 0.20
+      );
+
+    let healthStatus =
+      "AVERAGE";
+
+    if (
+      healthScore >= 80
+    ) {
+      healthStatus =
+        "EXCELLENT";
+    } else if (
+      healthScore >= 65
+    ) {
+      healthStatus =
+        "HEALTHY";
+    } else if (
+      healthScore < 45
+    ) {
+      healthStatus =
+        "WEAK";
+    }
+
+    // ==========================================================
+    // NEWS
+    // ==========================================================
+
+    const rawNews =
+      Array.isArray(
+        newsData.feed
+      )
+        ? newsData.feed
+        : [];
+
+    const news =
+      rawNews
+        .slice(0, 6)
+        .map((item) => ({
+          title:
+            item.title ||
+            "Untitled",
+
+          source:
+            item.source ||
+            "Unknown source",
+
+          url:
+            item.url ||
+            null,
+
+          timePublished:
+            item.time_published ||
+            null,
+
+          summary:
+            item.summary ||
+            "",
+
+          sentimentScore:
+            firstNumber(
+              item.overall_sentiment_score
+            ),
+
+          sentiment:
+            item.overall_sentiment_label ||
+            "Neutral"
+        }));
+
+    const sentimentScores =
+      news
+        .map(
+          (x) =>
+            x.sentimentScore
+        )
+        .filter(
+          Number.isFinite
+        );
+
+    const newsSentimentScore =
+      sentimentScores.length
+        ? average(
+            sentimentScores
+          )
+        : null;
+
+    let newsSentiment =
+      "NEUTRAL";
+
+    if (
+      newsSentimentScore !== null
+    ) {
+      if (
+        newsSentimentScore >= 0.15
+      ) {
+        newsSentiment =
+          "POSITIVE";
+      } else if (
+        newsSentimentScore <= -0.15
+      ) {
+        newsSentiment =
+          "NEGATIVE";
+      }
+    }
+
+    // ==========================================================
+    // TECHNICAL SCORE
+    // ==========================================================
+
+    let technicalScore =
+      50;
+
+    if (
+      trend === "BULLISH"
+    ) {
+      technicalScore += 15;
+    }
+
+    if (
+      structureDirection ===
+      "BULLISH"
+    ) {
+      technicalScore += 12;
     }
 
     if (
       macd.histogram !== null &&
       macd.histogram > 0
     ) {
-      reasons.push(
-        "MACD momentum is positive."
-      );
+      technicalScore += 10;
     }
 
     if (
       rsi !== null &&
-      rsi >= 50 &&
+      rsi >= 45 &&
       rsi <= 70
     ) {
-      reasons.push(
-        "RSI supports bullish momentum without being extremely overbought."
-      );
+      technicalScore += 8;
     }
 
     if (
       candleSignal === "BULLISH"
     ) {
-      reasons.push(
-        `${candlePattern} provides bullish candle confirmation.`
-      );
+      technicalScore += 5;
     }
 
     if (
       relativeVolume !== null &&
-      relativeVolume >= 1.2
+      relativeVolume >= 1.1
+    ) {
+      technicalScore += 5;
+    }
+
+    if (
+      trend === "BEARISH"
+    ) {
+      technicalScore -= 15;
+    }
+
+    if (
+      structureDirection ===
+      "BEARISH"
+    ) {
+      technicalScore -= 12;
+    }
+
+    technicalScore =
+      Math.max(
+        0,
+        Math.min(
+          100,
+          Math.round(
+            technicalScore
+          )
+        )
+      );
+
+    // ==========================================================
+    // OVERALL INVESTMENT SCORE
+    // ==========================================================
+
+    let newsScore =
+      50;
+
+    if (
+      newsSentiment === "POSITIVE"
+    ) {
+      newsScore = 75;
+    }
+
+    if (
+      newsSentiment === "NEGATIVE"
+    ) {
+      newsScore = 25;
+    }
+
+    const investmentScore =
+      Math.round(
+        healthScore * 0.30 +
+        growthScore * 0.20 +
+        profitabilityScore * 0.15 +
+        valuationScore * 0.15 +
+        technicalScore * 0.15 +
+        newsScore * 0.05
+      );
+
+    // ==========================================================
+    // DECISION
+    // ==========================================================
+
+    let decision =
+      "WATCH";
+
+    let decisionReason =
+      "The company and market setup need more confirmation.";
+
+    if (
+      investmentScore >= 80 &&
+      technicalScore >= 65 &&
+      healthScore >= 65
+    ) {
+      decision =
+        "STRONG BUY";
+
+      decisionReason =
+        "Strong company fundamentals combined with a supportive market setup.";
+    } else if (
+      investmentScore >= 68 &&
+      healthScore >= 60
+    ) {
+      decision =
+        "BUY";
+
+      decisionReason =
+        "The company fundamentals are attractive and the setup offers potential upside.";
+    } else if (
+      investmentScore <= 35
+    ) {
+      decision =
+        "AVOID";
+
+      decisionReason =
+        "Fundamental health and/or market conditions are weak.";
+    }
+
+    if (
+      technicalScore < 40 &&
+      decision === "BUY"
+    ) {
+      decision =
+        "WATCH";
+
+      decisionReason =
+        "The company is fundamentally attractive, but the technical entry is not yet supportive.";
+    }
+
+    // ==========================================================
+    // CONDITIONS
+    // ==========================================================
+
+    const conditions = {
+      healthyCompany:
+        healthScore >= 65,
+
+      revenueGrowing:
+        revenueGrowth !== null &&
+        revenueGrowth > 0,
+
+      profitsGrowing:
+        profitGrowth !== null &&
+        profitGrowth > 0,
+
+      profitable:
+        profitabilityScore >= 60,
+
+      valuationReasonable:
+        valuationScore >= 50,
+
+      technicalSupport:
+        technicalScore >= 55
+    };
+
+    const conditionsMet =
+      Object.values(
+        conditions
+      ).filter(Boolean).length;
+
+    // ==========================================================
+    // REASONS / RISKS
+    // ==========================================================
+
+    const reasons = [];
+
+    if (
+      healthScore >= 70
     ) {
       reasons.push(
-        "Trading volume is above its recent average."
+        "Company health is strong."
+      );
+    }
+
+    if (
+      revenueGrowth !== null &&
+      revenueGrowth > 0
+    ) {
+      reasons.push(
+        `Revenue is growing ${round(
+          revenueGrowth,
+          1
+        )}% year over year.`
+      );
+    }
+
+    if (
+      profitGrowth !== null &&
+      profitGrowth > 0
+    ) {
+      reasons.push(
+        `Profit is growing ${round(
+          profitGrowth,
+          1
+        )}% year over year.`
+      );
+    }
+
+    if (
+      technicalScore >= 65
+    ) {
+      reasons.push(
+        "Technical momentum is supportive."
+      );
+    }
+
+    if (
+      newsSentiment === "POSITIVE"
+    ) {
+      reasons.push(
+        "Recent news sentiment is positive."
+      );
+    }
+
+    const risks = [];
+
+    if (
+      revenueGrowth !== null &&
+      revenueGrowth < 0
+    ) {
+      risks.push(
+        "Revenue is declining."
+      );
+    }
+
+    if (
+      profitGrowth !== null &&
+      profitGrowth < 0
+    ) {
+      risks.push(
+        "Profit is declining."
+      );
+    }
+
+    if (
+      valuationScore < 40
+    ) {
+      risks.push(
+        "Valuation appears expensive."
+      );
+    }
+
+    if (
+      technicalScore < 45
+    ) {
+      risks.push(
+        "Technical setup is weak."
+      );
+    }
+
+    if (
+      newsSentiment === "NEGATIVE"
+    ) {
+      risks.push(
+        "Recent news sentiment is negative."
       );
     }
 
     if (!reasons.length) {
       reasons.push(
-        "No strong bullish confirmation yet."
-      );
-    }
-
-    // ---------------------------------------------------------
-    // Risks
-    // ---------------------------------------------------------
-
-    const risks = [];
-
-    if (trend === "BEARISH") {
-      risks.push(
-        "Primary trend is bearish."
-      );
-    }
-
-    if (
-      structureDirection === "BEARISH"
-    ) {
-      risks.push(
-        "Market structure shows lower highs and lower lows."
-      );
-    }
-
-    if (
-      rsi !== null &&
-      rsi > 75
-    ) {
-      risks.push(
-        "RSI is significantly overbought."
-      );
-    }
-
-    if (
-      relativeVolume !== null &&
-      relativeVolume < 0.8
-    ) {
-      risks.push(
-        "Volume confirmation is weak."
-      );
-    }
-
-    if (
-      riskRewardTarget1 < 1.5
-    ) {
-      risks.push(
-        "Risk/reward to Target 1 is not attractive."
+        "No major positive factor detected yet."
       );
     }
 
     if (!risks.length) {
       risks.push(
-        "No major technical risk detected, but market conditions can change."
+        "No major risk detected from the available data."
       );
     }
 
-    // ---------------------------------------------------------
-    // Trend confidence
-    // ---------------------------------------------------------
-
-    let trendConfidence = 50;
-
-    if (trend === "BULLISH") {
-      trendConfidence += 20;
-    }
-
-    if (
-      structureDirection === "BULLISH"
-    ) {
-      trendConfidence += 15;
-    }
-
-    if (
-      macd.histogram !== null &&
-      macd.histogram > 0
-    ) {
-      trendConfidence += 10;
-    }
-
-    if (
-      relativeVolume !== null &&
-      relativeVolume > 1.1
-    ) {
-      trendConfidence += 5;
-    }
-
-    if (trend === "BEARISH") {
-      trendConfidence -= 20;
-    }
-
-    trendConfidence = Math.max(
-      0,
-      Math.min(100, trendConfidence)
-    );
-
-    // ---------------------------------------------------------
-    // Response
-    // ---------------------------------------------------------
+    // ==========================================================
+    // RESPONSE
+    // ==========================================================
 
     return res.status(200).json({
+
+      // ----------------------------
+      // Basic
+      // ----------------------------
+
       symbol,
 
-      name: symbol,
+      name:
+        companyName,
 
-      price: round(price),
+      sector,
 
-      change: round(change),
+      industry,
 
-      change_pct: round(changePct),
+      price:
+        round(price),
+
+      change:
+        round(change),
+
+      change_pct:
+        round(changePct),
+
+      // ----------------------------
+      // Main decision
+      // ----------------------------
 
       decision,
 
-      score,
+      decision_reason:
+        decisionReason,
 
-      decision_reason: decisionReason,
+      score:
+        investmentScore,
+
+      // ----------------------------
+      // Company health
+      // ----------------------------
+
+      company_health: {
+        score:
+          healthScore,
+
+        status:
+          healthStatus
+      },
+
+      // ----------------------------
+      // Growth
+      // ----------------------------
+
+      growth: {
+
+        score:
+          growthScore,
+
+        trend:
+          growthTrend,
+
+        revenue_growth:
+          round(
+            revenueGrowth,
+            1
+          ),
+
+        profit_growth:
+          round(
+            profitGrowth,
+            1
+          ),
+
+        eps_growth:
+          round(
+            epsGrowth,
+            1
+          ),
+
+        quarterly_revenue_growth:
+          round(
+            quarterlyRevenueGrowth,
+            1
+          ),
+
+        quarterly_earnings_growth:
+          round(
+            quarterlyEarningsGrowth,
+            1
+          ),
+
+        history:
+          annualFinancials
+            .map((x) => ({
+              year:
+                x.fiscalDateEnding,
+
+              revenue:
+                x.revenue,
+
+              profit:
+                x.netIncome,
+
+              eps:
+                x.eps
+            }))
+            .reverse()
+      },
+
+      // ----------------------------
+      // Profitability
+      // ----------------------------
+
+      profitability: {
+
+        score:
+          profitabilityScore,
+
+        trend:
+          profitabilityTrend,
+
+        profit_margin:
+          round(
+            latestProfitMargin,
+            1
+          ),
+
+        operating_margin:
+          operatingMargin !== null
+            ? round(
+                operatingMargin * 100,
+                1
+              )
+            : null,
+
+        roe:
+          returnOnEquity !== null
+            ? round(
+                returnOnEquity * 100,
+                1
+              )
+            : null,
+
+        roa:
+          returnOnAssets !== null
+            ? round(
+                returnOnAssets * 100,
+                1
+              )
+            : null
+      },
+
+      // ----------------------------
+      // Valuation
+      // ----------------------------
+
+      valuation: {
+
+        score:
+          valuationScore,
+
+        view:
+          valuationView,
+
+        pe:
+          round(pe, 2),
+
+        peg:
+          round(peg, 2),
+
+        eps:
+          round(eps, 2),
+
+        book_value:
+          round(bookValue, 2),
+
+        market_cap:
+          marketCap
+      },
+
+      // ----------------------------
+      // News
+      // ----------------------------
+
+      news_sentiment:
+        newsSentiment,
+
+      news_sentiment_score:
+        round(
+          newsSentimentScore,
+          3
+        ),
+
+      news,
+
+      // ----------------------------
+      // Technical
+      // ----------------------------
+
+      technical_score:
+        technicalScore,
 
       trend,
 
-      trend_score: trendScore,
+      trend_score:
+        trendScore,
 
-      trend_confidence: trendConfidence,
+      trend_confidence:
+        Math.max(
+          0,
+          Math.min(
+            100,
+            Math.round(
+              technicalScore
+            )
+          )
+        ),
 
-      short_term_trend: shortTermTrend,
+      short_term_trend:
+        shortTermTrend,
 
       structure,
 
-      structure_direction: structureDirection,
+      structure_direction:
+        structureDirection,
 
-      candle: {
-        pattern: candlePattern,
-        signal: candleSignal,
-        strength: candleStrength
-      },
+      sma20:
+        round(sma20),
 
-      candle_pattern: candlePattern,
+      sma50:
+        round(sma50),
 
-      candle_signal: candleSignal,
+      rsi:
+        round(rsi),
 
-      candle_strength: candleStrength,
+      macd:
+        round(
+          macd.macd,
+          4
+        ),
 
-      volume: {
-        latest: latest.volume,
-        average20: round(avgVolume20),
-        relative: round(relativeVolume, 2),
-        confirmation: volumeConfirmation
-      },
+      macd_signal:
+        round(
+          macd.signal,
+          4
+        ),
 
-      relative_volume: round(
-        relativeVolume,
-        2
-      ),
+      macd_histogram:
+        round(
+          macd.histogram,
+          4
+        ),
+
+      support:
+        round(support),
+
+      resistance:
+        round(resistance),
+
+      relative_volume:
+        round(
+          relativeVolume,
+          2
+        ),
 
       volume_confirmation:
         volumeConfirmation,
 
-      sma20: round(sma20),
+      candle: {
+        pattern:
+          candlePattern,
 
-      sma50: round(sma50),
+        signal:
+          candleSignal,
 
-      rsi: round(rsi),
-
-      macd: round(macd.macd, 4),
-
-      macd_signal: round(
-        macd.signal,
-        4
-      ),
-
-      macd_histogram: round(
-        macd.histogram,
-        4
-      ),
-
-      support: round(support),
-
-      resistance: round(resistance),
-
-      entry_low: round(pullbackLow),
-
-      entry_high: round(pullbackHigh),
-
-      preferred_entry: round(
-        preferredEntry
-      ),
-
-      stop: round(invalidation),
-
-      invalidation: round(
-        invalidation
-      ),
-
-      target1: round(target1),
-
-      target2: round(target2),
-
-      risk_per_share: round(
-        riskPerShare
-      ),
-
-      reward_to_target1: round(
-        rewardToTarget1
-      ),
-
-      reward_to_target2: round(
-        rewardToTarget2
-      ),
-
-      risk_reward_target1: round(
-        riskRewardTarget1,
-        2
-      ),
-
-      risk_reward_target2: round(
-        riskRewardTarget2,
-        2
-      ),
-
-      risk_reward_quality:
-        riskRewardQuality,
-
-      breakout_level: round(
-        breakoutLevel
-      ),
-
-      buy_trigger: true,
-
-      buy_trigger_price: round(
-        buyTriggerPrice
-      ),
-
-      buy_trigger_confirmed:
-        buyTriggerConfirmed,
-
-      trigger_reason: triggerReason,
-
-      breakout_confirmed:
-        breakoutConfirmed,
-
-      pullback_zone: {
-        low: round(pullbackLow),
-        high: round(pullbackHigh),
-        preferred: round(preferredEntry)
+        strength:
+          candleStrength
       },
+
+      candle_pattern:
+        candlePattern,
+
+      candle_signal:
+        candleSignal,
+
+      candle_strength:
+        candleStrength,
+
+      // ----------------------------
+      // Entry
+      // ----------------------------
+
+      entry_low:
+        round(entryLow),
+
+      entry_high:
+        round(entryHigh),
+
+      preferred_entry:
+        round(preferredEntry),
 
       in_pullback_zone:
         inPullbackZone,
 
-      active_strategy:
-        activeStrategy,
+      invalidation:
+        round(invalidation),
 
-      conditions: conditions,
+      stop:
+        round(invalidation),
+
+      target1:
+        round(target1),
+
+      target2:
+        round(target2),
+
+      breakout_level:
+        round(breakoutLevel),
+
+      buy_trigger_price:
+        round(
+          buyTriggerPrice
+        ),
+
+      buy_trigger_confirmed:
+        breakoutConfirmed,
+
+      breakout_confirmed:
+        breakoutConfirmed,
+
+      // ----------------------------
+      // Risk / reward
+      // ----------------------------
+
+      risk_per_share:
+        round(
+          riskPerShare
+        ),
+
+      risk_reward_target1:
+        round(
+          riskRewardTarget1,
+          2
+        ),
+
+      risk_reward_target2:
+        round(
+          riskRewardTarget2,
+          2
+        ),
+
+      risk_reward_quality:
+        riskRewardQuality,
+
+      // ----------------------------
+      // Conditions
+      // ----------------------------
+
+      conditions,
 
       conditions_met:
         conditionsMet,
 
       conditions_total:
-        conditionsTotal,
+        Object.keys(
+          conditions
+        ).length,
 
-      formations,
+      // ----------------------------
+      // Reasons / risks
+      // ----------------------------
 
       reasons,
 
       risks,
 
-      history: history.map((x) => ({
-        date: x.date,
-        open: round(x.open),
-        high: round(x.high),
-        low: round(x.low),
-        close: round(x.close),
-        volume: x.volume,
-        sma20: round(x.sma20),
-        sma50: round(x.sma50),
-        rsi: round(x.rsi),
-        macd: round(x.macd, 4),
-        macdSignal: round(
-          x.macdSignal,
-          4
-        ),
-        macdHistogram: round(
-          x.macdHistogram,
-          4
-        )
-      })),
+      // ----------------------------
+      // Historical chart
+      // ----------------------------
 
-      last_updated: latest.date
+      history:
+        history.map((x) => ({
+          date:
+            x.date,
+
+          open:
+            round(x.open),
+
+          high:
+            round(x.high),
+
+          low:
+            round(x.low),
+
+          close:
+            round(x.close),
+
+          volume:
+            x.volume,
+
+          sma20:
+            round(x.sma20),
+
+          sma50:
+            round(x.sma50),
+
+          rsi:
+            round(x.rsi),
+
+          macd:
+            round(
+              x.macd,
+              4
+            ),
+
+          macdSignal:
+            round(
+              x.macdSignal,
+              4
+            ),
+
+          macdHistogram:
+            round(
+              x.macdHistogram,
+              4
+            )
+        })),
+
+      last_updated:
+        latest.date
     });
+
   } catch (error) {
+
+    console.error(error);
+
     return res.status(500).json({
-      error: "Server error",
-      message: error.message
+      error: "Analysis failed",
+      message:
+        error.message ||
+        "Unknown error"
     });
   }
 }
