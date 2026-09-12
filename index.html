@@ -2,414 +2,479 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Investment Cockpit</title>
 
 <style>
-* {
-  box-sizing: border-box;
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#f5f7fb;
+  color:#172033;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
 }
 
-body {
-  margin: 0;
-  background: #f5f7fb;
-  color: #172033;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:20px 14px 50px
 }
 
-.container {
-  max-width: 1100px;
-  margin: auto;
-  padding: 24px 18px 50px;
+header{margin-bottom:16px}
+
+h1{
+  margin:0;
+  font-size:29px;
+  letter-spacing:-.8px
 }
 
-header {
-  margin-bottom: 22px;
+.subtitle{
+  color:#71809a;
+  margin-top:5px;
+  font-size:14px
 }
 
-h1 {
-  margin: 0;
-  font-size: 30px;
-  letter-spacing: -0.8px;
+/* TABS */
+
+.tabs{
+  display:flex;
+  background:white;
+  border:1px solid #dce2ec;
+  border-radius:15px;
+  padding:4px;
+  margin:18px 0
 }
 
-.subtitle {
-  color: #71809a;
-  margin-top: 6px;
-  font-size: 15px;
+.tab{
+  flex:1;
+  border:0;
+  background:transparent;
+  color:#71809a;
+  padding:11px 8px;
+  border-radius:11px;
+  font-weight:800;
+  font-size:14px
 }
 
-.search-row {
-  display: flex;
-  gap: 9px;
-  margin-top: 18px;
+.tab.active{
+  background:#172033;
+  color:white
 }
 
-input {
-  flex: 1;
-  min-width: 0;
-  border: 1px solid #d9dfeb;
-  border-radius: 13px;
-  padding: 13px 14px;
-  font-size: 16px;
-  background: white;
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* GENERAL */
+
+.card{
+  background:white;
+  border:1px solid #dce2ec;
+  border-radius:20px;
+  padding:19px;
+  margin-top:14px;
+  box-shadow:0 3px 15px rgba(30,45,70,.035)
 }
 
-button {
-  border: 0;
-  border-radius: 13px;
-  padding: 0 17px;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  background: #172033;
-  color: white;
+.section-title{
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:1.3px;
+  color:#78869e;
+  margin-bottom:14px
 }
 
-.watchlist {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 14px 0 5px;
+.search-row{
+  display:flex;
+  gap:8px
 }
 
-.ticker {
-  flex: 0 0 auto;
-  background: white;
-  border: 1px solid #dce2ec;
-  color: #29354b;
-  padding: 9px 14px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-weight: 700;
+input,select{
+  width:100%;
+  border:1px solid #d9dfeb;
+  border-radius:12px;
+  padding:12px;
+  font-size:15px;
+  background:white;
+  color:#172033
 }
 
-.ticker.active {
-  background: #172033;
-  color: white;
+button{
+  border:0;
+  border-radius:12px;
+  background:#172033;
+  color:white;
+  font-weight:800;
+  cursor:pointer
 }
 
-.card {
-  background: white;
-  border: 1px solid #dce2ec;
-  border-radius: 22px;
-  padding: 22px;
-  margin-top: 16px;
-  box-shadow: 0 4px 18px rgba(30, 45, 70, .035);
+.primary{
+  padding:0 16px
 }
 
-.hero {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  align-items: flex-start;
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px
 }
 
-.company-name {
-  color: #71809a;
-  margin-top: 5px;
+.grid3{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px
 }
 
-.price {
-  font-size: 34px;
-  font-weight: 800;
-  margin-top: 14px;
+.metric{
+  background:#f8f9fc;
+  border-radius:14px;
+  padding:14px
 }
 
-.change {
-  font-weight: 700;
-  margin-top: 3px;
+.metric-label{
+  font-size:11px;
+  color:#7d899d;
+  margin-bottom:6px
 }
 
-.hero-right {
-  text-align: right;
+.metric-value{
+  font-size:19px;
+  font-weight:800
 }
 
-.decision {
-  font-size: 20px;
-  font-weight: 800;
-  padding: 9px 14px;
-  border-radius: 12px;
-  display: inline-block;
+.small{
+  font-size:12px;
+  color:#71809a;
+  margin-top:5px
 }
 
-.buy {
-  background: #e7f7ed;
-  color: #18733d;
+.good{color:#18733d}
+.bad{color:#a72c2c}
+.neutral{color:#8b6500}
+
+/* STOCK ANALYZER */
+
+.watchlist{
+  display:flex;
+  gap:7px;
+  overflow-x:auto;
+  padding:12px 0 2px
 }
 
-.watch {
-  background: #fff5d9;
-  color: #8b6500;
+.ticker{
+  flex:0 0 auto;
+  padding:8px 13px;
+  border-radius:18px;
+  background:white;
+  color:#29354b;
+  border:1px solid #dce2ec
 }
 
-.sell {
-  background: #fdeaea;
-  color: #a72c2c;
+.ticker.active{
+  background:#172033;
+  color:white
 }
 
-.avoid {
-  background: #edf0f5;
-  color: #5d687a;
+.hero{
+  display:flex;
+  justify-content:space-between;
+  gap:15px
 }
 
-.score {
-  margin-top: 12px;
-  color: #68758a;
+.company-name{
+  color:#71809a;
+  margin-top:4px
 }
 
-.score strong {
-  color: #172033;
-  font-size: 24px;
+.price{
+  font-size:34px;
+  font-weight:800;
+  margin-top:13px
 }
 
-.section-title {
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 1.4px;
-  color: #78869e;
-  margin: 4px 0 15px;
-  text-transform: uppercase;
+.change{
+  font-weight:700;
+  margin-top:3px
 }
 
-.investor-summary {
-  font-size: 18px;
-  line-height: 1.55;
-  color: #29354b;
+.hero-right{text-align:right}
+
+.decision{
+  display:inline-block;
+  padding:8px 13px;
+  border-radius:11px;
+  font-size:18px;
+  font-weight:800
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+.buy{background:#e7f7ed;color:#18733d}
+.watch{background:#fff5d9;color:#8b6500}
+.sell{background:#fdeaea;color:#a72c2c}
+.avoid{background:#edf0f5;color:#5d687a}
+
+.investor-summary{
+  font-size:17px;
+  line-height:1.5;
+  color:#29354b
 }
 
-.grid3 {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+.progress{
+  height:8px;
+  background:#e9edf3;
+  border-radius:20px;
+  overflow:hidden;
+  margin-top:10px
 }
 
-.metric {
-  background: #f8f9fc;
-  border-radius: 15px;
-  padding: 15px;
+.progress-inner{
+  height:100%;
+  background:#172033;
+  border-radius:20px
 }
 
-.metric-label {
-  font-size: 12px;
-  color: #7d899d;
-  margin-bottom: 6px;
+.news-item{
+  padding:13px 0;
+  border-bottom:1px solid #edf0f4
 }
 
-.metric-value {
-  font-size: 19px;
-  font-weight: 800;
+.news-item:last-child{border-bottom:0}
+
+.news-item a{
+  color:#172033;
+  text-decoration:none;
+  font-weight:700
 }
 
-.metric-small {
-  font-size: 13px;
-  color: #71809a;
-  margin-top: 4px;
+.news-source{
+  font-size:11px;
+  color:#8290a5;
+  margin-top:5px
 }
 
-.health-score {
-  font-size: 38px;
-  font-weight: 800;
+.entry{
+  background:#f5f8fb;
+  border:1px solid #e0e6ef;
+  border-radius:15px;
+  padding:16px
 }
 
-.progress {
-  height: 8px;
-  background: #e9edf3;
-  border-radius: 20px;
-  overflow: hidden;
-  margin-top: 10px;
+.entry-price{
+  font-size:27px;
+  font-weight:800
 }
 
-.progress-inner {
-  height: 100%;
-  width: 0;
-  background: #172033;
-  border-radius: 20px;
+.risk-box{
+  background:#fff8f7;
+  border:1px solid #f1dddd;
+  border-radius:15px;
+  padding:16px
 }
 
-.health-status {
-  font-weight: 800;
-  margin-top: 7px;
+.positive-box{
+  background:#f5fbf7;
+  border:1px solid #dceee3;
+  border-radius:15px;
+  padding:16px
 }
 
-.good {
-  color: #18733d;
+li{
+  margin:8px 0;
+  line-height:1.35
 }
 
-.bad {
-  color: #a72c2c;
+canvas{
+  width:100%;
+  height:320px;
+  display:block
 }
 
-.neutral {
-  color: #8b6500;
+details{margin-top:4px}
+
+summary{
+  cursor:pointer;
+  font-weight:800;
+  color:#65738a;
+  padding:5px 0
 }
 
-.news-item {
-  padding: 14px 0;
-  border-bottom: 1px solid #edf0f4;
+/* PORTFOLIO */
+
+.portfolio-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:15px
 }
 
-.news-item:last-child {
-  border-bottom: 0;
+.portfolio-value{
+  font-size:34px;
+  font-weight:800
 }
 
-.news-item a {
-  color: #172033;
-  text-decoration: none;
-  font-weight: 700;
-  line-height: 1.4;
+.return-value{
+  font-size:15px;
+  font-weight:800;
+  margin-top:4px
 }
 
-.news-source {
-  color: #8290a5;
-  font-size: 12px;
-  margin-top: 5px;
+.add-form{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr auto;
+  gap:8px
 }
 
-.entry-highlight {
-  background: #f4f7fb;
-  border: 1px solid #e0e6ef;
-  border-radius: 17px;
-  padding: 18px;
+.holding{
+  border:1px solid #e0e5ed;
+  border-radius:15px;
+  padding:15px;
+  margin-top:10px
 }
 
-.entry-price {
-  font-size: 28px;
-  font-weight: 800;
+.holding-top{
+  display:flex;
+  justify-content:space-between;
+  gap:10px
 }
 
-.rr {
-  font-size: 20px;
-  font-weight: 800;
+.holding-symbol{
+  font-size:18px;
+  font-weight:800
 }
 
-.risk-box {
-  background: #fff8f7;
-  border: 1px solid #f1dddd;
-  border-radius: 17px;
-  padding: 17px;
+.holding-name{
+  color:#7a879a;
+  font-size:12px;
+  margin-top:2px
 }
 
-.positive-box {
-  background: #f5fbf7;
-  border: 1px solid #dceee3;
-  border-radius: 17px;
-  padding: 17px;
+.weight{
+  font-size:20px;
+  font-weight:800;
+  text-align:right
 }
 
-ul {
-  padding-left: 20px;
-  margin: 8px 0;
+.bar{
+  height:7px;
+  background:#e9edf3;
+  border-radius:20px;
+  margin-top:10px;
+  overflow:hidden
 }
 
-li {
-  margin: 9px 0;
-  line-height: 1.4;
+.bar-inner{
+  height:100%;
+  background:#172033
 }
 
-.chart-wrap {
-  position: relative;
-  width: 100%;
-  overflow-x: auto;
+.holding-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:12px
 }
 
-canvas {
-  width: 100%;
-  height: 350px;
-  display: block;
+.holding-metric{
+  background:#f8f9fc;
+  border-radius:10px;
+  padding:9px
 }
 
-.chart-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 12px;
-  color: #71809a;
-  font-size: 12px;
+.holding-metric .label{
+  font-size:10px;
+  color:#8490a3
 }
 
-.legend {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+.holding-metric .value{
+  font-weight:800;
+  font-size:14px;
+  margin-top:3px
 }
 
-.dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #172033;
+.delete-btn{
+  background:#f1f3f7;
+  color:#66748b;
+  padding:7px 9px;
+  font-size:12px
 }
 
-.loading {
-  text-align: center;
-  padding: 50px 10px;
-  color: #71809a;
+.empty{
+  text-align:center;
+  padding:30px 10px;
+  color:#7a879a
 }
 
-.error {
-  background: #fff0f0;
-  border: 1px solid #efcccc;
-  color: #a72c2c;
-  padding: 16px;
-  border-radius: 14px;
-  margin-top: 15px;
+.info{
+  background:#f5f8fc;
+  border-radius:14px;
+  padding:14px;
+  font-size:13px;
+  line-height:1.45;
+  color:#64738a
 }
 
-details {
-  margin-top: 16px;
+.allocation-bar{
+  display:flex;
+  height:22px;
+  border-radius:8px;
+  overflow:hidden;
+  margin-top:12px
 }
 
-summary {
-  cursor: pointer;
-  font-weight: 800;
-  color: #65738a;
-  padding: 5px 0;
+.allocation-segment{
+  min-width:2px
 }
 
-.footer {
-  text-align: center;
-  color: #94a1b5;
-  font-size: 12px;
-  margin-top: 25px;
+.footer{
+  text-align:center;
+  color:#94a1b5;
+  font-size:11px;
+  margin-top:25px
 }
 
-@media (max-width: 650px) {
-  .container {
-    padding: 17px 12px 40px;
+.loading{
+  text-align:center;
+  padding:45px 10px;
+  color:#71809a
+}
+
+.error{
+  background:#fff0f0;
+  border:1px solid #efcccc;
+  color:#a72c2c;
+  padding:15px;
+  border-radius:14px;
+  margin-top:14px
+}
+
+@media(max-width:650px){
+
+  .container{
+    padding:15px 11px 40px
   }
 
-  h1 {
-    font-size: 27px;
+  .grid,.grid3{
+    grid-template-columns:1fr
   }
 
-  .hero {
-    flex-direction: column;
+  .hero{
+    flex-direction:column
   }
 
-  .hero-right {
-    text-align: left;
+  .hero-right{
+    text-align:left
   }
 
-  .grid,
-  .grid3 {
-    grid-template-columns: 1fr;
+  .add-form{
+    grid-template-columns:1fr 1fr
   }
 
-  .card {
-    padding: 17px;
-    border-radius: 18px;
+  .add-form button{
+    min-height:44px
   }
 
-  canvas {
-    height: 300px;
+  .holding-grid{
+    grid-template-columns:repeat(3,1fr)
   }
+
 }
 </style>
 </head>
@@ -423,333 +488,733 @@ summary {
   <div class="subtitle">
     Understand the company first. Then decide when to buy.
   </div>
+</header>
+
+<!-- MAIN TABS -->
+
+<div class="tabs">
+
+  <button
+    id="stockTabButton"
+    class="tab active"
+    onclick="switchTab('stock')">
+    🔎 Stock Analyzer
+  </button>
+
+  <button
+    id="portfolioTabButton"
+    class="tab"
+    onclick="switchTab('portfolio')">
+    📊 My Portfolio
+  </button>
+
+</div>
+
+
+<!-- =====================================================
+     STOCK ANALYZER
+===================================================== -->
+
+<div id="stockTab" class="tab-content active">
 
   <div class="search-row">
-    <input id="tickerInput" placeholder="Enter ticker e.g. AAPL">
-    <button onclick="analyze()">Analyze</button>
+
+    <input
+      id="tickerInput"
+      placeholder="Enter ticker e.g. AAPL">
+
+    <button
+      class="primary"
+      onclick="analyze()">
+      Analyze
+    </button>
+
   </div>
 
   <div class="watchlist">
-    <button class="ticker active" onclick="selectTicker('AAPL')">AAPL</button>
-    <button class="ticker" onclick="selectTicker('NVDA')">NVDA</button>
-    <button class="ticker" onclick="selectTicker('MSFT')">MSFT</button>
-    <button class="ticker" onclick="selectTicker('AMZN')">AMZN</button>
+
+    <button
+      class="ticker active"
+      onclick="selectTicker('AAPL')">
+      AAPL
+    </button>
+
+    <button
+      class="ticker"
+      onclick="selectTicker('NVDA')">
+      NVDA
+    </button>
+
+    <button
+      class="ticker"
+      onclick="selectTicker('MSFT')">
+      MSFT
+    </button>
+
+    <button
+      class="ticker"
+      onclick="selectTicker('AMZN')">
+      AMZN
+    </button>
+
   </div>
-</header>
 
-<div id="app">
-  <div class="loading">Loading investment cockpit...</div>
+  <div id="stockApp">
+    <div class="card loading">
+      Loading investment cockpit...
+    </div>
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     PORTFOLIO
+===================================================== -->
+
+<div id="portfolioTab" class="tab-content">
+
+  <div class="card">
+
+    <div class="section-title">
+      MY PORTFOLIO
+    </div>
+
+    <div class="portfolio-header">
+
+      <div>
+
+        <div class="portfolio-value"
+             id="portfolioValue">
+          $0.00
+        </div>
+
+        <div
+          id="portfolioReturn"
+          class="return-value neutral">
+          Add your holdings to begin
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ADD HOLDING -->
+
+  <div class="card">
+
+    <div class="section-title">
+      ADD HOLDING
+    </div>
+
+    <div class="add-form">
+
+      <input
+        id="holdingTicker"
+        placeholder="Ticker">
+
+      <input
+        id="holdingShares"
+        type="number"
+        step="any"
+        placeholder="Shares">
+
+      <input
+        id="holdingCost"
+        type="number"
+        step="any"
+        placeholder="Avg. cost">
+
+      <button
+        onclick="addHolding()">
+        Add
+      </button>
+
+    </div>
+
+    <div class="small">
+      Example: NVDA · 20 shares · $120 average cost
+    </div>
+
+  </div>
+
+
+  <!-- PORTFOLIO ALLOCATION -->
+
+  <div class="card">
+
+    <div class="section-title">
+      PORTFOLIO ALLOCATION
+    </div>
+
+    <div
+      id="allocation"
+      class="empty">
+      Add holdings to see your allocation.
+    </div>
+
+  </div>
+
+
+  <!-- HOLDINGS -->
+
+  <div class="card">
+
+    <div class="section-title">
+      HOLDINGS
+    </div>
+
+    <div id="holdingsList">
+
+      <div class="empty">
+        Your portfolio is empty.
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- INVESTOR SETTINGS -->
+
+  <div class="card">
+
+    <div class="section-title">
+      INVESTOR PROFILE
+    </div>
+
+    <div class="grid">
+
+      <div>
+
+        <div class="metric-label">
+          INVESTMENT HORIZON
+        </div>
+
+        <select id="horizon">
+          <option value="long">10+ years</option>
+          <option value="medium">5–10 years</option>
+          <option value="short">1–5 years</option>
+        </select>
+
+      </div>
+
+      <div>
+
+        <div class="metric-label">
+          RISK PROFILE
+        </div>
+
+        <select id="riskProfile">
+          <option value="growth">Growth</option>
+          <option value="balanced">Balanced</option>
+          <option value="conservative">Conservative</option>
+        </select>
+
+      </div>
+
+    </div>
+
+    <div style="margin-top:12px">
+
+      <div class="metric-label">
+        AVAILABLE CASH TO INVEST
+      </div>
+
+      <input
+        id="availableCash"
+        type="number"
+        step="any"
+        placeholder="e.g. 5000">
+
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <div class="section-title">
+      PORTFOLIO INTELLIGENCE
+    </div>
+
+    <div class="info">
+
+      Your portfolio recommendations will focus on
+      <strong>long-term business quality, growth,
+      profitability, valuation and diversification</strong>.
+
+      <br><br>
+
+      The system will eventually identify which positions
+      are candidates to <strong>Add, Hold or Reduce</strong>
+      and where new money could be allocated.
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<div class="footer">
+  Investment Cockpit · Personal investment analysis
 </div>
 
 </div>
+
 
 <script>
+
+/* ========================================================
+   GLOBAL STATE
+======================================================== */
 
 let currentTicker = "AAPL";
 let currentData = null;
 
-function money(v) {
-  if (v === null || v === undefined || !Number.isFinite(Number(v))) {
+let portfolio =
+  JSON.parse(
+    localStorage.getItem("investmentCockpitPortfolio") ||
+    "[]"
+  );
+
+let investorSettings =
+  JSON.parse(
+    localStorage.getItem("investmentCockpitSettings") ||
+    "{}"
+  );
+
+
+/* ========================================================
+   HELPERS
+======================================================== */
+
+function money(v){
+
+  if(
+    v === null ||
+    v === undefined ||
+    !Number.isFinite(Number(v))
+  ){
     return "N/A";
   }
 
-  return "$" + Number(v).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
+  return "$" +
+    Number(v).toLocaleString(
+      undefined,
+      {
+        minimumFractionDigits:2,
+        maximumFractionDigits:2
+      }
+    );
 }
 
-function percent(v) {
-  if (v === null || v === undefined || !Number.isFinite(Number(v))) {
+
+function percent(v){
+
+  if(
+    v === null ||
+    v === undefined ||
+    !Number.isFinite(Number(v))
+  ){
     return "N/A";
   }
 
   return Number(v).toFixed(1) + "%";
 }
 
-function multiple(v) {
-  if (v === null || v === undefined || !Number.isFinite(Number(v))) {
+
+function multiple(v){
+
+  if(
+    v === null ||
+    v === undefined ||
+    !Number.isFinite(Number(v))
+  ){
     return "N/A";
   }
 
   return Number(v).toFixed(1) + "x";
 }
 
-function classForDecision(decision) {
-  if (!decision) return "watch";
 
-  if (decision.includes("BUY")) return "buy";
-  if (decision === "SELL") return "sell";
-  if (decision === "AVOID") return "avoid";
+function esc(value){
 
-  return "watch";
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
-function valueClass(v) {
-  if (v === null || v === undefined) return "neutral";
 
-  if (Number(v) > 0) return "good";
-  if (Number(v) < 0) return "bad";
+function valueClass(v){
+
+  if(v === null || v === undefined){
+    return "neutral";
+  }
+
+  if(Number(v) > 0) return "good";
+
+  if(Number(v) < 0) return "bad";
 
   return "neutral";
 }
 
-function trendClass(text) {
-  if (!text) return "neutral";
 
-  const t = String(text).toUpperCase();
+function trendClass(text){
 
-  if (
+  if(!text) return "neutral";
+
+  const t =
+    String(text).toUpperCase();
+
+  if(
     t.includes("IMPROV") ||
     t.includes("STRONG") ||
     t.includes("BULLISH") ||
     t.includes("HEALTHY") ||
     t.includes("EXCELLENT") ||
     t.includes("ATTRACTIVE")
-  ) {
+  ){
     return "good";
   }
 
-  if (
+  if(
     t.includes("DECLIN") ||
     t.includes("WEAK") ||
     t.includes("BEARISH") ||
     t.includes("EXPENSIVE")
-  ) {
+  ){
     return "bad";
   }
 
   return "neutral";
 }
 
-function esc(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
 
-function investorSummary(d) {
+function decisionClass(decision){
 
-  const health = d.company_health?.status || "UNKNOWN";
-  const growth = d.growth?.trend || "UNKNOWN";
-  const profit = d.profitability?.trend || "UNKNOWN";
-  const valuation = d.valuation?.view || "UNKNOWN";
-  const decision = d.decision || "WATCH";
+  if(!decision) return "watch";
 
-  let message = "";
-
-  if (decision.includes("BUY")) {
-    message = `The company looks ${health.toLowerCase()}, with ${growth.toLowerCase()} growth and ${profit.toLowerCase()} profitability. The current setup supports a ${decision} view.`;
-  } else if (decision === "SELL") {
-    message = `The current setup is defensive. Despite the company's fundamentals, the technical picture is weakening and deserves caution.`;
-  } else {
-    message = `The company is currently showing ${health.toLowerCase()} fundamentals. Growth is ${growth.toLowerCase()} and profitability is ${profit.toLowerCase()}. The setup needs more confirmation before taking action.`;
+  if(decision.includes("BUY")){
+    return "buy";
   }
 
-  return message;
+  if(decision === "SELL"){
+    return "sell";
+  }
+
+  if(decision === "AVOID"){
+    return "avoid";
+  }
+
+  return "watch";
 }
 
-function buildRisks(d) {
+
+/* ========================================================
+   TABS
+======================================================== */
+
+function switchTab(tab){
+
+  document
+    .getElementById("stockTab")
+    .classList.toggle(
+      "active",
+      tab === "stock"
+    );
+
+  document
+    .getElementById("portfolioTab")
+    .classList.toggle(
+      "active",
+      tab === "portfolio"
+    );
+
+  document
+    .getElementById("stockTabButton")
+    .classList.toggle(
+      "active",
+      tab === "stock"
+    );
+
+  document
+    .getElementById("portfolioTabButton")
+    .classList.toggle(
+      "active",
+      tab === "portfolio"
+    );
+
+  if(tab === "portfolio"){
+    renderPortfolio();
+  }
+}
+
+
+/* ========================================================
+   STOCK ANALYZER
+======================================================== */
+
+function investorSummary(d){
+
+  const health =
+    d.company_health?.status || "UNKNOWN";
+
+  const growth =
+    d.growth?.trend || "UNKNOWN";
+
+  const profit =
+    d.profitability?.trend || "UNKNOWN";
+
+  const decision =
+    d.decision || "WATCH";
+
+  if(decision.includes("BUY")){
+
+    return `The company looks
+      ${health.toLowerCase()},
+      with ${growth.toLowerCase()} growth
+      and ${profit.toLowerCase()} profitability.
+      The current setup supports a
+      ${decision} view.`;
+  }
+
+  if(decision === "SELL"){
+
+    return `The current setup is defensive.
+      The technical picture is weakening,
+      so caution is warranted.`;
+  }
+
+  return `The company is currently showing
+    ${health.toLowerCase()} fundamentals.
+    Growth is ${growth.toLowerCase()} and
+    profitability is ${profit.toLowerCase()}.
+    More confirmation is needed before taking action.`;
+}
+
+
+function buildRisks(d){
 
   const risks = [];
 
   const rsi = Number(d.rsi);
-  const score = Number(d.score);
-  const health = Number(d.company_health?.score);
-  const pe = Number(d.valuation?.pe);
+  const health =
+    Number(d.company_health?.score);
 
-  if (
-    d.trend === "SIDEWAYS"
-  ) {
-    risks.push("The price trend is not clearly established.");
+  const pe =
+    Number(d.valuation?.pe);
+
+  if(d.trend === "SIDEWAYS"){
+    risks.push(
+      "The price trend is not clearly established."
+    );
   }
 
-  if (
+  if(
     d.structure_direction === "BEARISH" ||
     d.structure?.includes("LOWER")
-  ) {
-    risks.push("Market structure is deteriorating.");
+  ){
+    risks.push(
+      "Market structure is deteriorating."
+    );
   }
 
-  if (
+  if(
     Number.isFinite(rsi) &&
     rsi > 72
-  ) {
-    risks.push(`Momentum is becoming overbought (RSI ${rsi.toFixed(0)}).`);
+  ){
+    risks.push(
+      `Momentum is becoming overbought (RSI ${rsi.toFixed(0)}).`
+    );
   }
 
-  if (
+  if(
     Number.isFinite(pe) &&
     pe > 40
-  ) {
-    risks.push(`Valuation is demanding with a P/E of ${pe.toFixed(1)}x.`);
+  ){
+    risks.push(
+      `Valuation is demanding with a P/E of ${pe.toFixed(1)}x.`
+    );
   }
 
-  if (
+  if(
     Number.isFinite(health) &&
     health < 60
-  ) {
-    risks.push("Company fundamentals are not strong enough to fully support the setup.");
+  ){
+    risks.push(
+      "Company fundamentals are not strong enough to fully support the setup."
+    );
   }
 
-  if (
-    Number.isFinite(score) &&
-    score < 55
-  ) {
-    risks.push("The overall investment score remains below the preferred range.");
-  }
-
-  if (
-    d.price &&
-    d.resistance &&
-    Number(d.price) > Number(d.resistance) * 0.97 &&
-    !d.breakout_confirmed
-  ) {
-    risks.push("Price is close to resistance and may need a confirmed breakout.");
-  }
-
-  if (
-    d.risk_reward_target1 !== null &&
-    Number(d.risk_reward_target1) < 1.5
-  ) {
-    risks.push("The current risk/reward is not particularly attractive.");
-  }
-
-  if (
+  if(
     d.growth?.revenue_growth !== null &&
     Number(d.growth.revenue_growth) < 0
-  ) {
-    risks.push("Revenue growth is currently negative.");
+  ){
+    risks.push(
+      "Revenue growth is currently negative."
+    );
   }
 
-  if (
+  if(
     d.growth?.profit_growth !== null &&
     Number(d.growth.profit_growth) < 0
-  ) {
-    risks.push("Profit growth is currently negative.");
+  ){
+    risks.push(
+      "Profit growth is currently negative."
+    );
   }
 
-  if (!risks.length) {
-    risks.push("No major risk flag detected from the current data. Continue monitoring valuation, trend and earnings.");
+  if(!risks.length){
+
+    risks.push(
+      "No major risk flag detected from the current data. Continue monitoring valuation, trend and earnings."
+    );
+
   }
 
   return risks;
 }
 
-function buildPositives(d) {
+
+function buildPositives(d){
 
   const positives = [];
 
-  if (
+  if(
     Number(d.company_health?.score) >= 70
-  ) {
-    positives.push("Company fundamentals are healthy.");
+  ){
+    positives.push(
+      "Company fundamentals are healthy."
+    );
   }
 
-  if (
+  if(
     Number(d.growth?.revenue_growth) > 0
-  ) {
-    positives.push(`Revenue is growing ${percent(d.growth.revenue_growth)} year-over-year.`);
+  ){
+    positives.push(
+      `Revenue is growing ${percent(d.growth.revenue_growth)} year-over-year.`
+    );
   }
 
-  if (
+  if(
     Number(d.growth?.profit_growth) > 0
-  ) {
-    positives.push(`Profit is growing ${percent(d.growth.profit_growth)}.`);
+  ){
+    positives.push(
+      `Profit is growing ${percent(d.growth.profit_growth)}.`
+    );
   }
 
-  if (
-    d.trend === "BULLISH"
-  ) {
-    positives.push("Price trend is bullish.");
+  if(d.trend === "BULLISH"){
+    positives.push(
+      "Price trend is bullish."
+    );
   }
 
-  if (
+  if(
     d.structure?.includes("HIGHER")
-  ) {
-    positives.push("Market structure is improving.");
+  ){
+    positives.push(
+      "Market structure is improving."
+    );
   }
 
-  if (
+  if(
     Number(d.risk_reward_target1) >= 2
-  ) {
-    positives.push(`Risk/reward to Target 1 is attractive at ${Number(d.risk_reward_target1).toFixed(1)}x.`);
+  ){
+    positives.push(
+      `Risk/reward to Target 1 is attractive at ${Number(d.risk_reward_target1).toFixed(1)}x.`
+    );
   }
 
-  if (
-    d.breakout_confirmed
-  ) {
-    positives.push("Price has confirmed a breakout above resistance.");
-  }
-
-  if (
-    d.candle_bullish
-  ) {
-    positives.push(`Recent candle pattern is bullish (${d.candle_pattern}).`);
-  }
-
-  if (!positives.length) {
-    positives.push("No major positive factor has been confirmed yet.");
+  if(!positives.length){
+    positives.push(
+      "No major positive factor has been confirmed yet."
+    );
   }
 
   return positives;
 }
 
-function renderList(items) {
+
+function renderList(items){
 
   return items
     .map(x => `<li>${esc(x)}</li>`)
     .join("");
 }
 
-function renderNews(news) {
 
-  if (!news || !news.length) {
-    return `<div class="metric-small">
-      No recent news available.
-    </div>`;
+function renderNews(news){
+
+  if(!news || !news.length){
+
+    return `
+      <div class="small">
+        No recent news available.
+      </div>
+    `;
+
   }
 
   return news.map(item => {
 
-    const title = esc(item.title);
-    const source = esc(item.source);
-    const sentiment = esc(item.sentiment);
+    const title =
+      esc(item.title);
 
-    if (item.url) {
+    const source =
+      esc(item.source);
+
+    const sentiment =
+      esc(item.sentiment);
+
+    if(item.url){
+
       return `
         <div class="news-item">
-          <a href="${esc(item.url)}" target="_blank" rel="noopener">
+
+          <a
+            href="${esc(item.url)}"
+            target="_blank"
+            rel="noopener">
             ${title}
           </a>
+
           <div class="news-source">
             ${source} · ${sentiment}
           </div>
+
         </div>
       `;
+
     }
 
     return `
       <div class="news-item">
-        <div><strong>${title}</strong></div>
+
+        <strong>${title}</strong>
+
         <div class="news-source">
           ${source} · ${sentiment}
         </div>
+
       </div>
     `;
 
   }).join("");
 }
 
-function render(d) {
+
+function renderStock(d){
 
   currentData = d;
-
-  const decisionClass =
-    classForDecision(d.decision);
 
   const positives =
     buildPositives(d);
@@ -760,18 +1225,7 @@ function render(d) {
   const healthScore =
     Number(d.company_health?.score || 0);
 
-  const revenueGrowth =
-    d.growth?.revenue_growth;
-
-  const profitGrowth =
-    d.growth?.profit_growth;
-
-  const epsGrowth =
-    d.growth?.eps_growth;
-
-  document.getElementById("app").innerHTML = `
-
-    <!-- HERO -->
+  document.getElementById("stockApp").innerHTML = `
 
     <div class="card">
 
@@ -783,7 +1237,7 @@ function render(d) {
             INVESTMENT OVERVIEW
           </div>
 
-          <h2 style="margin:0;font-size:28px;">
+          <h2 style="margin:0;font-size:27px">
             ${esc(d.symbol)}
           </h2>
 
@@ -804,14 +1258,17 @@ function render(d) {
 
         <div class="hero-right">
 
-          <div class="decision ${decisionClass}">
+          <div class="decision ${decisionClass(d.decision)}">
             ${esc(d.decision)}
           </div>
 
-          <div class="score">
-            Investment Score<br>
-            <strong>${d.score ?? "N/A"}/100</strong>
+          <div class="small" style="margin-top:10px">
+            Investment Score
           </div>
+
+          <strong style="font-size:24px">
+            ${d.score ?? "N/A"}/100
+          </strong>
 
         </div>
 
@@ -819,8 +1276,6 @@ function render(d) {
 
     </div>
 
-
-    <!-- INVESTOR VIEW -->
 
     <div class="card">
 
@@ -835,8 +1290,6 @@ function render(d) {
     </div>
 
 
-    <!-- COMPANY HEALTH -->
-
     <div class="card">
 
       <div class="section-title">
@@ -847,24 +1300,20 @@ function render(d) {
 
         <div>
 
-          <div class="health-score">
+          <div style="font-size:37px;font-weight:800">
             ${healthScore}/100
           </div>
 
-          <div class="health-status ${trendClass(d.company_health?.status)}">
+          <div class="${trendClass(d.company_health?.status)}"
+               style="font-weight:800;margin-top:5px">
             ${esc(d.company_health?.status || "N/A")}
           </div>
 
           <div class="progress">
             <div
               class="progress-inner"
-              style="width:${Math.max(0,Math.min(100,healthScore))}%">
+              style="width:${healthScore}%">
             </div>
-          </div>
-
-          <div class="metric-small" style="margin-top:10px;">
-            Business health combines growth, profitability,
-            valuation and supporting market evidence.
           </div>
 
         </div>
@@ -872,15 +1321,21 @@ function render(d) {
         <div class="grid">
 
           <div class="metric">
-            <div class="metric-label">SECTOR</div>
-            <div class="metric-value">
+            <div class="metric-label">
+              SECTOR
+            </div>
+            <div class="metric-value"
+                 style="font-size:15px">
               ${esc(d.sector)}
             </div>
           </div>
 
           <div class="metric">
-            <div class="metric-label">INDUSTRY</div>
-            <div class="metric-value">
+            <div class="metric-label">
+              INDUSTRY
+            </div>
+            <div class="metric-value"
+                 style="font-size:15px">
               ${esc(d.industry)}
             </div>
           </div>
@@ -892,8 +1347,6 @@ function render(d) {
     </div>
 
 
-    <!-- GROWTH -->
-
     <div class="card">
 
       <div class="section-title">
@@ -903,39 +1356,36 @@ function render(d) {
       <div class="grid3">
 
         <div class="metric">
-          <div class="metric-label">GROWTH QUALITY</div>
+          <div class="metric-label">
+            GROWTH QUALITY
+          </div>
           <div class="metric-value ${trendClass(d.growth?.trend)}">
             ${esc(d.growth?.trend || "N/A")}
           </div>
         </div>
 
         <div class="metric">
-          <div class="metric-label">REVENUE GROWTH</div>
-          <div class="metric-value ${valueClass(revenueGrowth)}">
-            ${percent(revenueGrowth)}
+          <div class="metric-label">
+            REVENUE
+          </div>
+          <div class="metric-value ${valueClass(d.growth?.revenue_growth)}">
+            ${percent(d.growth?.revenue_growth)}
           </div>
         </div>
 
         <div class="metric">
-          <div class="metric-label">PROFIT GROWTH</div>
-          <div class="metric-value ${valueClass(profitGrowth)}">
-            ${percent(profitGrowth)}
+          <div class="metric-label">
+            PROFIT
+          </div>
+          <div class="metric-value ${valueClass(d.growth?.profit_growth)}">
+            ${percent(d.growth?.profit_growth)}
           </div>
         </div>
 
       </div>
 
-      <div class="metric" style="margin-top:12px;">
-        <div class="metric-label">EPS GROWTH</div>
-        <div class="metric-value ${valueClass(epsGrowth)}">
-          ${percent(epsGrowth)}
-        </div>
-      </div>
-
     </div>
 
-
-    <!-- PROFITABILITY -->
 
     <div class="card">
 
@@ -946,39 +1396,36 @@ function render(d) {
       <div class="grid3">
 
         <div class="metric">
-          <div class="metric-label">PROFITABILITY</div>
+          <div class="metric-label">
+            PROFITABILITY
+          </div>
           <div class="metric-value ${trendClass(d.profitability?.trend)}">
             ${esc(d.profitability?.trend || "N/A")}
           </div>
         </div>
 
         <div class="metric">
-          <div class="metric-label">PROFIT MARGIN</div>
+          <div class="metric-label">
+            PROFIT MARGIN
+          </div>
           <div class="metric-value">
             ${percent(d.profitability?.profit_margin)}
           </div>
         </div>
 
         <div class="metric">
-          <div class="metric-label">OPERATING MARGIN</div>
+          <div class="metric-label">
+            ROE
+          </div>
           <div class="metric-value">
-            ${percent(d.profitability?.operating_margin)}
+            ${percent(d.profitability?.roe)}
           </div>
         </div>
 
       </div>
 
-      <div class="metric" style="margin-top:12px;">
-        <div class="metric-label">RETURN ON EQUITY</div>
-        <div class="metric-value">
-          ${percent(d.profitability?.roe)}
-        </div>
-      </div>
-
     </div>
 
-
-    <!-- VALUATION -->
 
     <div class="card">
 
@@ -989,21 +1436,27 @@ function render(d) {
       <div class="grid3">
 
         <div class="metric">
-          <div class="metric-label">VALUATION VIEW</div>
+          <div class="metric-label">
+            VIEW
+          </div>
           <div class="metric-value ${trendClass(d.valuation?.view)}">
             ${esc(d.valuation?.view || "N/A")}
           </div>
         </div>
 
         <div class="metric">
-          <div class="metric-label">P/E</div>
+          <div class="metric-label">
+            P/E
+          </div>
           <div class="metric-value">
             ${multiple(d.valuation?.pe)}
           </div>
         </div>
 
         <div class="metric">
-          <div class="metric-label">PEG</div>
+          <div class="metric-label">
+            PEG
+          </div>
           <div class="metric-value">
             ${multiple(d.valuation?.peg)}
           </div>
@@ -1011,17 +1464,8 @@ function render(d) {
 
       </div>
 
-      <div class="metric" style="margin-top:12px;">
-        <div class="metric-label">EPS</div>
-        <div class="metric-value">
-          ${money(d.valuation?.eps)}
-        </div>
-      </div>
-
     </div>
 
-
-    <!-- NEWS -->
 
     <div class="card">
 
@@ -1029,11 +1473,16 @@ function render(d) {
         LATEST NEWS
       </div>
 
-      <div class="metric" style="margin-bottom:12px;">
-        <div class="metric-label">NEWS SENTIMENT</div>
+      <div class="metric" style="margin-bottom:8px">
+
+        <div class="metric-label">
+          NEWS SENTIMENT
+        </div>
+
         <div class="metric-value ${trendClass(d.news_sentiment)}">
           ${esc(d.news_sentiment || "N/A")}
         </div>
+
       </div>
 
       ${renderNews(d.news)}
@@ -1041,15 +1490,13 @@ function render(d) {
     </div>
 
 
-    <!-- ENTRY -->
-
     <div class="card">
 
       <div class="section-title">
         PRICE & ENTRY
       </div>
 
-      <div class="entry-highlight">
+      <div class="entry">
 
         <div class="metric-label">
           PREFERRED BUY ZONE
@@ -1061,31 +1508,39 @@ function render(d) {
           ${money(d.entry_high)}
         </div>
 
-        <div class="metric-small">
+        <div class="small">
           Preferred entry:
-          <strong>${money(d.preferred_entry)}</strong>
+          <strong>
+            ${money(d.preferred_entry)}
+          </strong>
         </div>
 
       </div>
 
-      <div class="grid3" style="margin-top:12px;">
+      <div class="grid3" style="margin-top:10px">
 
         <div class="metric">
-          <div class="metric-label">INVALIDATION</div>
+          <div class="metric-label">
+            INVALIDATION
+          </div>
           <div class="metric-value bad">
             ${money(d.invalidation)}
           </div>
         </div>
 
         <div class="metric">
-          <div class="metric-label">TARGET 1</div>
+          <div class="metric-label">
+            TARGET 1
+          </div>
           <div class="metric-value good">
             ${money(d.target1)}
           </div>
         </div>
 
         <div class="metric">
-          <div class="metric-label">TARGET 2</div>
+          <div class="metric-label">
+            TARGET 2
+          </div>
           <div class="metric-value good">
             ${money(d.target2)}
           </div>
@@ -1093,40 +1548,30 @@ function render(d) {
 
       </div>
 
-      <div class="grid" style="margin-top:12px;">
+      <div class="grid" style="margin-top:10px">
 
         <div class="metric">
           <div class="metric-label">
-            RISK / REWARD → TARGET 1
+            R/R TARGET 1
           </div>
-          <div class="rr ${trendClass(d.risk_reward_quality)}">
+          <div class="metric-value">
             ${multiple(d.risk_reward_target1)}
           </div>
         </div>
 
         <div class="metric">
           <div class="metric-label">
-            RISK / REWARD → TARGET 2
+            R/R TARGET 2
           </div>
-          <div class="rr ${trendClass(d.risk_reward_quality)}">
+          <div class="metric-value">
             ${multiple(d.risk_reward_target2)}
           </div>
         </div>
 
       </div>
 
-      <div class="metric-small" style="margin-top:12px;">
-        ${
-          d.in_pullback_zone
-          ? "✓ Price is currently inside the preferred pullback zone."
-          : "Waiting for price to reach the preferred entry zone."
-        }
-      </div>
-
     </div>
 
-
-    <!-- POSITIVES & RISKS -->
 
     <div class="grid">
 
@@ -1141,7 +1586,6 @@ function render(d) {
         </ul>
 
       </div>
-
 
       <div class="card risk-box">
 
@@ -1158,47 +1602,20 @@ function render(d) {
     </div>
 
 
-    <!-- CHART -->
-
     <div class="card">
 
       <div class="section-title">
         PRICE & DECISION MAP
       </div>
 
-      <div class="chart-wrap">
-        <canvas id="priceChart"></canvas>
-      </div>
+      <canvas id="priceChart"></canvas>
 
-      <div class="chart-legend">
-
-        <div class="legend">
-          <span class="dot"></span>
-          Price
-        </div>
-
-        <div class="legend">
-          🟢 Buy zone
-        </div>
-
-        <div class="legend">
-          🟠 Resistance
-        </div>
-
-        <div class="legend">
-          🔴 Invalidation
-        </div>
-
-        <div class="legend">
-          🎯 Target 1 / Target 2
-        </div>
-
+      <div class="small">
+        Buy zone · Resistance · Invalidation · Targets
       </div>
 
     </div>
 
-
-    <!-- TECHNICALS -->
 
     <div class="card">
 
@@ -1208,26 +1625,27 @@ function render(d) {
           Technical Analysis
         </summary>
 
-        <div class="grid3" style="margin-top:16px;">
+        <div class="grid3" style="margin-top:15px">
 
           <div class="metric">
             <div class="metric-label">TREND</div>
-            <div class="metric-value ${trendClass(d.trend)}">
+            <div class="metric-value">
               ${esc(d.trend)}
             </div>
           </div>
 
           <div class="metric">
             <div class="metric-label">STRUCTURE</div>
-            <div class="metric-value" style="font-size:14px;">
+            <div class="metric-value"
+                 style="font-size:13px">
               ${esc(d.structure)}
             </div>
           </div>
 
           <div class="metric">
-            <div class="metric-label">TECHNICAL SCORE</div>
+            <div class="metric-label">RSI</div>
             <div class="metric-value">
-              ${d.technical_score ?? "N/A"}/100
+              ${d.rsi ?? "N/A"}
             </div>
           </div>
 
@@ -1246,36 +1664,15 @@ function render(d) {
           </div>
 
           <div class="metric">
-            <div class="metric-label">RSI 14</div>
-            <div class="metric-value">
-              ${d.rsi ?? "N/A"}
-            </div>
-          </div>
-
-          <div class="metric">
-            <div class="metric-label">MACD</div>
-            <div class="metric-value">
-              ${d.macd ?? "N/A"}
-            </div>
-          </div>
-
-          <div class="metric">
             <div class="metric-label">SUPPORT</div>
             <div class="metric-value">
               ${money(d.support)}
             </div>
           </div>
 
-          <div class="metric">
-            <div class="metric-label">RESISTANCE</div>
-            <div class="metric-value">
-              ${money(d.resistance)}
-            </div>
-          </div>
-
         </div>
 
-        <div style="margin-top:18px;">
+        <div style="margin-top:15px">
 
           <div class="section-title">
             CHART FORMATIONS
@@ -1283,38 +1680,30 @@ function render(d) {
 
           ${
             d.formations?.length
-              ? d.formations.map(f => `
-                <div class="metric" style="margin-bottom:8px;">
-                  <strong>${esc(f.name)}</strong>
-                  <span class="${trendClass(f.direction)}">
-                    · ${esc(f.direction)}
-                  </span>
-                  <div class="metric-small">
-                    Confidence ${f.confidence}%
-                  </div>
+            ?
+            d.formations.map(f => `
+              <div class="metric"
+                   style="margin-bottom:7px">
+
+                <strong>
+                  ${esc(f.name)}
+                </strong>
+
+                <span class="${trendClass(f.direction)}">
+                  · ${esc(f.direction)}
+                </span>
+
+                <div class="small">
+                  Confidence ${f.confidence}%
                 </div>
-              `).join("")
-              : `<div class="metric-small">
-                   No significant formation detected.
-                 </div>`
+
+              </div>
+            `).join("")
+            :
+            `<div class="small">
+              No significant formation detected.
+            </div>`
           }
-
-        </div>
-
-        <div style="margin-top:18px;">
-
-          <div class="section-title">
-            CANDLE SIGNAL
-          </div>
-
-          <div class="metric">
-            <div class="metric-value">
-              ${esc(d.candle_pattern || "None")}
-            </div>
-            <div class="metric-small">
-              Strength: ${esc(d.candle_strength || "N/A")}
-            </div>
-          </div>
 
         </div>
 
@@ -1322,22 +1711,25 @@ function render(d) {
 
     </div>
 
-
     <div class="footer">
       Daily market data: ${esc(d.last_updated || "N/A")}
     </div>
   `;
 
   drawChart(d);
-
 }
 
-function drawChart(d) {
+
+/* ========================================================
+   CHART
+======================================================== */
+
+function drawChart(d){
 
   const canvas =
     document.getElementById("priceChart");
 
-  if (!canvas) return;
+  if(!canvas) return;
 
   const ctx =
     canvas.getContext("2d");
@@ -1354,7 +1746,7 @@ function drawChart(d) {
   canvas.height =
     rect.height * ratio;
 
-  ctx.scale(ratio, ratio);
+  ctx.scale(ratio,ratio);
 
   const width = rect.width;
   const height = rect.height;
@@ -1362,7 +1754,7 @@ function drawChart(d) {
   const history =
     (d.history || []).slice(-60);
 
-  if (history.length < 2) return;
+  if(history.length < 2) return;
 
   const prices =
     history.map(x => Number(x.close));
@@ -1386,7 +1778,7 @@ function drawChart(d) {
     Math.max(...all);
 
   const padding =
-    (max - min) * 0.12 || 1;
+    (max-min)*.12 || 1;
 
   min -= padding;
   max += padding;
@@ -1394,24 +1786,22 @@ function drawChart(d) {
   const left = 15;
   const right = 15;
   const top = 15;
-  const bottom = 25;
+  const bottom = 20;
 
   const chartWidth =
-    width - left - right;
+    width-left-right;
 
   const chartHeight =
-    height - top - bottom;
+    height-top-bottom;
 
-  function x(i) {
+  function x(i){
     return left +
-      (i / (prices.length - 1)) *
-      chartWidth;
+      i/(prices.length-1)*chartWidth;
   }
 
-  function y(value) {
+  function y(v){
     return top +
-      (1 - (value - min) / (max - min)) *
-      chartHeight;
+      (1-(v-min)/(max-min))*chartHeight;
   }
 
   ctx.clearRect(
@@ -1421,89 +1811,86 @@ function drawChart(d) {
     height
   );
 
-  /*
-    Background grid
-  */
+  /* grid */
 
-  ctx.strokeStyle = "#e8edf4";
+  ctx.strokeStyle =
+    "#e8edf4";
+
   ctx.lineWidth = 1;
 
-  for (let i = 0; i < 5; i++) {
+  for(let i=0;i<5;i++){
 
     const gy =
-      top +
-      (i / 4) * chartHeight;
+      top+i/4*chartHeight;
 
     ctx.beginPath();
-    ctx.moveTo(left, gy);
-    ctx.lineTo(width - right, gy);
+    ctx.moveTo(left,gy);
+    ctx.lineTo(width-right,gy);
     ctx.stroke();
 
   }
 
-  /*
-    BUY ZONE
-  */
+  /* buy zone */
 
-  const zoneLow =
+  const low =
     Number(d.entry_low);
 
-  const zoneHigh =
+  const high =
     Number(d.entry_high);
 
-  if (
-    Number.isFinite(zoneLow) &&
-    Number.isFinite(zoneHigh)
-  ) {
+  if(
+    Number.isFinite(low) &&
+    Number.isFinite(high)
+  ){
 
-    const yHigh =
-      y(Math.max(zoneLow, zoneHigh));
+    const yh =
+      y(Math.max(low,high));
 
-    const yLow =
-      y(Math.min(zoneLow, zoneHigh));
+    const yl =
+      y(Math.min(low,high));
 
     ctx.fillStyle =
-      "rgba(70,150,100,0.10)";
+      "rgba(70,150,100,.10)";
 
     ctx.fillRect(
       left,
-      yHigh,
+      yh,
       chartWidth,
-      yLow - yHigh
+      yl-yh
     );
-
   }
 
-  function drawLevel(
+  function level(
     value,
-    lineType,
+    type,
     label
-  ) {
+  ){
 
-    if (!Number.isFinite(value)) return;
+    if(!Number.isFinite(Number(value))){
+      return;
+    }
 
-    const yy = y(value);
+    const yy =
+      y(Number(value));
 
     ctx.save();
 
-    if (lineType === "dashed") {
-      ctx.setLineDash([6, 5]);
-    } else {
-      ctx.setLineDash([]);
+    if(type === "dashed"){
+      ctx.setLineDash([6,5]);
     }
 
     ctx.strokeStyle =
-      lineType === "risk"
-        ? "#c94b4b"
-        : lineType === "target"
-          ? "#4b8f63"
-          : "#bd8735";
+      type === "risk"
+      ? "#c94b4b"
+      : type === "target"
+        ? "#4b8f63"
+        : "#bd8735";
 
     ctx.lineWidth = 1.3;
 
     ctx.beginPath();
-    ctx.moveTo(left, yy);
-    ctx.lineTo(width - right, yy);
+    ctx.moveTo(left,yy);
+    ctx.lineTo(width-right,yy);
     ctx.stroke();
 
     ctx.restore();
@@ -1512,43 +1899,40 @@ function drawChart(d) {
       "#66748b";
 
     ctx.font =
-      "11px -apple-system, BlinkMacSystemFont, sans-serif";
+      "11px -apple-system,BlinkMacSystemFont,sans-serif";
 
     ctx.fillText(
-      label + " " + money(value),
-      left + 5,
-      Math.max(12, yy - 4)
+      label+" "+money(value),
+      left+4,
+      Math.max(12,yy-4)
     );
-
   }
 
-  drawLevel(
+  level(
     d.invalidation,
     "risk",
     "Invalidation"
   );
 
-  drawLevel(
+  level(
     d.resistance,
     "dashed",
     "Resistance"
   );
 
-  drawLevel(
+  level(
     d.target1,
     "target",
     "Target 1"
   );
 
-  drawLevel(
+  level(
     d.target2,
     "target",
     "Target 2"
   );
 
-  /*
-    PRICE LINE
-  */
+  /* price */
 
   ctx.strokeStyle =
     "#172033";
@@ -1557,30 +1941,25 @@ function drawChart(d) {
 
   ctx.beginPath();
 
-  prices.forEach((price, i) => {
+  prices.forEach((p,i)=>{
 
-    const px = x(i);
-    const py = y(price);
-
-    if (i === 0) {
-      ctx.moveTo(px, py);
-    } else {
-      ctx.lineTo(px, py);
+    if(i===0){
+      ctx.moveTo(x(i),y(p));
+    }else{
+      ctx.lineTo(x(i),y(p));
     }
 
   });
 
   ctx.stroke();
 
-  /*
-    CURRENT PRICE
-  */
+  /* current */
 
   const current =
-    prices[prices.length - 1];
+    prices[prices.length-1];
 
   const cx =
-    x(prices.length - 1);
+    x(prices.length-1);
 
   const cy =
     y(current);
@@ -1589,21 +1968,31 @@ function drawChart(d) {
     "#172033";
 
   ctx.beginPath();
-  ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+  ctx.arc(
+    cx,
+    cy,
+    5,
+    0,
+    Math.PI*2
+  );
   ctx.fill();
 
   ctx.font =
-    "bold 12px -apple-system, BlinkMacSystemFont, sans-serif";
+    "bold 12px -apple-system,BlinkMacSystemFont,sans-serif";
 
   ctx.fillText(
     money(current),
-    Math.max(5, cx - 55),
-    cy - 10
+    Math.max(5,cx-55),
+    cy-10
   );
-
 }
 
-async function analyze() {
+
+/* ========================================================
+   STOCK API
+======================================================== */
+
+async function analyze(){
 
   const input =
     document.getElementById("tickerInput");
@@ -1615,28 +2004,32 @@ async function analyze() {
       .trim()
       .toUpperCase();
 
-  if (!symbol) return;
+  if(!symbol) return;
 
-  currentTicker = symbol;
+  currentTicker =
+    symbol;
 
-  document.getElementById("app").innerHTML =
-    `<div class="card loading">
-      Analyzing ${esc(symbol)}...
-      <br><br>
-      <small>
-        Gathering market, company and news data.
-      </small>
-    </div>`;
+  document.getElementById("stockApp").innerHTML =
+    `
+      <div class="card loading">
+        Analyzing ${esc(symbol)}...
+        <br><br>
+        <small>
+          Gathering market, company and news data.
+        </small>
+      </div>
+    `;
 
-  document.querySelectorAll(".ticker")
-    .forEach(btn => {
+  document
+    .querySelectorAll(".ticker")
+    .forEach(btn=>{
       btn.classList.toggle(
         "active",
         btn.textContent.trim() === symbol
       );
     });
 
-  try {
+  try{
 
     const response =
       await fetch(
@@ -1646,58 +2039,503 @@ async function analyze() {
     const data =
       await response.json();
 
-    if (!response.ok || data.error) {
+    if(!response.ok || data.error){
 
       throw new Error(
         data.error ||
         "Unable to load investment data."
       );
-
     }
 
-    render(data);
+    renderStock(data);
 
-  } catch (error) {
+  }catch(error){
 
-    document.getElementById("app").innerHTML =
-      `<div class="error">
-        <strong>Error</strong><br><br>
-        ${esc(error.message)}
-      </div>`;
+    document.getElementById("stockApp").innerHTML =
+      `
+        <div class="error">
 
+          <strong>Error</strong>
+
+          <br><br>
+
+          ${esc(error.message)}
+
+        </div>
+      `;
   }
-
 }
 
-function selectTicker(symbol) {
 
-  currentTicker = symbol;
+function selectTicker(symbol){
+
+  currentTicker =
+    symbol;
 
   document.getElementById("tickerInput").value =
     symbol;
 
   analyze();
-
 }
+
+
+/* ========================================================
+   PORTFOLIO STORAGE
+======================================================== */
+
+function savePortfolio(){
+
+  localStorage.setItem(
+    "investmentCockpitPortfolio",
+    JSON.stringify(portfolio)
+  );
+}
+
+
+function saveSettings(){
+
+  investorSettings = {
+
+    horizon:
+      document.getElementById("horizon").value,
+
+    riskProfile:
+      document.getElementById("riskProfile").value,
+
+    availableCash:
+      Number(
+        document.getElementById("availableCash").value || 0
+      )
+
+  };
+
+  localStorage.setItem(
+    "investmentCockpitSettings",
+    JSON.stringify(investorSettings)
+  );
+}
+
+
+/* ========================================================
+   PORTFOLIO ADD
+======================================================== */
+
+function addHolding(){
+
+  const ticker =
+    document
+      .getElementById("holdingTicker")
+      .value
+      .trim()
+      .toUpperCase();
+
+  const shares =
+    Number(
+      document.getElementById("holdingShares").value
+    );
+
+  const cost =
+    Number(
+      document.getElementById("holdingCost").value
+    );
+
+  if(
+    !ticker ||
+    !Number.isFinite(shares) ||
+    shares <= 0 ||
+    !Number.isFinite(cost) ||
+    cost <= 0
+  ){
+
+    alert(
+      "Please enter ticker, shares and average cost."
+    );
+
+    return;
+  }
+
+  const existing =
+    portfolio.find(
+      x => x.ticker === ticker
+    );
+
+  if(existing){
+
+    const totalOld =
+      existing.shares *
+      existing.avgCost;
+
+    const totalNew =
+      shares * cost;
+
+    const totalShares =
+      existing.shares + shares;
+
+    existing.avgCost =
+      (totalOld + totalNew) /
+      totalShares;
+
+    existing.shares =
+      totalShares;
+
+  }else{
+
+    portfolio.push({
+
+      ticker,
+      shares,
+      avgCost:cost,
+      price:null,
+      name:ticker
+
+    });
+
+  }
+
+  savePortfolio();
+
+  document.getElementById("holdingTicker").value="";
+  document.getElementById("holdingShares").value="";
+  document.getElementById("holdingCost").value="";
+
+  renderPortfolio();
+}
+
+
+/* ========================================================
+   DELETE HOLDING
+======================================================== */
+
+function deleteHolding(ticker){
+
+  portfolio =
+    portfolio.filter(
+      x => x.ticker !== ticker
+    );
+
+  savePortfolio();
+
+  renderPortfolio();
+}
+
+
+/* ========================================================
+   PORTFOLIO RENDER
+======================================================== */
+
+function renderPortfolio(){
+
+  loadSettings();
+
+  const list =
+    document.getElementById("holdingsList");
+
+  if(!portfolio.length){
+
+    document.getElementById("portfolioValue")
+      .textContent =
+      "$0.00";
+
+    document.getElementById("portfolioReturn")
+      .textContent =
+      "Add your holdings to begin";
+
+    document.getElementById("portfolioReturn")
+      .className =
+      "return-value neutral";
+
+    list.innerHTML =
+      `
+        <div class="empty">
+          Your portfolio is empty.
+        </div>
+      `;
+
+    document.getElementById("allocation")
+      .innerHTML =
+      `
+        <div class="empty">
+          Add holdings to see your allocation.
+        </div>
+      `;
+
+    return;
+  }
+
+  let totalValue = 0;
+  let totalCost = 0;
+
+  portfolio.forEach(h=>{
+
+    const price =
+      Number(h.price) ||
+      Number(h.avgCost);
+
+    h.currentValue =
+      h.shares * price;
+
+    h.costValue =
+      h.shares * h.avgCost;
+
+    totalValue +=
+      h.currentValue;
+
+    totalCost +=
+      h.costValue;
+
+  });
+
+  portfolio.forEach(h=>{
+
+    h.weight =
+      totalValue > 0
+      ? h.currentValue / totalValue * 100
+      : 0;
+
+  });
+
+  savePortfolio();
+
+  const returnPct =
+    totalCost > 0
+    ? (totalValue-totalCost) /
+      totalCost*100
+    : 0;
+
+  document.getElementById("portfolioValue")
+    .textContent =
+    money(totalValue);
+
+  document.getElementById("portfolioReturn")
+    .textContent =
+    `Unrealized return ${returnPct >= 0 ? "+" : ""}${returnPct.toFixed(1)}%`;
+
+  document.getElementById("portfolioReturn")
+    .className =
+    `return-value ${valueClass(returnPct)}`;
+
+  list.innerHTML =
+    portfolio
+      .map(h=>{
+
+        return `
+
+          <div class="holding">
+
+            <div class="holding-top">
+
+              <div>
+
+                <div class="holding-symbol">
+                  ${esc(h.ticker)}
+                </div>
+
+                <div class="holding-name">
+                  ${esc(h.name || h.ticker)}
+                </div>
+
+              </div>
+
+              <div>
+
+                <div class="weight">
+                  ${h.weight.toFixed(1)}%
+                </div>
+
+                <button
+                  class="delete-btn"
+                  onclick="deleteHolding('${esc(h.ticker)}')">
+                  Remove
+                </button>
+
+              </div>
+
+            </div>
+
+            <div class="bar">
+
+              <div
+                class="bar-inner"
+                style="width:${Math.min(h.weight,100)}%">
+              </div>
+
+            </div>
+
+            <div class="holding-grid">
+
+              <div class="holding-metric">
+
+                <div class="label">
+                  VALUE
+                </div>
+
+                <div class="value">
+                  ${money(h.currentValue)}
+                </div>
+
+              </div>
+
+              <div class="holding-metric">
+
+                <div class="label">
+                  SHARES
+                </div>
+
+                <div class="value">
+                  ${h.shares}
+                </div>
+
+              </div>
+
+              <div class="holding-metric">
+
+                <div class="label">
+                  AVG COST
+                </div>
+
+                <div class="value">
+                  ${money(h.avgCost)}
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        `;
+
+      }).join("");
+
+
+  /* allocation */
+
+  document.getElementById("allocation")
+    .innerHTML = `
+
+      <div class="allocation-bar">
+
+        ${
+          portfolio.map(h=>`
+
+            <div
+              class="allocation-segment"
+              style="width:${h.weight}%"
+              title="${esc(h.ticker)} ${h.weight.toFixed(1)}%">
+            </div>
+
+          `).join("")
+        }
+
+      </div>
+
+      <div style="margin-top:12px">
+
+        ${
+          portfolio.map(h=>`
+
+            <div
+              style="
+                display:flex;
+                justify-content:space-between;
+                margin:7px 0;
+                font-size:13px">
+
+              <strong>
+                ${esc(h.ticker)}
+              </strong>
+
+              <span>
+                ${h.weight.toFixed(1)}%
+              </span>
+
+            </div>
+
+          `).join("")
+        }
+
+      </div>
+    `;
+}
+
+
+/* ========================================================
+   SETTINGS
+======================================================== */
+
+function loadSettings(){
+
+  if(
+    investorSettings.horizon
+  ){
+    document.getElementById("horizon").value =
+      investorSettings.horizon;
+  }
+
+  if(
+    investorSettings.riskProfile
+  ){
+    document.getElementById("riskProfile").value =
+      investorSettings.riskProfile;
+  }
+
+  if(
+    investorSettings.availableCash !== undefined
+  ){
+    document.getElementById("availableCash").value =
+      investorSettings.availableCash;
+  }
+}
+
+
+document
+  .getElementById("horizon")
+  .addEventListener(
+    "change",
+    saveSettings
+  );
+
+document
+  .getElementById("riskProfile")
+  .addEventListener(
+    "change",
+    saveSettings
+  );
+
+document
+  .getElementById("availableCash")
+  .addEventListener(
+    "input",
+    saveSettings
+  );
+
+
+document
+  .getElementById("tickerInput")
+  .addEventListener(
+    "keydown",
+    e=>{
+      if(e.key === "Enter"){
+        analyze();
+      }
+    }
+  );
+
 
 window.addEventListener(
   "resize",
-  () => {
-    if (currentData) {
+  ()=>{
+    if(currentData){
       drawChart(currentData);
     }
   }
 );
 
-document.getElementById("tickerInput")
-  .addEventListener(
-    "keydown",
-    e => {
-      if (e.key === "Enter") {
-        analyze();
-      }
-    }
-  );
+
+/* ========================================================
+   START
+======================================================== */
+
+loadSettings();
 
 analyze();
 
