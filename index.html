@@ -1005,6 +1005,23 @@
 
         </div>
 
+
+        <div style="margin-top:20px">
+
+          <div class="section-title">
+            SECTOR ALLOCATION
+          </div>
+
+          <div id="portfolioSectorAllocation">
+
+            <div class="info">
+              Refresh prices to calculate sector allocation.
+            </div>
+
+          </div>
+
+        </div>
+
       </div>
 
 
@@ -3414,6 +3431,16 @@
 
         `;
 
+        document.getElementById(
+          "portfolioSectorAllocation"
+        ).innerHTML = `
+
+          <div class="empty">
+            Add holdings to see sector allocation.
+          </div>
+
+        `;
+
 
         return;
 
@@ -3981,6 +4008,8 @@
         </div>
 
       `;
+
+      renderBasicSectorAllocation();
 
     }
 
@@ -6110,6 +6139,7 @@
 
         renderPortfolioIntelligence();
         renderPortfolioExposure();
+        renderBasicSectorAllocation();
 
 
       }catch(error){
@@ -6309,6 +6339,33 @@
        PORTFOLIO EXPOSURE & BUSINESS THEMES
     ======================================================== */
 
+
+    const sectorFallback = {
+      AMD:"Technology",
+      GOOGL:"Communication Services",
+      BE:"Industrials",
+      AVGO:"Technology",
+      CRWV:"Technology",
+      CRDO:"Technology",
+      QBTS:"Technology",
+      ISRG:"Healthcare",
+      IREN:"Technology",
+      MRVL:"Technology",
+      META:"Communication Services",
+      MU:"Technology",
+      MSFT:"Technology",
+      NBIS:"Technology",
+      NVDA:"Technology",
+      OKLO:"Industrials",
+      ORCL:"Technology",
+      OSCR:"Healthcare",
+      OUST:"Technology",
+      RKLB:"Industrials",
+      NOW:"Technology",
+      SOFI:"Financials",
+      VRT:"Industrials"
+    };
+
     const companyThemes = {
       NVDA:{themes:["AI","Semiconductors","Data Centers"],focus:"AI accelerators, data-center computing, networking and software infrastructure."},
       AMD:{themes:["AI","Semiconductors","Data Centers"],focus:"CPUs, GPUs and AI accelerators for data centers, PCs and high-performance computing."},
@@ -6385,6 +6442,108 @@
           </div>`;
       }).join("");
     }
+
+
+    function calculateBasicSectorWeights(){
+
+      const sectors = {};
+
+      portfolio.forEach(holding => {
+
+        const weight =
+          Number(holding.weight) || 0;
+
+        if(weight <= 0){
+          return;
+        }
+
+        const apiSector =
+          holding._analysis?.sector ||
+          holding.analysis?.sector;
+
+        const sector =
+          apiSector ||
+          sectorFallback[holding.ticker] ||
+          "Other";
+
+        sectors[sector] =
+          (sectors[sector] || 0) +
+          weight;
+
+      });
+
+      return sectors;
+    }
+
+
+    function renderBasicSectorAllocation(){
+
+      const box =
+        document.getElementById(
+          "portfolioSectorAllocation"
+        );
+
+      if(!box){
+        return;
+      }
+
+      const weights =
+        calculateBasicSectorWeights();
+
+      const entries =
+        Object.entries(weights)
+          .filter(([name,weight]) => Number(weight) > 0)
+          .sort((a,b) => b[1] - a[1]);
+
+      if(!entries.length){
+
+        box.innerHTML = `
+          <div class="info">
+            Refresh prices to calculate sector allocation.
+          </div>
+        `;
+
+        return;
+      }
+
+      const max =
+        Math.max(
+          ...entries.map(x => x[1])
+        );
+
+      box.innerHTML = entries.map(
+        ([sector,weight]) => `
+
+          <div class="exposure-row">
+
+            <div class="exposure-name">
+              ${esc(sector)}
+            </div>
+
+            <div class="exposure-track">
+
+              <div
+                class="exposure-fill"
+                style="width:${
+                  max > 0
+                    ? (weight / max) * 100
+                    : 0
+                }%">
+              </div>
+
+            </div>
+
+            <div class="exposure-pct">
+              ${weight.toFixed(1)}%
+            </div>
+
+          </div>
+
+        `
+      ).join("");
+
+    }
+
 
     function renderPortfolioExposure(){
       const box=document.getElementById("portfolioExposure");
