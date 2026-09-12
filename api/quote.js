@@ -1,11 +1,12 @@
 // api/quote.js
-// Portfolio market-price endpoint
-// Uses TigZig YFIN (Yahoo Finance data) instead of Yahoo directly.
+// Current portfolio price endpoint
+// Uses TigZig YFIN detailed company/market data.
 
 const CACHE = new Map();
 const CACHE_MS = 5 * 60 * 1000;
 
-const YFIN_BASE = "https://yfin-h.tigzig.com/v1/get-market-data/";
+const YFIN_BASE =
+  "https://yfin-h.tigzig.com/v1/get-detailed-info/";
 
 function cleanTicker(value) {
   return String(value || "")
@@ -22,131 +23,31 @@ function toNumber(value) {
     return null;
   }
 
+  if (typeof value === "object") {
+    if (value.raw !== undefined) {
+      return toNumber(value.raw);
+    }
+
+    if (value.value !== undefined) {
+      return toNumber(value.value);
+    }
+  }
+
   const n = Number(value);
 
   return Number.isFinite(n) ? n : null;
 }
 
-function findPrice(data) {
-  if (!data) return null;
-
-  // Direct fields
-  const possibleFields = [
-    "regularMarketPrice",
-    "regular_market_price",
-    "currentPrice",
-    "current_price",
-    "price",
-    "lastPrice",
-    "last_price",
-    "close",
-    "Close"
-  ];
-
-  for (const field of possibleFields) {
-    if (Object.prototype.hasOwnProperty.call(data, field)) {
-      const value = toNumber(data[field]);
-
-      if (value !== null) {
-        return value;
-      }
-    }
+function getField(data, fields) {
+  if (!data || typeof data !== "object") {
+    return null;
   }
-
-  // Sometimes the API may return nested market data.
-  const nestedCandidates = [
-    data.market,
-    data.market_data,
-    data.quote,
-    data.data,
-    data.result
-  ];
-
-  for (const nested of nestedCandidates) {
-    if (nested && typeof nested === "object") {
-      const price = findPrice(nested);
-
-      if (price !== null) {
-        return price;
-      }
-    }
-  }
-
-  return null;
-}
-
-function findPreviousClose(data) {
-  if (!data) return null;
-
-  const possibleFields = [
-    "regularMarketPreviousClose",
-    "regular_market_previous_close",
-    "previousClose",
-    "previous_close",
-    "prevClose",
-    "prev_close"
-  ];
-
-  for (const field of possibleFields) {
-    if (Object.prototype.hasOwnProperty.call(data, field)) {
-      const value = toNumber(data[field]);
-
-      if (value !== null) {
-        return value;
-      }
-    }
-  }
-
-  const nestedCandidates = [
-    data.market,
-    data.market_data,
-    data.quote,
-    data.data,
-    data.result
-  ];
-
-  for (const nested of nestedCandidates) {
-    if (nested && typeof nested === "object") {
-      const value = findPreviousClose(nested);
-
-      if (value !== null) {
-        return value;
-      }
-    }
-  }
-
-  return null;
-}
-
-function findCurrency(data) {
-  if (!data || typeof data !== "object") return null;
-
-  const fields = [
-    "currency",
-    "Currency",
-    "financialCurrency",
-    "financial_currency"
-  ];
 
   for (const field of fields) {
-    if (data[field]) {
-      return String(data[field]);
-    }
-  }
+    if (Object.prototype.hasOwnProperty.call(data, field)) {
+      const value = data[field];
 
-  const nestedCandidates = [
-    data.market,
-    data.market_data,
-    data.quote,
-    data.data,
-    data.result
-  ];
-
-  for (const nested of nestedCandidates) {
-    if (nested && typeof nested === "object") {
-      const value = findCurrency(nested);
-
-      if (value) {
+      if (value !== null && value !== undefined) {
         return value;
       }
     }
@@ -162,7 +63,7 @@ async function fetchMarketData(ticker) {
   const response = await fetch(url, {
     method: "GET",
     headers: {
-      "Accept": "application/json",
+      Accept: "application/json",
       "User-Agent": "Investment-Cockpit/1.0"
     }
   });
@@ -181,7 +82,7 @@ async function fetchMarketData(ticker) {
     data = JSON.parse(text);
   } catch (error) {
     throw new Error(
-      "Market data service returned an unexpected response"
+      "Market data service returned invalid JSON"
     );
   }
 
@@ -189,10 +90,19 @@ async function fetchMarketData(ticker) {
 }
 
 function extractTickerData(payload, ticker) {
-  if (!payload) return null;
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
 
-  // Case 1:
-  // { "NVDA": {...} }
+  // Expected format:
+  // {
+  //   "NVDA": {
+  //     "main_info": {
+  //       ...
+  //     }
+  //   }
+  // }
+
   if (
     payload[ticker] &&
     typeof payload[ticker] === "object"
@@ -200,62 +110,213 @@ function extractTickerData(payload, ticker) {
     return payload[ticker];
   }
 
-  // Case 2:
-  // { "data": { "NVDA": {...} } }
-  if (
-    payload.data &&
-    payload.data[ticker] &&
-    typeof payload.data[ticker] === "object"
-  ) {
-    return payload.data[ticker];
+  // Case-insensitive fallback
+  for (const key of Object.keys(payload)) {
+    if (String(key).toUpperCase() === ticker) {
+      return payload[key];
+    }
   }
 
-  // Case 3:
-  // { "results": [{ "ticker": "NVDA", ... }] }
-  const arrays = [
-    payload.results,
-    payload.data,
-    payload.quotes,
-    payload.items
+  return null;
+}
+
+function findPrice(data) {
+  if (!data || typeof data !== "object") {
+    return null;
+  }
+
+  const priceFields = [
+    "regularMarketPrice",
+    "currentPrice",
+    "current_price",
+    "price",
+    "lastPrice",
+    "last_price"
   ];
 
-  for (const arr of arrays) {
-    if (Array.isArray(arr)) {
-      const match = arr.find((item) => {
-        if (!item || typeof item !== "object") return false;
+  // First check directly on the object.
+  const direct = getField(data, priceFields);
 
-        const symbol =
-          item.ticker ||
-          item.symbol ||
-          item.Ticker ||
-          item.Symbol;
+  const directNumber = toNumber(direct);
 
-        return String(symbol || "").toUpperCase() === ticker;
-      });
+  if (directNumber !== null) {
+    return directNumber;
+  }
 
-      if (match) {
-        return match;
+  // Then check main_info.
+  if (
+    data.main_info &&
+    typeof data.main_info === "object"
+  ) {
+    const mainPrice = getField(
+      data.main_info,
+      priceFields
+    );
+
+    const mainNumber = toNumber(mainPrice);
+
+    if (mainNumber !== null) {
+      return mainNumber;
+    }
+  }
+
+  // Then check common nested objects.
+  const nestedObjects = [
+    data.market,
+    data.market_data,
+    data.quote,
+    data.data,
+    data.info
+  ];
+
+  for (const nested of nestedObjects) {
+    if (
+      nested &&
+      typeof nested === "object"
+    ) {
+      const nestedPrice = findPrice(nested);
+
+      if (nestedPrice !== null) {
+        return nestedPrice;
       }
     }
   }
 
-  // Case 4:
-  // The API may return one direct object for one ticker.
-  if (
-    typeof payload === "object" &&
-    !Array.isArray(payload)
-  ) {
-    const symbol =
-      payload.ticker ||
-      payload.symbol ||
-      payload.Ticker ||
-      payload.Symbol;
+  return null;
+}
 
-    if (
-      !symbol ||
-      String(symbol).toUpperCase() === ticker
-    ) {
-      return payload;
+function findPreviousClose(data) {
+  if (!data || typeof data !== "object") {
+    return null;
+  }
+
+  const fields = [
+    "regularMarketPreviousClose",
+    "previousClose",
+    "previous_close",
+    "chartPreviousClose"
+  ];
+
+  const direct = toNumber(
+    getField(data, fields)
+  );
+
+  if (direct !== null) {
+    return direct;
+  }
+
+  if (
+    data.main_info &&
+    typeof data.main_info === "object"
+  ) {
+    const mainValue = toNumber(
+      getField(data.main_info, fields)
+    );
+
+    if (mainValue !== null) {
+      return mainValue;
+    }
+  }
+
+  return null;
+}
+
+function findCurrency(data) {
+  if (!data || typeof data !== "object") {
+    return null;
+  }
+
+  const fields = [
+    "currency",
+    "financialCurrency",
+    "financial_currency"
+  ];
+
+  const direct = getField(data, fields);
+
+  if (direct) {
+    return String(direct);
+  }
+
+  if (
+    data.main_info &&
+    typeof data.main_info === "object"
+  ) {
+    const mainCurrency = getField(
+      data.main_info,
+      fields
+    );
+
+    if (mainCurrency) {
+      return String(mainCurrency);
+    }
+  }
+
+  return null;
+}
+
+function findMarketState(data) {
+  if (!data || typeof data !== "object") {
+    return null;
+  }
+
+  const direct = getField(data, [
+    "marketState",
+    "market_state"
+  ]);
+
+  if (direct) {
+    return String(direct);
+  }
+
+  if (
+    data.main_info &&
+    typeof data.main_info === "object"
+  ) {
+    const mainState = getField(
+      data.main_info,
+      [
+        "marketState",
+        "market_state"
+      ]
+    );
+
+    if (mainState) {
+      return String(mainState);
+    }
+  }
+
+  return null;
+}
+
+function findExchange(data) {
+  if (!data || typeof data !== "object") {
+    return null;
+  }
+
+  const direct = getField(data, [
+    "exchange",
+    "fullExchangeName"
+  ]);
+
+  if (direct) {
+    return String(direct);
+  }
+
+  if (
+    data.main_info &&
+    typeof data.main_info === "object"
+  ) {
+    const mainExchange = getField(
+      data.main_info,
+      [
+        "exchange",
+        "fullExchangeName"
+      ]
+    );
+
+    if (mainExchange) {
+      return String(mainExchange);
     }
   }
 
@@ -265,7 +326,8 @@ function extractTickerData(payload, ticker) {
 export default async function handler(req, res) {
   try {
     const ticker = cleanTicker(
-      req.query?.ticker || req.query?.symbol
+      req.query?.ticker ||
+      req.query?.symbol
     );
 
     if (!ticker) {
@@ -280,8 +342,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // Use short server-side cache so repeated refreshes
-    // don't unnecessarily hit the external service.
+    // Server-side cache.
     const cached = CACHE.get(ticker);
 
     if (
@@ -294,27 +355,34 @@ export default async function handler(req, res) {
       });
     }
 
-    const payload = await fetchMarketData(ticker);
+    const payload =
+      await fetchMarketData(ticker);
 
-    const marketData =
-      extractTickerData(payload, ticker);
+    const tickerData =
+      extractTickerData(
+        payload,
+        ticker
+      );
 
-    if (!marketData) {
+    if (!tickerData) {
       return res.status(404).json({
-        error: `No market data found for ${ticker}`
+        error:
+          `No market data found for ${ticker}`
       });
     }
 
-    const price = findPrice(marketData);
+    const price =
+      findPrice(tickerData);
 
     if (price === null) {
       return res.status(502).json({
-        error: `No current price found for ${ticker}`
+        error:
+          `No current price found for ${ticker}`
       });
     }
 
     const previousClose =
-      findPreviousClose(marketData);
+      findPreviousClose(tickerData);
 
     let changePct = null;
 
@@ -333,9 +401,16 @@ export default async function handler(req, res) {
       price,
       previous_close: previousClose,
       change_pct: changePct,
-      currency: findCurrency(marketData),
-      source: "TigZig YFIN / Yahoo Finance",
-      last_updated: new Date().toISOString(),
+      currency:
+        findCurrency(tickerData),
+      exchange:
+        findExchange(tickerData),
+      market_state:
+        findMarketState(tickerData),
+      source:
+        "TigZig YFIN / Yahoo Finance",
+      last_updated:
+        new Date().toISOString(),
       cached: false
     };
 
@@ -347,7 +422,10 @@ export default async function handler(req, res) {
     return res.status(200).json(result);
 
   } catch (error) {
-    console.error("Quote API error:", error);
+    console.error(
+      "Quote API error:",
+      error
+    );
 
     return res.status(500).json({
       error:
