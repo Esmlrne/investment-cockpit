@@ -589,6 +589,28 @@
 
     }
 
+
+    /* ========================================================
+       PORTFOLIO EXPOSURE
+    ======================================================== */
+
+    .exposure-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .exposure-card{background:#f8f9fc;border-radius:14px;padding:13px;margin-top:9px}
+    .exposure-row{display:grid;grid-template-columns:105px 1fr 55px;align-items:center;gap:8px;margin:10px 0}
+    .exposure-name{font-size:12px;font-weight:700;color:#344158;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .exposure-track{height:10px;background:#e7ebf2;border-radius:20px;overflow:hidden}
+    .exposure-fill{height:100%;background:#172033;border-radius:20px}
+    .exposure-pct{text-align:right;font-size:12px;font-weight:800}
+    .theme-chip{display:inline-block;background:white;border:1px solid #dce2ec;border-radius:18px;padding:7px 9px;margin:4px 4px 0 0;font-size:11px;font-weight:700}
+    .company-focus{border:1px solid #e0e5ed;border-radius:14px;padding:13px;margin-top:9px}
+    .company-focus-top{display:flex;justify-content:space-between;gap:10px}
+    .company-focus-symbol{font-size:16px;font-weight:800}
+    .company-focus-weight{font-size:13px;font-weight:800}
+    .company-focus-title{margin-top:5px;font-size:13px;font-weight:800}
+    .company-focus-text{margin-top:5px;color:#66748b;font-size:12px;line-height:1.45}
+    .exposure-note{margin-top:10px;font-size:11px;color:#8490a3;line-height:1.4}
+    @media(max-width:650px){.exposure-grid{grid-template-columns:1fr}.exposure-row{grid-template-columns:90px 1fr 50px}}
+
     /* ========================================================
        PORTFOLIO INTELLIGENCE
     ======================================================== */
@@ -1124,6 +1146,29 @@
             The long-term framework weights business
             quality & growth most heavily, while using
             valuation and diversification to control risk.
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- PORTFOLIO EXPOSURE -->
+
+      <div class="card">
+
+        <div class="section-title">
+          PORTFOLIO EXPOSURE & BUSINESS THEMES
+        </div>
+
+        <div id="portfolioExposure">
+
+          <div class="info">
+
+            Run <strong>🧠 Analyze Portfolio</strong>
+            above to see sector allocation, business/theme
+            exposure and what each company is working on.
 
           </div>
 
@@ -5588,6 +5633,8 @@
 
       `;
 
+      renderPortfolioExposure();
+
     }
 
 
@@ -6062,6 +6109,7 @@
 
 
         renderPortfolioIntelligence();
+        renderPortfolioExposure();
 
 
       }catch(error){
@@ -6256,6 +6304,125 @@
     }
 
 
+
+    /* ========================================================
+       PORTFOLIO EXPOSURE & BUSINESS THEMES
+    ======================================================== */
+
+    const companyThemes = {
+      NVDA:{themes:["AI","Semiconductors","Data Centers"],focus:"AI accelerators, data-center computing, networking and software infrastructure."},
+      AMD:{themes:["AI","Semiconductors","Data Centers"],focus:"CPUs, GPUs and AI accelerators for data centers, PCs and high-performance computing."},
+      AVGO:{themes:["AI","Semiconductors","Networking","Data Centers"],focus:"AI networking, custom accelerators, connectivity semiconductors and infrastructure software."},
+      MRVL:{themes:["AI","Semiconductors","Networking","Data Centers"],focus:"Data-center connectivity, custom silicon, networking and AI infrastructure."},
+      MU:{themes:["AI","Semiconductors","Memory","Data Centers"],focus:"High-bandwidth memory, DRAM and NAND supporting AI and data-center workloads."},
+      CRDO:{themes:["AI","Semiconductors","Networking","Data Centers"],focus:"High-speed connectivity and signal-integrity solutions for AI and data-center networks."},
+      CRWV:{themes:["AI","Data Centers","Cloud"],focus:"Cloud and GPU infrastructure designed for AI workloads."},
+      MSFT:{themes:["AI","Cloud","Software"],focus:"Azure cloud, AI platforms, enterprise software and productivity products."},
+      GOOGL:{themes:["AI","Cloud","Advertising","Software"],focus:"AI, Google Cloud, digital advertising, search and consumer software platforms."},
+      META:{themes:["AI","Advertising","Software"],focus:"AI-driven recommendation systems, digital advertising, social platforms and Reality Labs."},
+      ORCL:{themes:["AI","Cloud","Software","Data Centers"],focus:"Cloud infrastructure, enterprise databases, applications and AI-enabled data-center services."},
+      NOW:{themes:["AI","Software"],focus:"Enterprise workflow software and AI-enabled automation for businesses."},
+      ISRG:{themes:["Healthcare","Robotics","Medical Technology"],focus:"Robotic-assisted surgery systems, instruments and related digital surgical technology."},
+      IREN:{themes:["AI","Data Centers","Energy"],focus:"Large-scale data-center infrastructure and energy-backed computing, including AI/HPC capacity."},
+      OKLO:{themes:["Nuclear","Energy","Data Centers"],focus:"Advanced nuclear fission systems aimed at supplying reliable, scalable clean electricity."},
+      OUST:{themes:["Robotics","Industrial Technology"],focus:"Digital lidar and perception technology for industrial automation, mapping and robotics."},
+      RKLB:{themes:["Space","Aerospace"],focus:"Launch services, satellites, spacecraft components and broader space systems."},
+      SOFI:{themes:["Fintech","Financials"],focus:"Digital banking, lending, investing and financial-services products on one platform."},
+      QBTS:{themes:["Quantum Computing","AI"],focus:"Quantum computing systems and cloud-accessible quantum optimization technology."},
+      NBIS:{themes:["AI","Cloud","Data Centers"],focus:"AI-focused cloud infrastructure, GPU capacity and services for AI developers."},
+      BE:{themes:["Energy","Clean Energy","Data Centers"],focus:"Fuel-cell and distributed power systems designed for resilient electricity generation."},
+      OSCR:{themes:["Healthcare","Insurance"],focus:"Technology-enabled health insurance and member-focused healthcare services."}
+    };
+
+    function exposureRows(weights){
+      const entries=Object.entries(weights).filter(x=>Number(x[1])>0).sort((a,b)=>b[1]-a[1]);
+      if(!entries.length)return `<div class="info">Sector data is not available yet.</div>`;
+      const max=Math.max(...entries.map(x=>x[1]));
+      return entries.map(([name,weight])=>`
+        <div class="exposure-row">
+          <div class="exposure-name">${esc(name)}</div>
+          <div class="exposure-track"><div class="exposure-fill" style="width:${max?(weight/max)*100:0}%"></div></div>
+          <div class="exposure-pct">${weight.toFixed(1)}%</div>
+        </div>
+      `).join("");
+    }
+
+    function themeExposure(items){
+      const themes={};
+      items.forEach(item=>{
+        const def=companyThemes[item.holding.ticker];
+        if(!def)return;
+        const weight=Number(item.holding.weight)||0;
+        def.themes.forEach(theme=>themes[theme]=(themes[theme]||0)+weight);
+      });
+      return themes;
+    }
+
+    function renderThemes(themes){
+      const entries=Object.entries(themes).sort((a,b)=>b[1]-a[1]);
+      if(!entries.length)return `<div class="info">Theme data is not available yet.</div>`;
+      return entries.map(([theme,weight])=>`<span class="theme-chip">${esc(theme)} · ${weight.toFixed(1)}%</span>`).join("");
+    }
+
+    function renderCompanyFocus(items){
+      return items.slice().sort((a,b)=>(Number(b.holding.weight)||0)-(Number(a.holding.weight)||0)).map(item=>{
+        const ticker=item.holding.ticker;
+        const def=companyThemes[ticker];
+        const a=item._analysis||{};
+        const sector=a.sector||"Sector unavailable";
+        const industry=a.industry||"";
+        const focus=def?def.focus:"Business focus information has not yet been mapped for this company.";
+        const themes=def?def.themes:[];
+        return `
+          <div class="company-focus">
+            <div class="company-focus-top">
+              <div class="company-focus-symbol">${esc(ticker)}</div>
+              <div class="company-focus-weight">${(Number(item.holding.weight)||0).toFixed(1)}%</div>
+            </div>
+            <div class="company-focus-title">${esc(focus)}</div>
+            <div class="company-focus-text">${esc(sector)}${industry?" · "+esc(industry):""}</div>
+            ${themes.length?`<div>${themes.map(t=>`<span class="theme-chip">${esc(t)}</span>`).join("")}</div>`:""}
+          </div>`;
+      }).join("");
+    }
+
+    function renderPortfolioExposure(){
+      const box=document.getElementById("portfolioExposure");
+      if(!box)return;
+      if(!portfolioIntelligence?.items?.length){
+        box.innerHTML=`<div class="info">Run <strong>🧠 Analyze Portfolio</strong> above to calculate your exposure.</div>`;
+        return;
+      }
+
+      const items=portfolioIntelligence.items;
+      const sectors=portfolioIntelligence.sectorWeights||{};
+      const themes=themeExposure(items);
+      const sectorEntries=Object.entries(sectors).sort((a,b)=>b[1]-a[1]);
+      const topSector=sectorEntries[0];
+      const topTheme=Object.entries(themes).sort((a,b)=>b[1]-a[1])[0];
+
+      box.innerHTML=`
+        <div class="exposure-grid">
+          <div class="exposure-card">
+            <div class="section-title">SECTOR ALLOCATION</div>
+            ${exposureRows(sectors)}
+            ${topSector?`<div class="exposure-note">Largest sector: <strong>${esc(topSector[0])}</strong> at ${topSector[1].toFixed(1)}%.</div>`:""}
+          </div>
+
+          <div class="exposure-card">
+            <div class="section-title">BUSINESS / THEME EXPOSURE</div>
+            ${renderThemes(themes)}
+            ${topTheme?`<div class="exposure-note">Largest theme exposure: <strong>${esc(topTheme[0])}</strong> at ${topTheme[1].toFixed(1)}%.</div>`:""}
+            <div class="exposure-note">Theme percentages can exceed 100% because one company can contribute to multiple themes. This measures economic exposure, not allocation.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:15px">
+          <div class="section-title">WHAT YOUR COMPANIES ARE WORKING ON</div>
+          ${renderCompanyFocus(items)}
+        </div>`;
+    }
+
     /* ========================================================
        PORTFOLIO TAB OVERRIDE
     ======================================================== */
@@ -6278,6 +6445,7 @@
       if(tab === "portfolio"){
 
         renderPortfolioIntelligence();
+        renderPortfolioExposure();
 
       }
 
