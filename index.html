@@ -798,6 +798,7 @@
           placeholder="Enter ticker e.g. AAPL">
 
         <button
+          id="analyzeButton"
           class="primary"
           onclick="analyze()">
 
@@ -3039,13 +3040,24 @@
        STOCK API
     ======================================================== */
 
+    let stockAnalysisInProgress = false;
+
+
     async function analyze(){
+
+      if(stockAnalysisInProgress){
+        return;
+      }
 
       const input =
         document.getElementById(
           "tickerInput"
         );
 
+      const button =
+        document.getElementById(
+          "analyzeButton"
+        );
 
       const symbol =
         String(
@@ -3055,15 +3067,17 @@
           .trim()
           .toUpperCase();
 
-
       if(!symbol){
         return;
       }
 
+      currentTicker = symbol;
+      stockAnalysisInProgress = true;
 
-      currentTicker =
-        symbol;
-
+      if(button){
+        button.disabled = true;
+        button.textContent = "Analyzing...";
+      }
 
       document.getElementById(
         "stockApp"
@@ -3083,51 +3097,38 @@
 
       `;
 
-
       document
         .querySelectorAll(".ticker")
         .forEach(
           btn => {
-
             btn.classList.toggle(
               "active",
-              btn.textContent.trim() ===
-              symbol
+              btn.textContent.trim() === symbol
             );
-
           }
         );
-
 
       try{
 
         const response =
           await fetch(
-            `/api/stock?ticker=${encodeURIComponent(
-              symbol
-            )}`
+            `/api/stock?ticker=${encodeURIComponent(symbol)}`
           );
-
 
         const data =
           await response.json();
-
 
         if(
           !response.ok ||
           data.error
         ){
-
           throw new Error(
             data.error ||
             "Unable to load investment data."
           );
-
         }
 
-
         renderStock(data);
-
 
       }catch(error){
 
@@ -3145,9 +3146,28 @@
 
             ${esc(error.message)}
 
+            <br><br>
+
+            <div class="small">
+
+              Alpha Vantage limits free API requests.
+              If this message appears, wait before
+              trying another stock.
+
+            </div>
+
           </div>
 
         `;
+
+      }finally{
+
+        stockAnalysisInProgress = false;
+
+        if(button){
+          button.disabled = false;
+          button.textContent = "Analyze";
+        }
 
       }
 
@@ -4131,8 +4151,8 @@
           try{
 
             /*
-              Respect Alpha Vantage's
-              request-rate limitation.
+              Small pause between portfolio quote requests
+              to keep quote-provider traffic smooth.
             */
 
             if(i > 0){
@@ -6641,7 +6661,11 @@
 
     loadSettings();
 
-    analyze();
+    /*
+      Do not automatically call the Stock Analyzer on page load.
+      This prevents an unnecessary Alpha Vantage request and
+      preserves the free API quota.
+    */
 
 
     </script>
